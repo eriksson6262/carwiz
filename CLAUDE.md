@@ -22,7 +22,7 @@ Každý projekt má vlastní složku. Do ní patří skripty, šablony, konfigur
 Nový projekt = nová složka + řádek do tabulky výše.
 
 ## Git – povinné
-- Na začátku práce repo připoj (add_repo `eriksson6262/rxauto-projekty`, access push) a naklonuj.
+- Na začátku práce repo připoj (add_repo `eriksson6262/carwiz`, access push) a naklonuj.
 - Po každé dokončené změně **automaticky commitni a pushni na `main`**, bez ptaní.
 - Commit zpráva česky: co a proč. Prefix složkou, např. `renteon: oprava výpočtu sezónní přirážky`.
 - Před pushem `git pull --rebase`, konflikty vyřeš sám.
