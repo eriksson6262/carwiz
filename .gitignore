@@ -1,0 +1,26 @@
+# Tajné údaje
+.env
+.env.*
+*.key
+*.pem
+*secret*
+*credentials*
+*token*
+
+# Data a výstupy (osobní údaje klientů)
+**/data/
+**/output/
+**/uploads/
+*.xlsx
+*.xls
+*.csv
+*.pdf
+*.docx
+!**/templates/**
+
+# Systém
+.DS_Store
+__pycache__/
+*.pyc
+node_modules/
+.venv/
