@@ -10,7 +10,7 @@ Každý projekt má vlastní složku. Do ní patří skripty, šablony, konfigur
 |---|---|
 | `renteon/` | Renteon – ceníky, hromadné faktury, reklamace plateb, škody, flotila, e-maily Carwiz |
 | `rxauto-ig/` | Instagram/Facebook RX Auto (Metricool, Canva) |
-| `osek/` | OSEK – úroky z prodlení |
+| `osek/` | OSEK – úroky z prodlení, měsíční faktura za provizi |
 | `havex/` | HAVEX Mobility – fakturace ve Vyfakturuj, pravidelné faktury |
 | `generator-smluv/` | Lokální generátor nájemních smluv (localhost:8765) |
 | `linktree/` | Carwiz/Carnetto linktree web app |
