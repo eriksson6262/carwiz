@@ -8,7 +8,7 @@ Bonus se počítá vždy za **předchozí měsíc** (v říjnu se dělá září
 |---|---|---|
 | Provize z doplňkového prodeje | Renteon → Přehledy → Odbyt → **Doplňkový prodej** (`#/report/sales/additionalSales`), přednastavený „Předchozí měsíc“, Export do Excelu; list „Doplňkový prodej“, sloupec **TotalServiceBonusAmount** | dle Renteonu |
 | Noční výpůjčky | Sdílená poznámka Erika v iPhonu (nadpis = měsíc, sekce **Carwiz** a **ACE**); každá čárka = 1 noční výpůjčka. Sečíst Carwiz + ACE na osobu | 600 Kč / ks |
-| Pickupy | Soubor `Closed_agreements_2024_Prague_updated_*.xlsx`, list daného měsíce (např. `SEP 26`); počet smluv (`PRG-…`) se sloupcem **AgentOut** = `tsvacinka` / `dkasovsky` | 240 Kč / ks |
+| Pickupy | Měsíční mail od **Mateusze Oseka** (`mateusz.osek@osekrent.pl` → `erik@rxauto.cz`, předmět „Report“, chodí kolem 13. v měsíci; najdeš ve Sparku filtrem `from:mateusz.osek@osekrent.pl`), příloha `Closed agreements 2024 Prague updated -NN.xlsx`; list daného měsíce (např. `SEP 26`); počet smluv (`PRG-…`) se sloupcem **AgentOut** = `tsvacinka` / `dkasovsky` | 240 Kč / ks |
 
 Login v Renteonu: Tomáš = `tsvacinka`, Dan = `dkasovsky`.
 
