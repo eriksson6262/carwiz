@@ -18,6 +18,7 @@ Každý projekt má vlastní složku. Do ní patří skripty, šablony, konfigur
 | `fleet-dokumenty/` | SOSBK, vinkulace, plné moci, nájemní smlouvy – šablony a generátory |
 | `pokuty/` | Zpracování a přefakturace pokut |
 | `rxauto-sk/` | Landing page rxauto.sk |
+| `mzdy/` | Měsíční bonusy zaměstnanců (provize Renteon, noční výpůjčky, pickupy) |
 
 Nový projekt = nová složka + řádek do tabulky výše.
 
