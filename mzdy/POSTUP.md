@@ -45,4 +45,4 @@ bonus = TotalServiceBonusAmount + hodiny × 8 €
 ---
 
 # Odeslání účetní
-Výsledné bonusy (jen jména a částky, CZ v Kč, SK v €) poslat mailem z `erik@rxauto.cz` na **hanka@rav-technology.cz**, předmět „Mzdy za M/YYYY“.
+Výsledné bonusy (jen jména a částky, CZ v Kč, SK v €) + případná dovolená (zeptat se Erika) poslat mailem z `erik@rxauto.cz` na **hanka@rav-technology.cz**, předmět „Mzdy za M/YYYY“.
