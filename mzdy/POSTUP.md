@@ -41,3 +41,8 @@ bonus = TotalServiceBonusAmount + hodiny × 8 €
 
 - Kdo v reportu nemá řádek (nic neprodal), má provizi 0.
 - Export stejně jako u CZ: angular `$http.post('/sk/api/report/getAdditionalSalesExcel', {IsByDateOut:false, DateFrom, DateTo}, {responseType:'arraybuffer'})` + SheetJS. Přihlášení drží vestavěný prohlížeč Claude desktop appky.
+
+---
+
+# Odeslání účetní
+Výsledné bonusy (jen jména a částky, CZ v Kč, SK v €) poslat mailem z `erik@rxauto.cz` na **hanka@rav-technology.cz**, předmět „Mzdy za M/YYYY“.
