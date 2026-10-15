@@ -18,6 +18,7 @@ Každý projekt má vlastní složku. Do ní patří skripty, šablony, konfigur
 | `fleet-dokumenty/` | SOSBK, vinkulace, plné moci, nájemní smlouvy – šablony a generátory |
 | `pokuty/` | Zpracování a přefakturace pokut |
 | `rxauto-sk/` | Landing page rxauto.sk |
+| `common/` | Sdílené – přihlašovací údaje pro skripty (`rxauto_config.py`, Keychain / `~/.rxauto.env`) |
 | `mzdy/` | Měsíční bonusy zaměstnanců (provize Renteon, noční výpůjčky, pickupy) |
 
 Nový projekt = nová složka + řádek do tabulky výše.
@@ -29,7 +30,7 @@ Nový projekt = nová složka + řádek do tabulky výše.
 - Před pushem `git pull --rebase`, konflikty vyřeš sám.
 
 ## Co nikdy necommitovat
-- Hesla, API klíče, tokeny, `.env` soubory.
+- Hesla, API klíče, tokeny, `.env` soubory. Skripty berou údaje přes `common/rxauto_config.py`, nikdy natvrdo v kódu.
 - Osobní údaje klientů: RČ, čísla dokladů, vyplněné smlouvy, protokoly, exporty z Renteonu se zákazníky.
 - Vstupní a výstupní data patří do `data/` nebo `output/` v dané složce – obojí je v `.gitignore`.
 - Když si nejsi jistý, jestli soubor obsahuje osobní údaje, necommituj ho a zeptej se.
