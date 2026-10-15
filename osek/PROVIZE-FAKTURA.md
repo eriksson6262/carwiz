@@ -13,8 +13,9 @@ Vytvořit **kopií poslední provizní faktury** OSEK Group s.r.o. (Detail → M
 | Počet | Text | Cena za MJ |
 |---|---|---|
 | počet pickupů | mytí exterier (car wash) | 299 Kč |
-| 2 ks | parkování | 5 900 Kč |
+| dle Erika (07–08/26: 2 ks, 09/26: 4 ks) – zeptat se | parkování | 5 900 Kč |
 | 1 ks | zprostředkování | TOTAL Netto |
 
 Text před položkami = období `MM/YY`. Datum vystavení = DUZP = dnešek.
-Poslední vzory: FA 20261457 (07/26), FA 20261631 (08/26).
+Poslední vzory: FA 20261457 (07/26), FA 20261631 (08/26), FA 20261895 (09/26).
+Po vytvoření odeslat: Možnosti → Poslat → Poslat e-mail s fakturou (na mateusz.osek@osekrent.pl, PDF v příloze) → Odeslat.
