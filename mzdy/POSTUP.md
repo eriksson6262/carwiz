@@ -23,3 +23,21 @@ bonus = TotalServiceBonusAmount + noci × 600 + pickupy × 240
 - Report „Na konci“ (IsByDateOut=false) = podle data vrácení, stejně jako closed agreements.
 - Pro čárky v poznámce platí číslo napsané za čárkami.
 - Do repa nikdy neukládat konkrétní částky ani exporty (osobní/mzdové údaje) – jen postup.
+
+---
+
+# Mzdy – Carwiz SK (Bratislava, BTS)
+
+Bonus za **předchozí měsíc** pro BTS tým (Peter Remeš, Slavo, Miro Bednár).
+
+| Složka | Zdroj | Sazba |
+|---|---|---|
+| Provize z doplňkového prodeje | SK Renteon `https://cwslovakia.s6.renteon.com/sk/#/report/sales/additionalSales` (Doplnkový predaj), předchozí měsíc, list „Doplnkový predaj“, sloupec **TotalServiceBonusAmount** (EUR) | dle Renteonu |
+| Odpracované hodiny | Píše Erik každý měsíc | 8 € / h |
+
+```
+bonus = TotalServiceBonusAmount + hodiny × 8 €
+```
+
+- Kdo v reportu nemá řádek (nic neprodal), má provizi 0.
+- Export stejně jako u CZ: angular `$http.post('/sk/api/report/getAdditionalSalesExcel', {IsByDateOut:false, DateFrom, DateTo}, {responseType:'arraybuffer'})` + SheetJS. Přihlášení drží vestavěný prohlížeč Claude desktop appky.
