@@ -15,6 +15,7 @@ registerFontFamily('DV', normal='DV', bold='DVB', italic='DV', boldItalic='DVB')
 
 DATUM = "11.10.2026"
 SPU_PCT, SPU_MIN, KM_RATE = 0.10, 10000, 7.0
+SPU_FLAT = 10000  # PU Fabian: paušálně 10 000 Kč za každou pojistnou událost
 
 def fmt(x): return f"{x:,.2f}".replace(",", " ").replace(".", ",")
 def nice(s): return s.replace(' - ', ' – ')
@@ -73,24 +74,17 @@ def build(d, out, stamp):
     sumB = 0
     n = d['pu_count']; P = d['PU']
     if n:
-        pol = (f"Spoluúčast dle smluvních podmínek: {int(SPU_PCT*100)} % z ceny opravy, minimálně {fmt(SPU_MIN)} Kč za pojistnou událost; "
-               f"u oprav do {fmt(SPU_MIN)} Kč se účtuje skutečná cena opravy.")
-        rows = [[Paragraph("<b>Pojistná událost</b>", N), Paragraph("<b>Cena opravy</b>", R), Paragraph("<b>Spoluúčast</b>", R)]]
+        pol = f"Spoluúčast dle smluvních podmínek: {fmt(SPU_FLAT)} Kč za každou pojistnou událost."
+        rows = [[Paragraph("<b>Pojistná událost</b>", N), Paragraph("<b>Orientační cena</b>", R), Paragraph("<b>Spoluúčast</b>", R)]]
         if n == len(P):
             for desc, c in P:
-                s = spu_for(c); sumB += s
-                rows.append([Paragraph(esc(nice(desc)), N), Paragraph(fmt(c), R), Paragraph(fmt(s), R)])
+                sumB += SPU_FLAT
+                rows.append([Paragraph(esc(nice(desc)), N), Paragraph(fmt(c), R), Paragraph(fmt(SPU_FLAT), R)])
         else:
-            costs = [c for _, c in P]
-            if n == 1:
-                s = spu_for(sum(costs)); sumB = s
-            else:
-                assert min(costs) >= SPU_MIN and sum(costs) * SPU_PCT <= SPU_MIN * n * 10, d['rz']
-                sumB = SPU_MIN * n
+            sumB = SPU_FLAT * n
             for desc, c in P:
                 rows.append([Paragraph(esc(nice(desc)), N), Paragraph(fmt(c), R), Paragraph("", R)])
-            rows.append([Paragraph(f"Spoluúčast za {n} pojistn{'ou událost' if n == 1 else 'é události'} (cena opravy nad {fmt(SPU_MIN)} Kč)", N),
-                         Paragraph(fmt(sum(costs)), R), Paragraph(fmt(sumB), R)])
+            rows.append([Paragraph(f"Spoluúčast za {n} pojistn{'ou událost' if n == 1 else 'é události'} × {fmt(SPU_FLAT)} Kč", N), Paragraph("", R), Paragraph(fmt(sumB), R)])
         rows.append([Paragraph(f"<b>Celkem spoluúčast ({n} × PU)</b>", N), Paragraph("", R), Paragraph(f"<b>{fmt(sumB)}</b>", R)])
         LB = chr(ord('A') + len(letters))
         el += [Paragraph(f"{LB}. Poškození řešená jako pojistná událost – spoluúčast nájemce", SEC),

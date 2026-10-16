@@ -15,6 +15,7 @@ registerFontFamily('DV', normal='DV', bold='DVB', italic='DV', boldItalic='DVB')
 
 DATUM = "11.10.2026"
 SPU_PCT, SPU_MIN, KM_RATE = 0.10, 10000, 7.0
+SPU_FLAT = 10000  # PU Fabian: paušálně 10 000 Kč za každou pojistnou událost
 
 def fmt(x): return f"{x:,.2f}"
 from en_map import T, VUZ
@@ -74,24 +75,17 @@ def build(d, out, stamp):
     sumB = 0
     n = d['pu_count']; P = d['PU']
     if n:
-        pol = (f"Deductible under the agreed terms: {int(SPU_PCT*100)} % of the repair cost, minimum CZK {fmt(SPU_MIN)} per insurance claim; "
-               f"repairs below CZK {fmt(SPU_MIN)} are charged at the actual repair cost.")
-        rows = [[Paragraph("<b>Insurance claim</b>", N), Paragraph("<b>Repair cost</b>", R), Paragraph("<b>Deductible</b>", R)]]
+        pol = f"Deductible under the agreed terms: CZK {fmt(SPU_FLAT)} per insurance claim."
+        rows = [[Paragraph("<b>Insurance claim</b>", N), Paragraph("<b>Estimated cost</b>", R), Paragraph("<b>Deductible</b>", R)]]
         if n == len(P):
             for desc, c in P:
-                s = spu_for(c); sumB += s
-                rows.append([Paragraph(esc(nice(desc)), N), Paragraph(fmt(c), R), Paragraph(fmt(s), R)])
+                sumB += SPU_FLAT
+                rows.append([Paragraph(esc(nice(desc)), N), Paragraph(fmt(c), R), Paragraph(fmt(SPU_FLAT), R)])
         else:
-            costs = [c for _, c in P]
-            if n == 1:
-                s = spu_for(sum(costs)); sumB = s
-            else:
-                assert min(costs) >= SPU_MIN and sum(costs) * SPU_PCT <= SPU_MIN * n * 10, d['rz']
-                sumB = SPU_MIN * n
+            sumB = SPU_FLAT * n
             for desc, c in P:
                 rows.append([Paragraph(esc(nice(desc)), N), Paragraph(fmt(c), R), Paragraph("", R)])
-            rows.append([Paragraph(f"Deductible for {n} insurance claim{'' if n == 1 else 's'} (repair cost above CZK {fmt(SPU_MIN)})", N),
-                         Paragraph(fmt(sum(costs)), R), Paragraph(fmt(sumB), R)])
+            rows.append([Paragraph(f"Deductible for {n} insurance claim{'' if n == 1 else 's'} × CZK {fmt(SPU_FLAT)}", N), Paragraph("", R), Paragraph(fmt(sumB), R)])
         rows.append([Paragraph(f"<b>Total deductible ({n} × claim)</b>", N), Paragraph("", R), Paragraph(f"<b>{fmt(sumB)}</b>", R)])
         LB = chr(ord('A') + len(letters))
         el += [Paragraph(f"{LB}. Damage handled as insurance claim – lessee's deductible", SEC),

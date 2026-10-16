@@ -18,7 +18,7 @@ def parse(path):
         if m: d['km_over'] = int(m.group(1)); d['havex_rate'] = num(m.group(2))
         m = re.search(r'CELKEM K ÚHRADĚ.*?([\d ]+,\d\d)\s*$', l)
         if m: d['havex_total'] = num(m.group(1))
-    dates = re.findall(r'^\s+(\d\d\.\d\d\.\d{4})\s*$', t, re.M)
+    dates = re.findall(r'^\s+(?:Praha\s+)?(\d\d\.\d\d\.\d{4})\s*$', t, re.M)
     d['dat_protokolu'] = dates[-1] if dates else ''
     sec = None; pu_hdr = 0
     for l in L:
