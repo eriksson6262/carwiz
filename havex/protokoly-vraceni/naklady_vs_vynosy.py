@@ -105,7 +105,7 @@ notes=['Metodika:',
  '• Předčasné vrácení nesnižuje nájem (smlouva na pevnou dobu).',
  '• Škody/km HAVEX = celková částka z protokolu o vrácení (Beyr).',
  '• Pojištění HAV (POV je ve splátce HAVEX) = měsíční předpis × 12/365 × dny od počátku pojištění do vrácení. Fabian vozy: Kooperativa IS 6667100466 (předpis 08–09/2026), RX vozy: Generali RS 4785635732 (vyúčtování 07/2026). U 8H84631/666/669/696 pojistka nenalezena.',
- '• Výnosy Fabian = nájem fakturovaný ve Vyfakturuj (EUR × kurz faktury) + naše vyúčtování škod po vrácení (vč. přirážky 21 % na škody, FA 20261915); pokuty jsou průtokové, uvedeny jen pro info.',
+ '• Výnosy Fabian = nájem fakturovaný ve Vyfakturuj (EUR × kurz faktury) + naše vyúčtování škod po vrácení; pokuty jsou průtokové, uvedeny jen pro info.',
  '• Výnosy RX Auto = Renteon, přehled příjmů dle vozu (smlouvy), nájem a celkem bez DPH.',
  '• Sazby prodloužení 2600687/689/691/692 převzaty z původních smluv – ověřit v podepsaných PK (DigiSign 15.10.2026).']
 for i,t in enumerate(notes,9): s[f'A{i}']=t; s[f'A{i}'].font=B if i==9 else F
