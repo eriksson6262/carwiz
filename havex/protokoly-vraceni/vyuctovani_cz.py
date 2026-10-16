@@ -16,6 +16,7 @@ registerFontFamily('DV', normal='DV', bold='DVB', italic='DV', boldItalic='DVB')
 DATUM = "11.10.2026"
 SPU_PCT, SPU_MIN, KM_RATE = 0.10, 10000, 7.0
 PU_MARKUP = 1.21  # skutečná cena opravy PU + 21 %
+DMG_MARKUP = 1.21  # škody (oddíl A) = cena opravy dle HAVEX + 21 %
 SPU_FLAT = 10000  # PU Fabian: skutečná cena opravy, max. 10 000 Kč za každou pojistnou událost
 
 def fmt(x): return f"{x:,.2f}".replace(",", " ").replace(".", ",")
@@ -65,9 +66,9 @@ def build(d, out, stamp):
     total = 0; letters = []
     # A
     if d['A']:
-        sumA = sum(a for _, a in d['A'] if a)
+        sumA = round(sum(round(a * DMG_MARKUP, 2) for _, a in d['A'] if a), 2)
         rows = [[Paragraph("<b>Položka</b>", N), Paragraph("<b>Kč bez DPH</b>", R)]]
-        rows += [[Paragraph(esc(nice(n)), N), Paragraph(fmt(a) if a else "–", R)] for n, a in d['A']]
+        rows += [[Paragraph(esc(nice(n)), N), Paragraph(fmt(round(a * DMG_MARKUP, 2)) if a else "–", R)] for n, a in d['A']]
         rows += [[Paragraph("<b>Celkem škody hrazené nájemcem</b>", N), Paragraph(f"<b>{fmt(sumA)}</b>", R)]]
         el += [Paragraph("A. Neakceptovatelné poškození – hradí nájemce", SEC), table(rows, [W*0.78, W*0.22])]
         total += sumA; letters.append('A')
