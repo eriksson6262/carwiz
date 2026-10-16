@@ -15,6 +15,7 @@ registerFontFamily('DV', normal='DV', bold='DVB', italic='DV', boldItalic='DVB')
 
 DATUM = "11.10.2026"
 SPU_PCT, SPU_MIN, KM_RATE = 0.10, 10000, 7.0
+PU_MARKUP = 1.21  # skutečná cena opravy PU + 21 %
 SPU_FLAT = 10000  # PU Fabian: skutečná cena opravy, max. 10 000 Kč za každou pojistnou událost
 
 def fmt(x): return f"{x:,.2f}".replace(",", " ").replace(".", ",")
@@ -74,14 +75,14 @@ def build(d, out, stamp):
     sumB = 0
     n = d['pu_count']; P = d['PU']
     if n:
-        pol = f"Spoluúčast dle smluvních podmínek: za každou pojistnou událost skutečná cena opravy, nejvýše {fmt(SPU_FLAT)} Kč."
+        pol = f"Spoluúčast dle smluvních podmínek: za každou pojistnou událost skutečná cena opravy navýšená o 21 %, nejvýše {fmt(SPU_FLAT)} Kč."
         rows = [[Paragraph("<b>Pojistná událost</b>", N), Paragraph("<b>Orientační cena</b>", R), Paragraph("<b>Spoluúčast</b>", R)]]
         if n == len(P):
             for desc, c in P:
-                sp = min(c, SPU_FLAT); sumB += sp
+                sp = SPU_FLAT if c >= SPU_FLAT else min(round(c * PU_MARKUP, 2), SPU_FLAT); sumB += sp
                 rows.append([Paragraph(esc(nice(desc)), N), Paragraph(fmt(c), R), Paragraph(fmt(sp), R)])
         else:
-            sumB = min(sum(c for _, c in P), SPU_FLAT * n)
+            tc = sum(c for _, c in P); sumB = SPU_FLAT * n if tc >= SPU_FLAT * n else min(round(tc * PU_MARKUP, 2), SPU_FLAT * n)
             for desc, c in P:
                 rows.append([Paragraph(esc(nice(desc)), N), Paragraph(fmt(c), R), Paragraph("", R)])
             rows.append([Paragraph(f"Spoluúčast za {n} pojistn{'ou událost' if n == 1 else 'é události'} (max. {fmt(SPU_FLAT)} Kč / PU)", N), Paragraph("", R), Paragraph(fmt(sumB), R)])
