@@ -17,7 +17,7 @@ Zpracování protokolů o vrácení vozidel, které posílá HAVEX Mobility (pet
    Výstup: `Downloads/Protokoly_Beyr/Fabian` a `Downloads/Protokoly_Beyr/RX Auto`.
 3. **Razítko RX Auto** (Fabian) – `stamp.py` vloží razítko do pole „předávajícího“.
 4. **Vyúčtování pro Fabiana** – `parse.py` → `data.json`, pak `vyuctovani_cz.py` / `vyuctovani_en.py`.
-   Podmínky Fabian: spoluúčast paušálně 10 000 Kč za každou PU (počet PU dle HAVEX protokolu), nadlimitní km 7 Kč bez DPH.
+   Podmínky Fabian: spoluúčast za každou PU = skutečná (orientační) cena opravy, max. 10 000 Kč (počet PU dle HAVEX protokolu), nadlimitní km 7 Kč bez DPH.
    Datum dokladu = datum HAVEX protokolu.
 5. **Faktury Fabianovi** – Vyfakturuj, přenesená daňová povinnost, CZK, popis CZ+EN „vyúčtování po vrácení vozidla“.
 6. **Ukončení pojistek** – Kooperativa (Gieselová) / Generali (Herrmann); pojišťovnu určit z výpisu Kooperativy (předpis pojistného, CSV) a vyúčtování flotily Generali.

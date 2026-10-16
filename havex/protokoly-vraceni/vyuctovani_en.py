@@ -15,7 +15,7 @@ registerFontFamily('DV', normal='DV', bold='DVB', italic='DV', boldItalic='DVB')
 
 DATUM = "11.10.2026"
 SPU_PCT, SPU_MIN, KM_RATE = 0.10, 10000, 7.0
-SPU_FLAT = 10000  # PU Fabian: paušálně 10 000 Kč za každou pojistnou událost
+SPU_FLAT = 10000  # PU Fabian: skutečná cena opravy, max. 10 000 Kč za každou pojistnou událost
 
 def fmt(x): return f"{x:,.2f}"
 from en_map import T, VUZ
@@ -75,17 +75,17 @@ def build(d, out, stamp):
     sumB = 0
     n = d['pu_count']; P = d['PU']
     if n:
-        pol = f"Deductible under the agreed terms: CZK {fmt(SPU_FLAT)} per insurance claim."
+        pol = f"Deductible under the agreed terms: actual repair cost per insurance claim, capped at CZK {fmt(SPU_FLAT)}."
         rows = [[Paragraph("<b>Insurance claim</b>", N), Paragraph("<b>Estimated cost</b>", R), Paragraph("<b>Deductible</b>", R)]]
         if n == len(P):
             for desc, c in P:
-                sumB += SPU_FLAT
-                rows.append([Paragraph(esc(nice(desc)), N), Paragraph(fmt(c), R), Paragraph(fmt(SPU_FLAT), R)])
+                sp = min(c, SPU_FLAT); sumB += sp
+                rows.append([Paragraph(esc(nice(desc)), N), Paragraph(fmt(c), R), Paragraph(fmt(sp), R)])
         else:
-            sumB = SPU_FLAT * n
+            sumB = min(sum(c for _, c in P), SPU_FLAT * n)
             for desc, c in P:
                 rows.append([Paragraph(esc(nice(desc)), N), Paragraph(fmt(c), R), Paragraph("", R)])
-            rows.append([Paragraph(f"Deductible for {n} insurance claim{'' if n == 1 else 's'} × CZK {fmt(SPU_FLAT)}", N), Paragraph("", R), Paragraph(fmt(sumB), R)])
+            rows.append([Paragraph(f"Deductible for {n} insurance claim{'' if n == 1 else 's'} (max. CZK {fmt(SPU_FLAT)} per claim)", N), Paragraph("", R), Paragraph(fmt(sumB), R)])
         rows.append([Paragraph(f"<b>Total deductible ({n} × claim)</b>", N), Paragraph("", R), Paragraph(f"<b>{fmt(sumB)}</b>", R)])
         LB = chr(ord('A') + len(letters))
         el += [Paragraph(f"{LB}. Damage handled as insurance claim – lessee's deductible", SEC),
