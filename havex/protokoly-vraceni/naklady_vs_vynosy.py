@@ -7,6 +7,7 @@ prot={r['rz']:r for r in json.load(open(base+'all.json'))}
 vyf=json.load(open(base+'vyf.json')); ren=json.load(open(base+'renteon.json'))
 con=json.load(open(base+'contracts.json'))
 ins=json.load(open(base+'insurance.json'))
+MK={k:v for k,_,v in json.load(open(base+'markup21.json'))} if __import__('os').path.exists(base+'markup21.json') else {}
 EXTRA={'8H84473':(5447.34,'prodloužení 25.09.–08.10. dofakturováno FA 20261914 (223,71 EUR × 24,35)')}
 D=lambda s: dt.datetime.strptime(s,'%d.%m.%Y').date()
 K1=('23.03.2026','22.09.2026'); K2=('31.03.2026','30.09.2026'); K3=('17.04.2026','16.10.2026')
@@ -35,6 +36,7 @@ for rz,p in sorted(prot.items(), key=lambda x:(x[0] not in vyf, x[0])):
     if fab:
         n=vyf[rz]['rent']; o=vyf[rz]['damage']; f=vyf[rz]['fines']
         if rz in EXTRA: n=round(n+EXTRA[rz][0],2); note.append(EXTRA[rz][1])
+        if rz in MK: o=round(o+MK[rz],2); note.append(f'přirážka 21 % na škody {MK[rz]:.2f} Kč dofakturována FA 20261915')
         src='Vyfakturuj'
     else:
         n=ren[rz]['rent']; o=round(ren[rz]['tot']-ren[rz]['rent'],2); f=None; src='Renteon'
@@ -103,7 +105,7 @@ notes=['Metodika:',
  '• Předčasné vrácení nesnižuje nájem (smlouva na pevnou dobu).',
  '• Škody/km HAVEX = celková částka z protokolu o vrácení (Beyr).',
  '• Pojištění HAV (POV je ve splátce HAVEX) = měsíční předpis × 12/365 × dny od počátku pojištění do vrácení. Fabian vozy: Kooperativa IS 6667100466 (předpis 08–09/2026), RX vozy: Generali RS 4785635732 (vyúčtování 07/2026). U 8H84631/666/669/696 pojistka nenalezena.',
- '• Výnosy Fabian = nájem fakturovaný ve Vyfakturuj (EUR × kurz faktury) + naše vyúčtování škod po vrácení; pokuty jsou průtokové, uvedeny jen pro info.',
+ '• Výnosy Fabian = nájem fakturovaný ve Vyfakturuj (EUR × kurz faktury) + naše vyúčtování škod po vrácení (vč. přirážky 21 % na škody, FA 20261915); pokuty jsou průtokové, uvedeny jen pro info.',
  '• Výnosy RX Auto = Renteon, přehled příjmů dle vozu (smlouvy), nájem a celkem bez DPH.',
  '• Sazby prodloužení 2600687/689/691/692 převzaty z původních smluv – ověřit v podepsaných PK (DigiSign 15.10.2026).']
 for i,t in enumerate(notes,9): s[f'A{i}']=t; s[f'A{i}'].font=B if i==9 else F
