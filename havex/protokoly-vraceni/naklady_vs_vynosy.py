@@ -6,6 +6,8 @@ base=(sys.argv[2] if len(sys.argv)>2 else 'data/')
 prot={r['rz']:r for r in json.load(open(base+'all.json'))}
 vyf=json.load(open(base+'vyf.json')); ren=json.load(open(base+'renteon.json'))
 con=json.load(open(base+'contracts.json'))
+ins=json.load(open(base+'insurance.json'))
+EXTRA={'8H84473':(5447.34,'prodloužení 25.09.–08.10. dofakturováno FA 20261914 (223,71 EUR × 24,35)')}
 D=lambda s: dt.datetime.strptime(s,'%d.%m.%Y').date()
 K1=('23.03.2026','22.09.2026'); K2=('31.03.2026','30.09.2026'); K3=('17.04.2026','16.10.2026')
 rate={}
@@ -32,15 +34,18 @@ for rz,p in sorted(prot.items(), key=lambda x:(x[0] not in vyf, x[0])):
     if rz=='8H85167': note.append('splátkový kalendář 2500652 celkem 105 252 Kč bez DPH; vůz bez výnosu (soukromé užití)')
     if fab:
         n=vyf[rz]['rent']; o=vyf[rz]['damage']; f=vyf[rz]['fines']
-        if prol: note.append('Fabianovi fakturováno jen 6 měsíců')
+        if rz in EXTRA: n=round(n+EXTRA[rz][0],2); note.append(EXTRA[rz][1])
         src='Vyfakturuj'
     else:
         n=ren[rz]['rent']; o=round(ren[rz]['tot']-ren[rz]['rent'],2); f=None; src='Renteon'
+    I=ins.get(rz)
+    if not I: note.append('HAV pojištění nenalezeno (Kooperativa 6667100466 ani Generali 4785635732) – ověřit')
     rows.append([rz,p['vuz'].strip(),'Fabian' if fab else 'RX Auto',con[rz],D(od),D(do),ret,r,months,prol,
-                 None,p['havex_total'],None,n,o,None,None,None,f,src,'; '.join(note)])
+                 None,p['havex_total'],None,n,o,None,None,None,f,src,'; '.join(note),
+                 I['mes'] if I else 0, D(I['od']) if I and I['od'] else D(od), None, I['poj'] if I else '–'])
 wb=Workbook(); ws=wb.active; ws.title='Vozidla'
 hdr=['RZ','Vůz','Provoz','Smlouva HAVEX','Začátek','Konec smlouvy','Vráceno','Měs. splátka HAVEX','Měsíců','Prodloužení (dny)',
-     'Nájem HAVEX celkem','Škody/km dle protokolu HAVEX','NÁKLADY CELKEM','Výnos – nájem','Výnos – ostatní (škody / doplňky)','VÝNOSY CELKEM','ZISK','Marže','Pokuty přefakturované (info)','Zdroj výnosů','Poznámka']
+     'Nájem HAVEX celkem','Škody/km dle protokolu HAVEX','NÁKLADY CELKEM','Výnos – nájem','Výnos – ostatní (škody / doplňky)','VÝNOSY CELKEM','ZISK','Marže','Pokuty přefakturované (info)','Zdroj výnosů','Poznámka','Pojistné HAV měsíčně','Pojištěno od','Pojištění celkem (do vrácení)','Pojistná smlouva']
 F=Font(name='Arial',size=10); B=Font(name='Arial',size=10,bold=True); BL=Font(name='Arial',size=10,color='0000FF')
 thin=Side(style='thin',color='BBBBBB'); bd=Border(top=thin,bottom=thin,left=thin,right=thin)
 ws.append(['Náklady HAVEX vs. výnosy – vozidla z protokolů o vrácení (Beyr), stav k 16.10.2026, vše v Kč bez DPH']); ws['A1'].font=Font(name='Arial',size=12,bold=True)
@@ -52,54 +57,56 @@ first=4
 for i,row in enumerate(rows):
     R=first+i; ws.append(row)
     ws[f'K{R}']=f'=ROUND(H{R}*I{R}+H{R}/30*J{R},2)'
-    ws[f'M{R}']=f'=K{R}+L{R}'; ws[f'P{R}']=f'=N{R}+O{R}'; ws[f'Q{R}']=f'=P{R}-M{R}'
+    ws[f'X{R}']=f'=ROUND(V{R}*12/365*(G{R}-W{R}+1),0)'
+    ws[f'M{R}']=f'=K{R}+L{R}+X{R}'; ws[f'P{R}']=f'=N{R}+O{R}'; ws[f'Q{R}']=f'=P{R}-M{R}'
     ws[f'R{R}']=f'=IF(P{R}=0,"–",Q{R}/P{R})'
     for c in range(1,len(hdr)+1):
         x=ws.cell(R,c); x.font=F; x.border=bd
-    for c in 'HIJLNOS': ws[f'{c}{R}'].font=BL
-    for c in 'EFG': ws[f'{c}{R}'].number_format='DD.MM.YYYY'
-    for c in 'HKLMNOPQS': ws[f'{c}{R}'].number_format='#,##0;[Red]-#,##0'
+    for c in 'HIJLNOSVW': ws[f'{c}{R}'].font=BL
+    for c in 'EFGW': ws[f'{c}{R}'].number_format='DD.MM.YYYY'
+    for c in 'HKLMNOPQSVX': ws[f'{c}{R}'].number_format='#,##0;[Red]-#,##0'
     ws[f'R{R}'].number_format='0.0%;[Red]-0.0%'
     for c in 'MPQ': ws[f'{c}{R}'].font=B
 last=first+len(rows)-1; T=last+1
 ws[f'A{T}']='CELKEM'
-for c in 'KLMNOPQS': ws[f'{c}{T}']=f'=SUM({c}{first}:{c}{last})'; ws[f'{c}{T}'].number_format='#,##0;[Red]-#,##0'
+for c in 'KLMNOPQSX': ws[f'{c}{T}']=f'=SUM({c}{first}:{c}{last})'; ws[f'{c}{T}'].number_format='#,##0;[Red]-#,##0'
 ws[f'R{T}']=f'=Q{T}/P{T}'; ws[f'R{T}'].number_format='0.0%;[Red]-0.0%'
 for c in range(1,len(hdr)+1):
     x=ws.cell(T,c); x.font=B; x.fill=PatternFill('solid',fgColor='D9E1F2'); x.border=bd
 from openpyxl.formatting.rule import CellIsRule
 ws.conditional_formatting.add(f'Q{first}:Q{last}',CellIsRule(operator='lessThan',formula=['0'],fill=PatternFill('solid',fgColor='F8CBAD')))
-W=[10,34,9,12,11,11,11,11,7,10,13,13,14,13,14,14,13,8,12,11,70]
+W=[10,34,9,12,11,11,11,11,7,10,13,13,14,13,14,14,13,8,12,11,70,11,11,13,24]
 for i,w in enumerate(W,1): ws.column_dimensions[get_column_letter(i)].width=w
-ws.freeze_panes='B4'; ws.auto_filter.ref=f'A3:U{last}'
+ws.freeze_panes='B4'; ws.auto_filter.ref=f'A3:Y{last}'
 # souhrn
 s=wb.create_sheet('Souhrn')
 s.append(['Souhrn podle provozu (Kč bez DPH)']); s['A1'].font=Font(name='Arial',size=12,bold=True); s.append([])
-h2=['Provoz','Počet vozů','Nájem HAVEX','Škody HAVEX','Náklady celkem','Výnos nájem','Výnos ostatní','Výnosy celkem','Zisk','Marže','Ztrátové vozy']
+h2=['Provoz','Počet vozů','Nájem HAVEX','Škody HAVEX','Pojištění HAV','Náklady celkem','Výnos nájem','Výnos ostatní','Výnosy celkem','Zisk','Marže','Ztrátové vozy']
 s.append(h2)
 for c in range(1,len(h2)+1):
     x=s.cell(3,c); x.font=Font(name='Arial',size=10,bold=True,color='FFFFFF'); x.fill=PatternFill('solid',fgColor='1F3864'); x.alignment=Alignment(wrap_text=True,horizontal='center')
 rng=lambda c: f"Vozidla!${c}${first}:${c}${last}"
 for j,g in enumerate(['Fabian','RX Auto'],4):
     s[f'A{j}']=g; s[f'B{j}']=f'=COUNTIF({rng("C")},A{j})'
-    for col,src in zip('CDEFGHI','KLMNOPQ'): s[f'{col}{j}']=f'=SUMIF({rng("C")},$A{j},{rng(src)})'
-    s[f'J{j}']=f'=IF(H{j}=0,0,I{j}/H{j})'; s[f'K{j}']=f'=COUNTIFS({rng("C")},A{j},{rng("Q")},"<0")'
+    for col,src in zip('CDEFGHIJ','KLXMNOPQ'): s[f'{col}{j}']=f'=SUMIF({rng("C")},$A{j},{rng(src)})'
+    s[f'K{j}']=f'=IF(I{j}=0,0,J{j}/I{j})'; s[f'L{j}']=f'=COUNTIFS({rng("C")},A{j},{rng("Q")},"<0")'
 s['A6']='CELKEM'
-for col in 'BCDEFGHIK': s[f'{col}6']=f'=SUM({col}4:{col}5)'
-s['J6']='=IF(H6=0,0,I6/H6)'
+for col in 'BCDEFGHIJL': s[f'{col}6']=f'=SUM({col}4:{col}5)'
+s['K6']='=IF(I6=0,0,J6/I6)'
 for R in range(4,7):
-    for c in range(1,12):
+    for c in range(1,13):
         x=s.cell(R,c); x.font=B if R==6 else F; x.border=bd
-        if c in (3,4,5,6,7,8,9): x.number_format='#,##0;[Red]-#,##0'
-    s[f'J{R}'].number_format='0.0%;[Red]-0.0%'
+        if c in (3,4,5,6,7,8,9,10): x.number_format='#,##0;[Red]-#,##0'
+    s[f'K{R}'].number_format='0.0%;[Red]-0.0%'
 notes=['Metodika:',
  '• Nájem HAVEX = měsíční splátka bez DPH × počet měsíců smlouvy (6, u 8H85167 12 dle platebního kalendáře) + u prodloužení splátka/30 × dny po konci smlouvy do vrácení.',
  '• Předčasné vrácení nesnižuje nájem (smlouva na pevnou dobu).',
  '• Škody/km HAVEX = celková částka z protokolu o vrácení (Beyr).',
+ '• Pojištění HAV (POV je ve splátce HAVEX) = měsíční předpis × 12/365 × dny od počátku pojištění do vrácení. Fabian vozy: Kooperativa IS 6667100466 (předpis 08–09/2026), RX vozy: Generali RS 4785635732 (vyúčtování 07/2026). U 8H84631/666/669/696 pojistka nenalezena.',
  '• Výnosy Fabian = nájem fakturovaný ve Vyfakturuj (EUR × kurz faktury) + naše vyúčtování škod po vrácení; pokuty jsou průtokové, uvedeny jen pro info.',
  '• Výnosy RX Auto = Renteon, přehled příjmů dle vozu (smlouvy), nájem a celkem bez DPH.',
  '• Sazby prodloužení 2600687/689/691/692 převzaty z původních smluv – ověřit v podepsaných PK (DigiSign 15.10.2026).']
 for i,t in enumerate(notes,9): s[f'A{i}']=t; s[f'A{i}'].font=B if i==9 else F
-for i,w in enumerate([12,10,13,13,14,13,13,14,13,9,10],1): s.column_dimensions[get_column_letter(i)].width=w
+for i,w in enumerate([12,10,13,13,13,14,13,13,14,13,9,10],1): s.column_dimensions[get_column_letter(i)].width=w
 wb.move_sheet('Souhrn',-1)
 wb.save(sys.argv[1])

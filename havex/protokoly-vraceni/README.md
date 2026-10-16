@@ -31,5 +31,6 @@ python3 vyuctovani_en.py data/data.json output/ data/razitko_rx.pdf
 Protokoly, razítko a výstupy patří do `data/` a `output/` (necommitují se).
 
 ## Náklady vs. výnosy po vrácení
-`naklady_vs_vynosy.py output/vysledek.xlsx data/` – vstupy v `data/`: `all.json` (parse.py ze všech protokolů), `vyf.json` (Fabian: nájem CZK, škody, pokuty z Vyfakturuj), `renteon.json` (RX: RentIncome/TotalIncome bez DPH z `/cs/api/report/getIncomeAndExpenseComparison`, Type car, IncomeType 2), `contracts.json` (RZ → smlouva HAVEX).
-Nájem HAVEX = splátka × měsíce smlouvy (+ splátka/30 × dny prodloužení); sazby z e-mailů „Přehled zápůjček“ / platebních kalendářů. Předčasné vrácení nájem nesnižuje.
+`naklady_vs_vynosy.py output/vysledek.xlsx data/` – vstupy v `data/`: `all.json` (parse.py ze všech protokolů), `vyf.json` (Fabian: nájem CZK, škody, pokuty z Vyfakturuj), `renteon.json` (RX: RentIncome/TotalIncome bez DPH z `/cs/api/report/getIncomeAndExpenseComparison`, Type car, IncomeType 2), `contracts.json` (RZ → smlouva HAVEX), `insurance.json` (RZ → měsíční pojistné HAV, počátek, smlouva; Kooperativa = DETAIL_PREDPIS xlsx z e-mailu „Předpis pojistného“, Generali = report vyúčtování RS 4785635732).
+Nájem HAVEX = splátka × měsíce smlouvy (+ splátka/30 × dny prodloužení); sazby z e-mailů „Přehled zápůjček“ / platebních kalendářů. Předčasné vrácení nájem nesnižuje. Pojištění HAV platí RX (POV je ve splátce HAVEX) – počítá se předpis × 12/365 × dny do vrácení.
+Fabian se fakturuje měsíčně 25.–24.; když vůz vrátí po konci posledního fakturovaného období, dofakturovat dny do vrácení (sazba/30 × dny).
