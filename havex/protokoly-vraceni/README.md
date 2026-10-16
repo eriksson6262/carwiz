@@ -29,3 +29,7 @@ python3 vyuctovani_cz.py data/data.json output/ data/razitko_rx.pdf
 python3 vyuctovani_en.py data/data.json output/ data/razitko_rx.pdf
 ```
 Protokoly, razítko a výstupy patří do `data/` a `output/` (necommitují se).
+
+## Náklady vs. výnosy po vrácení
+`naklady_vs_vynosy.py output/vysledek.xlsx data/` – vstupy v `data/`: `all.json` (parse.py ze všech protokolů), `vyf.json` (Fabian: nájem CZK, škody, pokuty z Vyfakturuj), `renteon.json` (RX: RentIncome/TotalIncome bez DPH z `/cs/api/report/getIncomeAndExpenseComparison`, Type car, IncomeType 2), `contracts.json` (RZ → smlouva HAVEX).
+Nájem HAVEX = splátka × měsíce smlouvy (+ splátka/30 × dny prodloužení); sazby z e-mailů „Přehled zápůjček“ / platebních kalendářů. Předčasné vrácení nájem nesnižuje.
