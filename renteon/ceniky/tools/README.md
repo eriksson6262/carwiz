@@ -26,3 +26,6 @@ IMPORT obsahuje řádky od TODAY (jako export s "Datum od"), hlavička z posledn
   SK CW-PP 351 + WEB 585 + Aurum 361/778/822 (POST api/pricelist/importFromExcelCheckPrices → importFromExcel, ceny bez DPH).
 - 20.10.2026 (Erik, noc): výpůjčka na 1 den (pásmo 1-1) nikdy pod 35 €/den bez DPH ani po slevě z pravidel obsazenosti (build.min_1day; CZ max sleva −30 % → ceník ≥ 50 €, SK −60 % → ≥ 87,50 €).
   Příčina chyby: v Praze se pásmo 1-1 drželo jen ≥ 2-3, takže po minimech spadlo na 7,15 €.
+- 20.10.2026 (Erik, noc): cena podle délky se řídí konkurencí – build.length_curve: tvar €/den (2–3/4/7/10/14 dní) = medián křivky cílů z konkurence za období
+  (cíl/den ÷ cíl/den 14 dní, max 2×, neroste s délkou); nejlevnější pásmo zůstává, kratší se zvednou. Dřív minimum srovnalo všechna pásma na jednu cenu.
+  Kde je i konkurence plochá (Ostrava – Budget má stejnou cenu/den na 7–14 dní, na 3–4 dny nic), zůstává cena plochá.

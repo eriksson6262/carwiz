@@ -302,6 +302,74 @@ def derive_from(rows, changes, TG, SRC, MULT):
     return out
 
 
+# Erik 20.10.2026: cena se má podle délky pronájmu řídit konkurencí (2–3, 4, 7, 10, 14 dní). Když cíl vyjde pod minimum,
+# minimum dřív srovnalo všechna pásma na jednu cenu. Nově: tvar křivky €/den podle délky = křivka cílů z konkurence
+# (cíl/den pro danou délku ÷ cíl/den pro 14 dní, medián za období), nejlevnější pásmo zůstává, kratší se zvednou.
+CURVE_DURS = [('2-3', 3), ('4-6', 4), ('7-7', 7), ('8-13', 10), ('14-14', 14), ('15-20', 14)]
+CURVE_MAX = 2.0
+
+
+def _shapes():
+    per = defaultdict(dict)   # (L,k,p) -> {du: t/den}
+    for s in S:
+        if s.get('t') and s['du'] in (3, 4, 7, 10, 14):
+            per[(s['L'], s['k'], s['p'])][s['du']] = s['t'] / s['du']
+    out = defaultdict(list)   # (L,k) -> [(date, {band: shape})]
+    for (L, k, p), v in per.items():
+        if 14 not in v or len(v) < 3: continue
+        pd = ISO(p)
+        if dt.date(2026, 12, 20) <= pd <= dt.date(2026, 12, 29): continue
+        run = v[14]; vals = {}
+        for du in (14, 10, 7, 4, 3):
+            if du in v: run = max(run, v[du])
+            vals[du] = run
+        out[(L, k)].append((pd, {band: min(CURVE_MAX, vals[du] / v[14]) for band, du in CURVE_DURS}))
+    return out
+
+
+SHAPES = _shapes()
+
+
+def shape_for(L, k, a, b):
+    for key in ((L, k), ('PRG', k), (L, 'C'), ('PRG', 'C')):
+        lst = SHAPES.get(key)
+        if not lst: continue
+        inp = [sh for pd, sh in lst if a <= pd <= b] or [sh for pd, sh in lst]
+        return {band: st.median(sh[band] for sh in inp) for band, _ in CURVE_DURS}
+    return None
+
+
+def length_curve(rows, changes, country):
+    from reprice import TODAY
+    oid2L = {v[2]: L for L, v in LOC.items() if v[0] == country}
+    order = [b for b, _ in CURVE_DURS]
+    out = []
+    for r in rows:
+        L = oid2L.get(r['Oid']); k = SIPP2K.get(r['S'])
+        a, b = D(r['F']), D(r['T'])
+        if not L or not k or b < TODAY or (a <= dt.date(2026, 12, 27) and b >= dt.date(2026, 12, 24)) \
+                or any(r['D'].get(x) is None for x in order):
+            out.append(r); continue
+        sh = shape_for(L, k, max(a, TODAY), b)
+        if not sh:
+            out.append(r); continue
+        d = dict(r['D']); base = min(d[x] for x in order)
+        for x in order:
+            d[x] = round(max(d[x], base * sh[x]), 2)
+        for i in range(1, len(order)):      # €/den s délkou neroste
+            d[order[i]] = min(d[order[i]], d[order[i - 1]])
+        if all(abs(d[x] - r['D'][x]) < 0.005 for x in order):
+            out.append(r); continue
+        if r['D'].get('21-') is not None and abs(r['D']['21-'] - 3 * r['D']['7-7']) < 0.05:
+            d['21-'] = round(3 * d['7-7'], 2)
+        d['1-1'] = max(d['1-1'], d['2-3'])
+        if a < TODAY:
+            out.append(dict(r, T=fmt(TODAY - dt.timedelta(days=1)))); a = TODAY
+        out.append(dict(r, F=fmt(a), D=d, new=True))
+        changes.append(dict(L=L, S=r['S'], F=fmt(a), T=r['T'], old=r['D'], new=d, fac={'x': 'křivka délky dle konkurence'}))
+    return out
+
+
 # Erik 20.10.2026: žádný vůz pod 35 € za 1 den (pásmo 1-1, €/den bez DPH, i po slevě z pravidel obsazenosti)
 MIN_1DAY = 35.0
 
@@ -342,6 +410,7 @@ if __name__ == '__main__':
     res = {}
     for c in ('CZ', 'SK'):
         rows, ch, tabs = build(c)
+        rows = length_curve(rows, ch, c)
         if c == 'CZ':
             rows = pgar_from_igar(rows, ch)
         rows = mini_from_edmr(rows, ch)
