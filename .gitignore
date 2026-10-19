@@ -26,3 +26,4 @@ __pycache__/
 *.pyc
 node_modules/
 .venv/
+**/out/
