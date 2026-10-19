@@ -52,14 +52,15 @@ def factor_table(L):
         pl = sorted({(max(D(r['F']), TODAY), min(D(r['T']), WIN_END)) for r in PL
                      if r['Oid'] == oid and r['S'] in CLASSES[k] and D(r['T']) >= TODAY and D(r['F']) <= WIN_END})
         for (a, b) in pl:
-            if k in NEW_K and a <= dt.date(2026, 12, 29) and b >= dt.date(2026, 12, 24):
+            # Erik 20.10.2026: blokují se jen vyzvednutí 24.–27.12. (pravidla +500 % CZ / +300 % SK), od 28.12. normálně konkurenceschopné
+            if k in NEW_K and a <= dt.date(2026, 12, 27) and b >= dt.date(2026, 12, 24):
                 for band in BAND_DURS:
                     tab[(k, (a, b), band)] = 1.0; info[(k, (a, b), band)] = 'Vánoce beze změny'
                 continue
             for band in BAND_DURS:
                 f, n = get(a, b, band)
                 note = f'{n} vz.'
-                if a <= dt.date(2026, 12, 29) and b >= dt.date(2026, 12, 25) and a >= dt.date(2026, 12, 25):
+                if a <= dt.date(2026, 12, 27) and b >= dt.date(2026, 12, 25) and a >= dt.date(2026, 12, 25):
                     f, note = 1.0, 'Vánoce beze změny'
                 elif a >= dt.date(2026, 12, 30) and b <= dt.date(2027, 1, 7):
                     # P9/P10 = P11 (first period starting 08.01.)
@@ -211,7 +212,7 @@ def build(country):
         new['1-1'] = 0
         new = enforce({x: new[x] for x in BANDS})
         new['1-1'] = round(max(new['2-3'], new['2-3'] * ratio11), 2)
-        xmas = a >= dt.date(2026, 12, 25) and b <= dt.date(2026, 12, 29)
+        xmas = a >= dt.date(2026, 12, 25) and b <= dt.date(2026, 12, 27)
         if xmas:
             new = dict(old)  # P8 unchanged
             if country == 'SK':
@@ -248,11 +249,36 @@ PGAR_OVER_IGAR = 1.10   # Erik 12.10.2026: PGAR na úrovni Karoqu (IGAR), lehce 
 
 DERIVED = [('PGAR', 'IGAR', PGAR_OVER_IGAR),   # PGAR na úrovni Karoqu, lehce dražší
            ('SVMR', 'SVAR', 0.95)]            # Erik 12.10.2026: SVMR (manuál) lehce pod SVAR
+# Erik 20.10.2026: MBMR/MDMR/MTMR = kategorie mini -> cena jako EDMR (economy manuál) na stejné pobočce, CZ i SK
+DERIVED_MINI = [('MBMR', 'EDMR', 1.0), ('MDMR', 'EDMR', 1.0), ('MTMR', 'EDMR', 1.0)]
 
 
 def pgar_from_igar(rows, changes):
     for tgt, src, mult in DERIVED:
         rows = derive_from(rows, changes, tgt, src, mult)
+    return rows
+
+
+def mini_from_edmr(rows, changes):
+    """mini (MBMR/MDMR/MTMR) = EDMR na všech pobočkách (Praha, Ostrava, Bratislava), budoucí řádky."""
+    from reprice import TODAY
+    for TG, SRC, MULT in DERIVED_MINI:
+        if not any(r['S'] == TG for r in rows):
+            continue
+        offs = {r['Oid'] for r in rows if r['S'] == TG}
+        out = []
+        for r in rows:
+            if r['S'] != TG or D(r['T']) < TODAY or not any(x['S'] == SRC and x['Oid'] == r['Oid'] for x in rows):
+                out.append(r); continue
+            if D(r['F']) < TODAY:
+                out.append(dict(r, T=fmt(TODAY - dt.timedelta(days=1))))
+        for r in rows:
+            if r['S'] != SRC or r['Oid'] not in offs or D(r['T']) < TODAY: continue
+            a = max(D(r['F']), TODAY)
+            d = {b: (round(v * MULT, 2) if v is not None else None) for b, v in r['D'].items()}
+            out.append(dict(r, S=TG, F=fmt(a), D=d, new=True, k=TG))
+            changes.append(dict(L=r.get('L'), S=TG, F=fmt(a), T=r['T'], old={}, new=d, fac={'x': f'{SRC} × {MULT} (mini)'}))
+        rows = out
     return rows
 
 
@@ -297,6 +323,7 @@ if __name__ == '__main__':
         rows, ch, tabs = build(c)
         if c == 'CZ':
             rows = pgar_from_igar(rows, ch)
+        rows = mini_from_edmr(rows, ch)
         iss = check_continuity(rows)
         print(c, 'rows', len(rows), 'changed', len(ch), 'continuity issues', len(iss), iss[:10])
         res[c] = dict(rows=rows, changes=ch, tabs=tabs, issues=iss)
