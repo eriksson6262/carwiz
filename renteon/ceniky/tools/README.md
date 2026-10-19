@@ -24,3 +24,5 @@ IMPORT obsahuje řádky od TODAY (jako export s "Datum od"), hlavička z posledn
 - 20.10.2026 (Erik): Vánoce – blokují se jen vyzvednutí 24.–27.12. (pravidla +500 % CZ / +300 % SK), od 28.12. normálně konkurenceschopné (řádky 28.–29.12. už jsou v Renteonu oddělené).
   Mini MBMR/MDMR/MTMR = cena EDMR na stejné pobočce (build.mini_from_edmr, CZ i SK). Import do Renteonu: CZ CW-PP 1051 + CW Web 1850 + Aurum 1768/1769/1790/1810;
   SK CW-PP 351 + WEB 585 + Aurum 361/778/822 (POST api/pricelist/importFromExcelCheckPrices → importFromExcel, ceny bez DPH).
+- 20.10.2026 (Erik, noc): výpůjčka na 1 den (pásmo 1-1) nikdy pod 35 €/den bez DPH ani po slevě z pravidel obsazenosti (build.min_1day; CZ max sleva −30 % → ceník ≥ 50 €, SK −60 % → ≥ 87,50 €).
+  Příčina chyby: v Praze se pásmo 1-1 drželo jen ≥ 2-3, takže po minimech spadlo na 7,15 €.

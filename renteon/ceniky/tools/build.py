@@ -302,6 +302,27 @@ def derive_from(rows, changes, TG, SRC, MULT):
     return out
 
 
+# Erik 20.10.2026: žádný vůz pod 35 € za 1 den (pásmo 1-1, €/den bez DPH, i po slevě z pravidel obsazenosti)
+MIN_1DAY = 35.0
+
+
+def min_1day(rows, changes, country):
+    from reprice import TODAY
+    out = []
+    for r in rows:
+        fl = math.ceil(MIN_1DAY / max_discount(country, r['S']) * 100) / 100
+        v = r['D'].get('1-1')
+        if D(r['T']) < TODAY or v is None or v >= fl:
+            out.append(r); continue
+        a = D(r['F'])
+        if a < TODAY:
+            out.append(dict(r, T=fmt(TODAY - dt.timedelta(days=1)))); a = TODAY
+        d = dict(r['D']); d['1-1'] = fl
+        out.append(dict(r, F=fmt(a), D=d, new=True))
+        changes.append(dict(L=r.get('L'), S=r['S'], F=fmt(a), T=r['T'], old={'1-1': v}, new={'1-1': fl}, fac={'x': 'min 1 den 35 €'}))
+    return out
+
+
 def check_continuity(rows):
     issues = []
     grp = defaultdict(list)
@@ -324,6 +345,7 @@ if __name__ == '__main__':
         if c == 'CZ':
             rows = pgar_from_igar(rows, ch)
         rows = mini_from_edmr(rows, ch)
+        rows = min_1day(rows, ch, c)
         iss = check_continuity(rows)
         print(c, 'rows', len(rows), 'changed', len(ch), 'continuity issues', len(iss), iss[:10])
         res[c] = dict(rows=rows, changes=ch, tabs=tabs, issues=iss)
