@@ -42,7 +42,7 @@ def rule_mult(country, u):
 
 
 FALLBACK = False
-PRG_MODE = os.environ.get('PRG_MODE', 'excl')   # 'excl' (od 19.10.2026) | 'rank3' (dřívější cíl ≈3. místo)
+PRG_MODE = os.environ.get('PRG_MODE', 'rank3')   # Erik 20.10.2026: max. rezervací, ale ne úplně nejlevnější – Praha ideálně 3. na trhu (OSR a BTS 1.) | 'excl' = 19.10. (levnější jen RENT PLUS + NUCarrentals)
 PRG_ALLOWED_CHEAPER = {'RENT PLUS', 'NUCARRENTALS'}
 PRG_UNDER = float(os.environ.get('PRG_UNDER', '0.97'))
 OSR_MODE = os.environ.get('OSR_MODE', 'target')   # Erik 19.10.2026 (odpoledne): Ostrava nejlevnější všude, ale ne o moc; 'flat' = plošně OSR_MAX_F

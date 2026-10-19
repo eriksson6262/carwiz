@@ -29,3 +29,5 @@ IMPORT obsahuje řádky od TODAY (jako export s "Datum od"), hlavička z posledn
 - 20.10.2026 (Erik, noc): cena podle délky se řídí konkurencí – build.length_curve: tvar €/den (2–3/4/7/10/14 dní) = medián křivky cílů z konkurence za období
   (cíl/den ÷ cíl/den 14 dní, max 2×, neroste s délkou); nejlevnější pásmo zůstává, kratší se zvednou. Dřív minimum srovnalo všechna pásma na jednu cenu.
   Kde je i konkurence plochá (Ostrava – Budget má stejnou cenu/den na 7–14 dní, na 3–4 dny nic), zůstává cena plochá.
+- 20.10.2026 (Erik): cíl = co nejvíc rezervací, ale ne úplně nejlevnější. Praha ideálně 3. na trhu (PRG_MODE=rank3: těsně pod 3. nejlevnějším
+  konkurentem stejné velikosti, na každém kanálu); Ostrava a Bratislava 1. (OSR 3 % pod nejlevnějším, BTS 5 % pod nejlevnějším).
