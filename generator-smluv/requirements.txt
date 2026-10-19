@@ -1,0 +1,5 @@
+reportlab
+Pillow
+lxml
+anthropic
+requests

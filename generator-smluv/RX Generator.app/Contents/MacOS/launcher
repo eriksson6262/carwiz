@@ -1,0 +1,18 @@
+#!/bin/bash
+# RX Generátor — zástupce do Docku.
+# Běžící server jen otevře v prohlížeči; vypnutý server spustí přes Terminál
+# (macOS nepouští aplikace z Docku k souborům na Ploše — Terminál to povolené má).
+DIR="$HOME/Desktop/generator_smluv"
+PORT=8765
+
+if [ ! -f "$DIR/server.py" ]; then
+  /usr/bin/osascript -e 'display dialog "Složka generator_smluv nebyla nalezena na Ploše." buttons {"OK"} with icon stop with title "RX Generátor"'
+  exit 1
+fi
+
+if /usr/sbin/lsof -i :$PORT -t >/dev/null 2>&1; then
+  /usr/bin/open "http://localhost:$PORT"
+  exit 0
+fi
+
+/usr/bin/open -a Terminal "$DIR/Spustit_generator.command"

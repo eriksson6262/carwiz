@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RX Auto — Generátor smluv</title>
+<style>
+  
+  :root{
+    --black:#080807;--white:#f4f1eb;
+    --red:#c0392b;--red-light:#e74c3c;
+    --green:#1a6b3c;--green-light:#27ae60;
+    --gold:#c9a84c;--gold-light:#e8c96a;--gold-dim:#7a6328;
+    --grey:#7a736a;--border:rgba(201,168,76,0.22);--card-bg:rgba(255,255,255,0.025);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:var(--black);color:var(--white);min-height:100vh;
+    background-image:radial-gradient(ellipse 90% 60% at 50% -10%,rgba(201,168,76,0.1) 0%,transparent 55%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,0.012) 0,rgba(255,255,255,0.012) 1px,transparent 1px,transparent 72px)}
+
+  /* HEADER */
+  header{display:flex;align-items:center;justify-content:space-between;padding:22px 48px;border-bottom:1px solid var(--border);position:relative}
+  header::after{content:'';position:absolute;bottom:0;left:48px;right:48px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.4),transparent)}
+  .logo{display:flex;align-items:center;gap:16px}
+  .logo-svg{width:44px;height:44px;flex-shrink:0}
+  .logo-text{display:flex;flex-direction:column;line-height:1}
+  .logo-main{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:22px;font-weight:600;letter-spacing:.05em;color:var(--white)}
+  .logo-main span{color:var(--gold)}
+  .logo-sub{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--grey);margin-top:3px}
+  .status-badge{display:flex;align-items:center;gap:8px;background:rgba(26,107,60,0.12);border:1px solid rgba(39,174,96,0.25);border-radius:100px;padding:7px 18px;font-size:12px;color:var(--green-light);font-weight:500;letter-spacing:.03em}
+  .status-dot{width:6px;height:6px;background:var(--green-light);border-radius:50%;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  main{max-width:880px;margin:0 auto;padding:52px 24px}
+
+  /* HERO */
+  .hero{margin-bottom:44px}
+  .hero-title{font-size:clamp(26px,3.2vw,34px);line-height:1.2;margin-bottom:8px;font-weight:300;letter-spacing:-0.01em}
+  .hero-title b{font-weight:600}
+  .hero-desc{color:var(--grey);font-size:14px;font-weight:300;line-height:1.7;max-width:520px}
+
+  /* STEPPER */
+  .stepper{display:flex;align-items:center;margin-bottom:36px}
+  .step-item{display:flex;align-items:center;gap:10px;flex:1}
+  .step-item:last-child{flex:0}
+  .step-circle{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;border:1.5px solid var(--border);color:var(--grey);transition:all .3s}
+  .step-circle.active{border-color:var(--gold);background:rgba(201,168,76,0.1);color:var(--gold)}
+  .step-circle.done{border-color:var(--green-light);background:rgba(39,174,96,0.12);color:var(--green-light)}
+  .step-label{font-size:12px;font-weight:500;color:var(--grey);transition:color .3s;white-space:nowrap;letter-spacing:.02em}
+  .step-label.active{color:var(--white)}
+  .step-label.done{color:var(--green-light)}
+  .step-line{flex:1;height:1px;background:var(--border);margin:0 10px;transition:background .3s}
+  .step-line.done{background:rgba(39,174,96,0.35)}
+
+  /* UPLOAD */
+  .section-label{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+  .smart-upload-zone{border:2px dashed rgba(201,168,76,0.45);border-radius:16px;padding:36px 24px;text-align:center;cursor:pointer;transition:all .3s;background:linear-gradient(135deg,rgba(201,168,76,0.06),rgba(201,168,76,0.02));position:relative;margin-bottom:8px}
+  .smart-upload-zone:hover{border-color:rgba(201,168,76,0.7);background:rgba(201,168,76,0.08);transform:translateY(-1px)}
+  .smart-upload-zone.processing{border-color:rgba(201,168,76,0.8);animation:smartPulse 1.5s infinite}
+  @keyframes smartPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.25)}50%{box-shadow:0 0 0 14px rgba(201,168,76,0)}}
+  .smart-upload-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+  @media(max-width:600px){.upload-grid{grid-template-columns:1fr}}
+  .upload-card{border:1.5px dashed var(--border);border-radius:14px;padding:28px 22px;text-align:center;cursor:pointer;transition:all .3s;background:var(--card-bg);position:relative;overflow:hidden}
+  .upload-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 35% at 50% 0%,rgba(201,168,76,0.04),transparent);pointer-events:none}
+  .upload-card:hover{border-color:rgba(201,168,76,0.45);transform:translateY(-2px)}
+  .upload-card.ready{border-color:rgba(39,174,96,0.45);background:rgba(39,174,96,0.03)}
+  .upload-card input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .card-badge{display:inline-flex;align-items:center;gap:5px;border-radius:100px;padding:3px 11px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;border:1px solid}
+  .card-badge.rp-badge{background:rgba(201,168,76,0.08);border-color:rgba(201,168,76,0.3);color:var(--gold)}
+  .card-badge.op-badge{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--grey)}
+  .card-badge.done-badge{background:rgba(39,174,96,0.1);border-color:rgba(39,174,96,0.3);color:var(--green-light)}
+  .card-badge.warn-badge{background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.45);color:var(--gold-light)}
+  .upload-icon{font-size:36px;margin-bottom:10px;display:block}
+  .upload-title{font-size:15px;font-weight:500;margin-bottom:5px;letter-spacing:.01em}
+  .upload-desc{color:var(--grey);font-size:12px;line-height:1.6}
+  .preview-thumb{width:100%;max-height:90px;object-fit:cover;border-radius:7px;border:1px solid var(--border);margin-top:12px;display:none}
+  .preview-name{margin-top:7px;font-size:11px;color:var(--green-light);font-weight:500;display:none}
+  .check-mark{position:absolute;top:11px;right:13px;font-size:16px;display:none}
+
+  .btn-analyze{width:100%;padding:17px;background:var(--gold);color:var(--black);border:none;border-radius:11px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+  .btn-analyze:hover:not(:disabled){background:var(--gold-light);transform:translateY(-1px);box-shadow:0 8px 28px rgba(201,168,76,0.28)}
+  .btn-analyze:disabled{opacity:.3;cursor:not-allowed}
+
+  /* MODAL — zadní strana */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.82);backdrop-filter:blur(6px);z-index:100;display:none;align-items:center;justify-content:center;padding:24px}
+  .modal-overlay.show{display:flex;animation:fadeIn .2s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .modal{background:#121110;border:1px solid var(--border);border-radius:18px;padding:32px;max-width:440px;width:100%;position:relative;max-height:calc(100vh - 48px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(201,168,76,0.4) transparent}
+  .modal::-webkit-scrollbar{width:8px}
+  .modal::-webkit-scrollbar-track{background:transparent}
+  .modal::-webkit-scrollbar-thumb{background:rgba(201,168,76,0.35);border-radius:8px}
+  .modal::-webkit-scrollbar-thumb:hover{background:rgba(201,168,76,0.55)}
+  .modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent);border-radius:18px 18px 0 0}
+  .modal-icon{font-size:36px;margin-bottom:14px;text-align:center}
+  .modal-title{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:22px;font-weight:600;margin-bottom:8px;text-align:center}
+  .modal-desc{color:var(--grey);font-size:13px;line-height:1.7;text-align:center;margin-bottom:20px}
+  .modal-missing{background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:9px;padding:12px 16px;margin-bottom:20px;font-size:12px;color:var(--gold-light)}
+  .modal-missing ul{list-style:none;padding:0;margin-top:6px}
+  .modal-missing li{padding:2px 0}
+  .modal-missing li::before{content:'· ';opacity:.5}
+  .modal-upload-zone{border:1.5px dashed var(--border);border-radius:11px;padding:28px;text-align:center;cursor:pointer;position:relative;transition:all .3s;margin-bottom:14px}
+  .modal-upload-zone:hover{border-color:rgba(201,168,76,0.55);background:rgba(201,168,76,0.03)}
+  .modal-upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .modal-preview{max-height:100px;max-width:100%;border-radius:7px;margin-top:10px;display:none}
+  .modal-btns{display:flex;gap:10px}
+  .btn-modal-ok{flex:1;padding:13px;background:var(--gold);color:var(--black);border:none;border-radius:9px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+  .btn-modal-ok:hover:not(:disabled){background:var(--gold-light)}
+  .btn-modal-ok:disabled{opacity:.35;cursor:not-allowed}
+  .btn-modal-skip{flex:1;padding:13px;background:transparent;color:var(--grey);border:1px solid rgba(255,255,255,0.1);border-radius:9px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+  .btn-modal-skip:hover{color:var(--white);border-color:rgba(255,255,255,0.2)}
+
+  /* MODAL — doplnění smlouvy */
+  .form-modal{max-width:720px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+  @media(max-width:700px){.form-grid{grid-template-columns:1fr}}
+  .form-field{display:flex;flex-direction:column;gap:6px}
+  .form-field.full{grid-column:1/-1}
+  .form-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--grey)}
+  .form-label.required::after{content:' *';color:var(--gold)}
+  .form-input{background:rgba(255,255,255,0.04);border:1.5px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:14px;outline:none;transition:all .2s}
+  input[type="date"].form-input::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.3);cursor:pointer;opacity:.85}
+  input[type="date"].form-input::-webkit-calendar-picker-indicator:hover{opacity:1}
+  select.form-input{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='%23c9a84c' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+  select.form-input option{background:#1a1814;color:var(--white)}
+  .form-input:focus{border-color:rgba(201,168,76,0.6);background:rgba(201,168,76,0.04)}
+  .form-input.error{border-color:rgba(231,76,60,0.6);background:rgba(231,76,60,0.04)}
+  .form-input::placeholder{color:var(--grey);opacity:.6}
+  .form-error-msg{font-size:11px;color:var(--red-light);display:none}
+  .form-field.has-error .form-error-msg{display:block}
+  .form-field.has-error .form-label{color:var(--red-light)}
+  .toggle-btn{flex:1;padding:9px 8px;background:rgba(255,255,255,0.04);border:1.5px solid var(--border);border-radius:7px;color:var(--grey);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+  .toggle-btn.active{background:rgba(201,168,76,0.15);border-color:rgba(201,168,76,0.6);color:var(--gold-light)}
+  .toggle-btn:hover:not(.active){border-color:rgba(255,255,255,0.2);color:var(--white)}
+
+  /* LOADING */
+  .loading{display:none;text-align:center;padding:52px}
+  .loading-spinner{width:44px;height:44px;border:2.5px solid rgba(201,168,76,0.15);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 18px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-title{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:22px;font-weight:600;margin-bottom:6px}
+  .loading-steps{display:flex;flex-direction:column;gap:8px;text-align:left;max-width:300px;margin:22px auto 0}
+  .lstep{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--grey);padding:9px 13px;border-radius:7px;transition:all .3s}
+  .lstep.active{color:var(--white);background:rgba(255,255,255,0.04)}
+  .lstep.done{color:var(--green-light)}
+  .lstep-icon{font-size:16px;width:22px;text-align:center}
+
+  /* RESULTS */
+  .results{display:none;animation:fadeUp .4s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+  @media(max-width:600px){.result-grid{grid-template-columns:1fr}}
+  .result-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:22px;position:relative;overflow:hidden}
+  .result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent)}
+  .result-card.danger::before{background:linear-gradient(90deg,var(--red),transparent)}
+  .result-card.success::before{background:linear-gradient(90deg,var(--green-light),transparent)}
+  .card-title{font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--grey);margin-bottom:14px}
+  .data-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.045);gap:14px}
+  .data-row:last-child{border-bottom:none}
+  .data-label{font-size:11px;color:var(--grey);flex-shrink:0}
+  .data-value{font-size:12px;font-weight:500;text-align:right}
+  .lustrace-result{grid-column:1/-1;padding:26px}
+  .lustrace-status{display:flex;align-items:center;gap:18px;margin-bottom:18px}
+  .lustrace-icon{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+  .lustrace-icon.ok{background:rgba(26,107,60,0.18);border:1.5px solid rgba(39,174,96,0.35)}
+  .lustrace-icon.warn{background:rgba(192,57,43,0.18);border:1.5px solid rgba(231,76,60,0.55);animation:warnPulse 1.5s infinite}
+  @keyframes warnPulse{0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.35)}50%{box-shadow:0 0 0 10px rgba(231,76,60,0)}}
+  .lustrace-text h3{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:24px;font-weight:600;margin-bottom:4px}
+  .lustrace-text h3.danger{color:var(--red-light)}
+  .lustrace-text h3.ok{color:var(--green-light)}
+  .lustrace-text p{color:var(--grey);font-size:13px}
+  .lustrace-meta{display:flex;gap:22px;flex-wrap:wrap}
+  .meta-item{display:flex;flex-direction:column;gap:3px}
+  .meta-item .label{font-size:10px;color:var(--grey);text-transform:uppercase;letter-spacing:.12em}
+  .meta-item .value{font-size:14px;font-weight:500}
+  .actions{display:flex;gap:11px;flex-wrap:wrap;margin-top:4px}
+  .btn-dl{display:inline-flex;align-items:center;gap:7px;padding:12px 20px;border-radius:9px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s}
+  .btn-dl.primary{background:var(--gold);color:var(--black);border:none}
+  .btn-dl.primary:hover{background:var(--gold-light);transform:translateY(-1px)}
+  .btn-dl.secondary{background:transparent;color:var(--white);border:1px solid var(--border)}
+  .btn-dl.secondary:hover{border-color:rgba(201,168,76,0.45);background:rgba(201,168,76,0.04)}
+  .btn-reset{display:inline-flex;align-items:center;gap:7px;padding:12px 20px;border-radius:9px;background:transparent;color:var(--grey);border:1px solid rgba(255,255,255,0.08);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+  .btn-reset:hover{color:var(--white);border-color:rgba(255,255,255,0.18)}
+  .error-box{background:rgba(192,57,43,0.09);border:1px solid rgba(231,76,60,0.28);border-radius:10px;padding:14px 18px;color:var(--red-light);display:none;margin-top:14px;font-size:13px}
+  .divider{height:1px;background:var(--border);margin:28px 0}
+
+  .history-row{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:18px 22px;margin-bottom:10px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all .2s;position:relative}
+  .history-row:hover{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.03);transform:translateX(3px)}
+  .history-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);border-radius:12px 0 0 12px;opacity:0;transition:opacity .2s}
+  .history-row:hover::before{opacity:1}
+  .hist-avatar{width:42px;height:42px;border-radius:50%;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.25);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+  .hist-main{flex:1;min-width:0}
+  .hist-name{font-size:15px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hist-meta{font-size:12px;color:var(--grey);display:flex;gap:14px;flex-wrap:wrap}
+  .hist-meta span{display:flex;align-items:center;gap:4px}
+  .hist-actions{display:flex;gap:8px;flex-shrink:0}
+  .hist-btn{padding:7px 14px;border-radius:7px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;border:1px solid}
+  .hist-btn-load{background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.3);color:var(--gold)}
+  .hist-btn-load:hover{background:rgba(201,168,76,0.2)}
+  .hist-btn-del{background:rgba(231,76,60,0.08);border-color:rgba(231,76,60,0.2);color:rgba(231,76,60,0.7)}
+  .hist-btn-del:hover{background:rgba(231,76,60,0.15);color:var(--red-light)}
+  .hist-empty{text-align:center;padding:48px;color:var(--grey);font-size:14px}
+
+  footer{text-align:center;padding:28px;color:var(--grey);font-size:11px;border-top:1px solid var(--border);margin-top:72px;letter-spacing:.05em}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <!-- RX Auto logo SVG -->
+    <svg class="logo-svg" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="44" height="44" rx="10" fill="#c9a84c" fill-opacity="0.12"/>
+      <rect width="44" height="44" rx="10" stroke="#c9a84c" stroke-width="1" stroke-opacity="0.4"/>
+      <text x="22" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="#c9a84c" letter-spacing="-1">RX</text>
+    </svg>
+    <div class="logo-text">
+      <div class="logo-main">RX <span>Auto</span></div>
+      <div class="logo-sub">Půjčovna vozidel</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <button onclick="toggleHistory()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--grey-light)'">📋 Historie</button>
+    <button onclick="restartGenerator()" title="Restartuje server (po aktualizaci souborů)" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--grey-light)'">🔄 Restart</button>
+    <button onclick="vypnoutGenerator()" title="Vypne server generátoru" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='#e57373'" onmouseout="this.style.color='var(--grey-light)'">⏻ Vypnout</button>
+    <div class="status-badge"><div class="status-dot"></div>ispis.cz online</div>
+  </div>
+</header>
+
+<!-- MODAL — zadní strana dokladu -->
+<div class="modal-overlay" id="modalBack">
+  <div class="modal">
+    <div class="modal-icon" id="mBackIcon">📋</div>
+    <div class="modal-title" id="mBackTitle">Chybí zadní strana</div>
+    <div class="modal-desc" id="mBackDesc">Na přední straně dokladu chybí některé údaje. Nahrajte zadní stranu pro doplnění.</div>
+    <div class="modal-missing" id="mBackMissing" style="display:none">
+      <strong style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.65">Chybějící údaje</strong>
+      <ul id="mBackList"></ul>
+    </div>
+    <div class="modal-upload-zone">
+      <input type="file" id="mBackInput" accept="image/*" onchange="handleModalBack(this)"/>
+      <div style="font-size:28px;margin-bottom:7px">📷</div>
+      <div style="font-size:14px;font-weight:500;margin-bottom:3px">Nahrát zadní stranu</div>
+      <div style="font-size:11px;color:var(--grey)">JPG, PNG — max 10 MB</div>
+      <img class="modal-preview" id="mBackPreview"/>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-modal-skip" onclick="skipBack()">Přeskočit</button>
+      <button class="btn-modal-ok" id="mBackOk" disabled onclick="confirmBack()">✓ Potvrdit</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — doplnění smlouvy -->
+<div class="modal-overlay" id="modalNakres" style="z-index:300">
+  <div class="modal" style="max-width:860px">
+    <div class="modal-icon">🖌️</div>
+    <div class="modal-title">Zakreslení poškození</div>
+    <div class="modal-desc">Červeně vyznač poškození na nákresu (křížek, kolečko…). Kreslí se prstem, stylusem i myší.</div>
+    <canvas id="nakresCanvas" width="1600" height="1131"
+      style="width:100%;background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,0.2);touch-action:none;cursor:crosshair;display:block"></canvas>
+    <div class="modal-btns">
+      <button class="btn-modal-skip" onclick="closeNakres()">Zavřít</button>
+      <button class="btn-modal-skip" onclick="resetNakres()">↺ Vymazat</button>
+      <button class="btn-modal-ok" onclick="ulozNakres()">✓ Uložit nákres</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalPodpis">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-icon">🖊️</div>
+    <div class="modal-title">Podpis nájemce</div>
+    <div class="modal-desc">Podepiš se prstem (tablet/mobil), stylusem nebo trackpadem do pole níže. Podpis se vloží do smlouvy nad čáru „Nájemce“.</div>
+    <canvas id="podpisCanvas" width="1160" height="360"
+      style="width:100%;height:180px;background:#fff;border-radius:10px;border:1px dashed rgba(0,0,0,0.3);touch-action:none;cursor:crosshair;display:block"></canvas>
+    <div id="podpisStatus" style="display:none;margin-top:10px;font-size:13px"></div>
+    <div class="modal-btns">
+      <button class="btn-modal-skip" onclick="closePodpis()">Zavřít</button>
+      <button class="btn-modal-skip" onclick="clearPodpis()">↺ Vymazat</button>
+      <button class="btn-modal-ok" onclick="submitPodpis()">✓ Vložit podpis do smlouvy</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalVraceni">
+  <div class="modal">
+    <div class="modal-icon">🔁</div>
+    <div class="modal-title">Vrácení vozidla</div>
+    <div class="modal-desc" id="vrDesc"></div>
+    <div class="form-grid" style="margin-top:10px">
+      <div class="form-field"><label class="form-label">Datum vrácení</label>
+        <input class="form-input" id="vr_datum" type="date" /></div>
+      <div class="form-field"><label class="form-label">Stav tachometru při vrácení</label>
+        <input class="form-input" id="vr_km" placeholder="km" inputmode="numeric" /></div>
+      <div class="form-field"><label class="form-label">Stav nádrže při vrácení</label>
+        <select class="form-input" id="vr_nadrz">
+          <option value="">— nevyplněno —</option>
+          <option>Plná</option><option>7/8</option><option>3/4</option><option>5/8</option><option>1/2</option>
+          <option>3/8</option><option>1/4</option><option>1/8</option><option>Prázdná</option>
+        </select></div>
+      <div class="form-field"><label class="form-label">Kdo vozidlo vrací</label>
+        <input class="form-input" id="vr_kdo" placeholder="jméno" /></div>
+      <div class="form-field"><label class="form-label">Poškození — částka</label>
+        <input class="form-input" id="vr_poskozeni" placeholder="0" inputmode="numeric" /></div>
+      <div class="form-field"><label class="form-label">Poškození — popis</label>
+        <input class="form-input" id="vr_poskozeni_popis" placeholder="např. škrábanec pravé dveře" /></div>
+      <div class="form-field full">
+        <button type="button" class="toggle-btn" onclick="openNakres('vraceni')">🖌️ Zakreslit poškození na nákresu vozidla</button>
+        <span id="nakresVraceniInfo" style="display:none;font-size:11px;color:var(--green-light);margin-left:8px">✓ nákres uložen</span>
+      </div>
+      <div class="form-field full">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="vr_faktura" style="margin:0">
+          Vystavit fakturu ve Vyfakturuj (překročení km + náhrada škody)
+        </label>
+      </div>
+    </div>
+    <div id="vrStatus" style="display:none;margin-top:10px;font-size:13px"></div>
+    <div class="modal-btns">
+      <button class="btn-modal-skip" onclick="document.getElementById('modalVraceni').classList.remove('show')">Zavřít</button>
+      <button class="btn-modal-ok" onclick="submitVraceni()">✓ Vygenerovat vyúčtování</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalForm">
+  <div class="modal form-modal">
+    <div class="modal-icon">📋</div>
+    <div class="modal-title">Doplnění smlouvy</div>
+    <div class="modal-desc">Vyplňte povinné údaje pro vygenerování nájemní smlouvy. Zvýrazněná pole jsou povinná.</div>
+    <div class="form-grid">
+      <input type="hidden" id="fi_verze" value="v2" />
+
+      <div class="form-field full" id="ff_typ_najemce">
+        <label class="form-label required">Nájemce</label>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="toggle-btn active" id="tnaj_fyzicka" onclick="setTypNajemce('fyzicka')">Fyzická osoba</button>
+          <button type="button" class="toggle-btn" id="tnaj_firma" onclick="setTypNajemce('firma')">Firma</button>
+        </div>
+        <input type="hidden" id="fi_typ_najemce" value="fyzicka" />
+      </div>
+
+      <div class="form-field full" id="ff_korespondencni_adresa">
+        <label class="form-label">Korespondenční adresa <span style="opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(pokud jiná než trvalé bydliště)</span></label>
+        <input class="form-input" id="fi_korespondencni_adresa" placeholder="volitelné" />
+      </div>
+
+      <div id="firmaFields" style="display:none">
+        <div class="form-field" id="ff_firma_ico">
+          <label class="form-label required">IČO</label>
+          <input class="form-input" id="fi_firma_ico" placeholder="např. 06044310" oninput="onIcoInput()" />
+          <span class="form-error-msg">Povinné pole</span>
+          <span id="ares_status" style="display:block;font-size:11px;margin-top:4px;opacity:.7"></span>
+        </div>
+        <div class="form-field" id="ff_firma_dic">
+          <label class="form-label">DIČ</label>
+          <input class="form-input" id="fi_firma_dic" placeholder="doplní se z ARES" />
+        </div>
+        <div class="form-field full" id="ff_firma_nazev">
+          <label class="form-label required">Název společnosti</label>
+          <input class="form-input" id="fi_firma_nazev" placeholder="doplní se z ARES" />
+          <span class="form-error-msg">Povinné pole</span>
+        </div>
+        <div class="form-field full" id="ff_firma_sidlo">
+          <label class="form-label required">Sídlo</label>
+          <input class="form-input" id="fi_firma_sidlo" placeholder="doplní se z ARES" />
+          <span class="form-error-msg">Povinné pole</span>
+        </div>
+        <div class="form-field full" id="ff_firma_zastupce">
+          <label class="form-label required">Zástupce společnosti (jméno)</label>
+          <input class="form-input" id="fi_firma_zastupce" placeholder="jméno jednatele / zástupce" />
+          <span class="form-error-msg">Povinné pole</span>
+        </div>
+        <div class="form-field full" id="ff_ridic_je_zastupce">
+          <label class="form-label">Řidič je totožný se zástupcem společnosti?</label>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="toggle-btn active" id="ridic_ano" onclick="setRidicJeZastupce(true)">Ano</button>
+            <button type="button" class="toggle-btn" id="ridic_ne" onclick="setRidicJeZastupce(false)">Ne</button>
+          </div>
+          <input type="hidden" id="fi_ridic_je_zastupce" value="1" />
+        </div>
+        <div class="form-field full" id="ff_zmocneni" style="display:none">
+          <label class="form-label required">Řidič zmocněn jednat na základě</label>
+          <input class="form-input" id="fi_zmocneni" placeholder="např. plná moc ze dne ..., pracovní pozice" />
+          <span class="form-error-msg">Povinné pole</span>
+        </div>
+      </div>
+
+      <div class="form-field full" id="ff_vozidlo">
+        <label class="form-label required">Vozidlo (SPZ, značka, model)</label>
+        <input class="form-input" id="fi_vozidlo" placeholder="např. 1AB2345 — BMW 320d" />
+        <span class="form-error-msg">Povinné pole</span>
+      </div>
+      <div class="form-field full" id="ff_typ_vozidla">
+        <label class="form-label required">Typ vozidla <span style="opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(nákres v protokolu)</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="toggle-btn active" id="tv_osobni" onclick="setTypVozidla('osobni',true)">Sedan</button>
+          <button type="button" class="toggle-btn" id="tv_hatchback" onclick="setTypVozidla('hatchback',true)">Hatchback / liftback</button>
+          <button type="button" class="toggle-btn" id="tv_kombi" onclick="setTypVozidla('kombi',true)">Kombi</button>
+          <button type="button" class="toggle-btn" id="tv_suv" onclick="setTypVozidla('suv',true)">SUV</button>
+          <button type="button" class="toggle-btn" id="tv_coupe" onclick="setTypVozidla('coupe',true)">Coupé</button>
+          <button type="button" class="toggle-btn" id="tv_kabriolet" onclick="setTypVozidla('kabriolet',true)">Kabriolet</button>
+          <button type="button" class="toggle-btn" id="tv_dodavka" onclick="setTypVozidla('dodavka',true)">Dodávka / karavan</button>
+          <button type="button" class="toggle-btn" id="tv_prives" onclick="setTypVozidla('prives',true)">Přívěs</button>
+          <button type="button" class="toggle-btn" id="tv_motorka" onclick="setTypVozidla('motorka',true)">Motorka</button>
+        </div>
+        <input type="hidden" id="fi_typ_vozidla" value="osobni" />
+      </div>
+      <div class="form-field full" id="ff_nahradni_vozidlo">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="fi_nahradni_vozidlo" style="margin:0" onchange="updateZmocneni()">
+          Náhradní vozidlo <span style="opacity:.5">(u firmy se nevyžaduje zmocnění řidiče)</span>
+        </label>
+      </div>
+      <div class="form-field full" id="ff_mena">
+        <label class="form-label required">Měna smlouvy</label>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="toggle-btn active" id="cur_czk" onclick="setMena('CZK')">CZK</button>
+          <button type="button" class="toggle-btn" id="cur_eur" onclick="setMena('EUR')">EUR</button>
+        </div>
+        <input type="hidden" id="fi_mena" value="CZK" />
+      </div>
+      <div class="form-field" id="ff_datum_zacatku">
+        <label class="form-label required">Datum začátku</label>
+        <input class="form-input" id="fi_datum_zacatku" type="date" oninput="autoCalcDelka()" />
+        <span class="form-error-msg">Povinné pole</span>
+      </div>
+      <div class="form-field" id="ff_datum_konce">
+        <label class="form-label required">Datum konce</label>
+        <input class="form-input" id="fi_datum_konce" type="date" oninput="autoCalcDelka()" />
+        <span class="form-error-msg">Povinné pole</span>
+        <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;opacity:.85;cursor:pointer">
+          <input type="checkbox" id="fi_flexi" style="margin:0" onchange="setFlexi(this.checked)">
+          Flexi — konec neznámý, účtuje se po jednotkách
+        </label>
+      </div>
+
+      <!-- CENA + DPH + INTERVAL -->
+      <div class="form-field" id="ff_cena">
+        <label class="form-label required">Cena nájmu</label>
+        <input class="form-input" id="fi_cena" placeholder="např. 15000" />
+        <span class="form-error-msg">Povinné pole</span>
+      </div>
+      <div class="form-field" id="ff_cena_dph">
+        <label class="form-label required">Zadaná cena je</label>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="toggle-btn active" id="tb_cena_bez_dph" onclick="setCenaDph('bez_dph')">Bez DPH</button>
+          <button type="button" class="toggle-btn" id="tb_cena_s_dph" onclick="setCenaDph('s_dph')">S DPH</button>
+        </div>
+        <input type="hidden" id="fi_cena_dph" value="bez_dph" />
+      </div>
+      <div class="form-field" id="ff_interval_ceny">
+        <label class="form-label required">Fakturace</label>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="toggle-btn active" id="tb_mesicne" onclick="setInterval('ceny','měsíčně')">Měsíčně</button>
+          <button type="button" class="toggle-btn" id="tb_denne" onclick="setInterval('ceny','denně')">Denně</button>
+        </div>
+        <input type="hidden" id="fi_interval_ceny" value="měsíčně" />
+      </div>
+
+      <div class="form-field" id="ff_pocet_intervalu">
+        <label class="form-label required"><span id="lbl_pocet">Počet měsíců</span> <span style="opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(auto z dat)</span></label>
+        <input class="form-input" id="fi_pocet_intervalu" placeholder="vyplní se automaticky" />
+        <span class="form-error-msg">Povinné pole</span>
+      </div>
+      <div class="form-field" id="ff_jistina">
+        <label class="form-label required">Jistina</label>
+        <input class="form-input" id="fi_jistina" placeholder="např. 50000" />
+        <span class="form-error-msg">Povinné pole</span>
+      </div>
+
+      <!-- NÁJEZD + INTERVAL -->
+      <div class="form-field" id="ff_sjednany_najezd">
+        <label class="form-label required">Sjednaný nájezd (km)</label>
+        <input class="form-input" id="fi_sjednany_najezd" placeholder="např. 20000" />
+        <span class="form-error-msg">Povinné pole</span>
+      </div>
+      <div class="form-field" id="ff_interval_najezdu">
+        <label class="form-label required">Interval nájezdu</label>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="toggle-btn active" id="tn_rok" onclick="setInterval('najezdu','rok')">Za rok</button>
+          <button type="button" class="toggle-btn" id="tn_mesic" onclick="setInterval('najezdu','měsíc')">Za měsíc</button>
+          <button type="button" class="toggle-btn" id="tn_den" onclick="setInterval('najezdu','den')">Za den</button>
+          <button type="button" class="toggle-btn" id="tn_pronajem" onclick="setInterval('najezdu','pronájem')">Za pronájem</button>
+        </div>
+        <input type="hidden" id="fi_interval_najezdu" value="rok" />
+      </div>
+
+      <div class="form-field" id="ff_email">
+        <label class="form-label required">E-mail nájemce</label>
+        <input class="form-input" id="fi_email" type="email" placeholder="jmeno@email.cz" />
+        <span class="form-error-msg">Povinné pole</span>
+      </div>
+      <div class="form-field" id="ff_telefon">
+        <label class="form-label required">Telefon nájemce</label>
+        <input class="form-input" id="fi_telefon" placeholder="+420 xxx xxx xxx" />
+        <span class="form-error-msg">Povinné pole</span>
+      </div>
+
+      <!-- ADMIN: ruční údaje nájemce -->
+      <div id="adminFields" style="display:none">
+        <div class="form-field full" style="margin-top:6px">
+          <label class="form-label" style="color:var(--gold)">🔓 Admin — údaje nájemce ručně</label>
+        </div>
+        <div class="form-field" id="ff_adm_jmeno">
+          <label class="form-label">Jméno a příjmení</label>
+          <input class="form-input" id="fi_adm_jmeno" placeholder="Jan Novák" />
+        </div>
+        <div class="form-field" id="ff_adm_datum_narozeni">
+          <label class="form-label">Datum narození</label>
+          <input class="form-input" id="fi_adm_datum_narozeni" placeholder="dd.mm.rrrr" />
+        </div>
+        <div class="form-field full" id="ff_adm_adresa">
+          <label class="form-label">Adresa bydliště</label>
+          <input class="form-input" id="fi_adm_adresa" placeholder="ulice č., PSČ město" />
+        </div>
+      </div>
+
+      <!-- ÚDAJE Z DOKLADŮ -->
+      <div class="form-field full" style="margin-top:6px">
+        <label class="form-label" style="opacity:.6">Údaje z dokladů <span style="opacity:.6;font-weight:400;text-transform:none;letter-spacing:0">(zkontroluj — chybějící doplň, např. 01.02.2020)</span></label>
+      </div>
+      <div class="form-field" id="ff_doc_cislo_op"><label class="form-label">Číslo OP / pasu</label><input class="form-input" id="fi_doc_cislo_op" /></div>
+      <div class="form-field" id="ff_doc_datum_vydani_op"><label class="form-label">OP — datum vydání</label><input class="form-input" id="fi_doc_datum_vydani_op" placeholder="dd.mm.rrrr" /></div>
+      <div class="form-field" id="ff_doc_platnost_op"><label class="form-label">OP — platnost do</label><input class="form-input" id="fi_doc_platnost_op" placeholder="dd.mm.rrrr" /></div>
+      <div class="form-field" id="ff_doc_cislo_rp"><label class="form-label">Číslo ŘP</label><input class="form-input" id="fi_doc_cislo_rp" /></div>
+      <div class="form-field" id="ff_doc_datum_vydani_rp"><label class="form-label">ŘP — datum vydání</label><input class="form-input" id="fi_doc_datum_vydani_rp" placeholder="dd.mm.rrrr" /></div>
+      <div class="form-field" id="ff_doc_platnost_rp"><label class="form-label">ŘP — platnost do</label><input class="form-input" id="fi_doc_platnost_rp" placeholder="dd.mm.rrrr" /></div>
+
+      <!-- PŘEDÁVACÍ PROTOKOL -->
+      <div class="form-field full" style="margin-top:6px">
+        <label class="form-label" style="opacity:.6">Předávací protokol <span style="opacity:.6;font-weight:400;text-transform:none;letter-spacing:0">(nepovinné — lze doplnit i ručně na místě)</span></label>
+      </div>
+      <div class="form-field full" id="ff_poskozeni_predani">
+        <label class="form-label">Stávající poškození při předání <span style="opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(propíše se do protokolu)</span></label>
+        <input class="form-input" id="fi_poskozeni_predani" placeholder="např. škrábanec na pravých zadních dveřích, oděrka na zrcátku" />
+        <div style="margin-top:8px">
+          <button type="button" class="toggle-btn" onclick="openNakres('predani')">🖌️ Zakreslit poškození na nákresu vozidla</button>
+          <span id="nakresPredaniInfo" style="display:none;font-size:11px;color:var(--green-light);margin-left:8px">✓ nákres uložen</span>
+        </div>
+      </div>
+      <div class="form-field" id="ff_cas_predani">
+        <label class="form-label">Čas předání</label>
+        <input class="form-input" id="fi_cas_predani" type="time" />
+      </div>
+      <div class="form-field" id="ff_palivo">
+        <label class="form-label">Palivo</label>
+        <select class="form-input" id="fi_palivo">
+          <option value="">— nevyplněno —</option>
+          <option>Nafta</option><option>Benzín</option><option>Elektro</option>
+          <option>Hybrid</option><option>LPG</option><option>CNG</option>
+        </select>
+      </div>
+      <div class="form-field" id="ff_misto_predani">
+        <label class="form-label">Místo předání</label>
+        <input class="form-input" id="fi_misto_predani" placeholder="např. Praha, Václav Havel Airport" />
+      </div>
+      <div class="form-field" id="ff_misto_vraceni">
+        <label class="form-label">Místo vrácení</label>
+        <input class="form-input" id="fi_misto_vraceni" placeholder="např. Praha, Václav Havel Airport" />
+      </div>
+      <div class="form-field" id="ff_stav_tachometru_predani">
+        <label class="form-label">Stav tachometru při předání</label>
+        <input class="form-input" id="fi_stav_tachometru_predani" placeholder="km" inputmode="numeric" />
+      </div>
+      <div class="form-field" id="ff_stav_nadrze">
+        <label class="form-label">Stav nádrže při předání</label>
+        <select class="form-input" id="fi_stav_nadrze">
+          <option value="">— nevyplněno —</option>
+          <option>Plná</option><option>7/8</option><option>3/4</option><option>5/8</option><option>1/2</option>
+          <option>3/8</option><option>1/4</option><option>1/8</option><option>Prázdná</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-modal-skip" onclick="closeFormModal()">Zrušit</button>
+      <button class="btn-modal-ok" onclick="submitForm()">✓ Vygenerovat smlouvu</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="hero">
+    <h1 class="hero-title">Generátor <b>smluv</b></h1>
+    <p class="hero-desc">Nahraj doklady řidiče — údaje se přečtou, nájemce se prolustruje a smlouva vyplní sama.</p>
+  </div>
+
+  <!-- STEPPER -->
+  <div class="stepper">
+    <div class="step-item"><div class="step-circle active" id="sc1">1</div><span class="step-label active" id="sl1">Řidičský průkaz</span></div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-item"><div class="step-circle" id="sc2">2</div><span class="step-label" id="sl2">OP / Pas / ID</span></div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-item"><div class="step-circle" id="sc3">3</div><span class="step-label" id="sl3">Výsledky</span></div>
+  </div>
+
+  <div id="uploadSection">
+    <div id="activeBox" style="display:none;margin:0 0 16px;padding:12px 16px;border:1px solid rgba(201,168,76,0.3);border-radius:12px;background:rgba(201,168,76,0.05);font-size:13px;line-height:1.6"></div>
+    <div class="section-label">Rychlé nahrání</div>
+    <div class="smart-upload-zone" id="smartUploadZone">
+      <input type="file" id="smartInput" accept="image/*,application/pdf,.pdf" multiple onchange="handleSmartUpload(this)"/>
+      <span class="upload-icon">📥</span>
+      <div class="upload-title">Nahrajte všechny doklady najednou</div>
+      <div class="upload-desc">Vyberte 1–4 fotky (ŘP + OP/pas, přední i zadní strana) — systém je sám rozpozná a roztřídí<br><small style="opacity:.55">JPG, PNG, PDF — max 10 MB / soubor</small></div>
+      <div id="smartStatus" style="display:none;margin-top:14px;font-size:13px;color:var(--gold)"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 2px">
+      <button class="btn-dl secondary" type="button" onclick="document.getElementById('cameraInput').click()">📷 Vyfotit doklad (mobil)</button>
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleCameraPhoto(this)"/>
+    </div>
+
+    <!-- Samostatné karty ŘP / OP zůstávají skryté (používá je rozpoznávání na pozadí) -->
+    <div id="legacyUploadGrid" style="display:none">
+    <div class="upload-grid">
+      <div class="upload-card" id="rpCard">
+        <input type="file" id="rpInput" accept="image/*" onchange="handleUpload('rp',this)"/>
+        <span class="check-mark" id="rpCheck">✅</span>
+        <div class="card-badge rp-badge" id="rpBadge">① Řidičský průkaz</div>
+        <span class="upload-icon">🚘</span>
+        <div class="upload-title">Řidičský průkaz</div>
+        <div class="upload-desc">Přední strana ŘP<br><small style="opacity:.55">JPG, PNG — max 10 MB</small></div>
+        <img class="preview-thumb" id="rpPreview"/>
+        <div class="preview-name" id="rpFileName"></div>
+      </div>
+      <div class="upload-card" id="opCard">
+        <input type="file" id="opInput" accept="image/*" onchange="handleUpload('op',this)"/>
+        <span class="check-mark" id="opCheck">✅</span>
+        <div class="card-badge op-badge" id="opBadge">② OP / Pas / ID</div>
+        <span class="upload-icon">🪪</span>
+        <div class="upload-title">Občanský průkaz / Pas</div>
+        <div class="upload-desc">OP, cestovní pas nebo jiné ID<br><small style="opacity:.55">JPG, PNG — max 10 MB</small></div>
+        <img class="preview-thumb" id="opPreview"/>
+        <div class="preview-name" id="opFileName"></div>
+      </div>
+    </div>
+    </div>
+
+    <div class="section-label" style="margin-top:24px">Jiný dokument <span style="opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(nepovinné — faktura, objednávka, e-mail… z něj se předvyplní smlouva)</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn-dl secondary" type="button" onclick="document.getElementById('docFileInput').click()">📎 Nahrát (foto / PDF)</button>
+      <button class="btn-dl secondary" type="button" onclick="document.getElementById('docCamInput').click()">📷 Vyfotit</button>
+      <input type="file" id="docFileInput" accept="image/*,application/pdf" multiple style="display:none" onchange="handleOtherDoc(this)"/>
+      <input type="file" id="docCamInput" accept="image/*" capture="environment" style="display:none" onchange="handleOtherDoc(this)"/>
+    </div>
+    <div id="docStatus" style="display:none;margin:8px 0 4px;font-size:12px;line-height:1.6"></div>
+
+    <div class="section-label" style="margin-top:24px">Údaje o pronájmu slovy <span style="opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(nepovinné — předvyplní formulář)</span></div>
+    <div style="display:flex;gap:10px;align-items:stretch">
+      <textarea class="form-input" id="popisInput" rows="2" style="flex:1;resize:vertical;min-height:52px"
+        placeholder="např. 10000 měsíčně bez dph, kauce 15tis, nájezd 2500 km měsíčně, začátek dneska, konec za půl roku, auto bmw 2 1ALB766"
+        onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();parsePopis();}"></textarea>
+      <button class="btn-dl secondary" id="popisBtn" onclick="parsePopis()" style="white-space:nowrap">✨ Předvyplnit</button>
+    </div>
+    <div id="popisStatus" style="display:none;margin:8px 0 4px;font-size:12px;line-height:1.6"></div>
+
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn-analyze" id="analyzeBtn" disabled onclick="openFormModal(false)" style="flex:2">✦ Ověřit a připravit smlouvu</button>
+      <button class="btn-analyze" id="contractOnlyBtn" disabled onclick="openFormModal(true)" style="flex:1;background:rgba(201,168,76,0.12);color:var(--gold);border:1.5px solid rgba(201,168,76,0.35);font-size:13px">📄 Pouze smlouva</button>
+    </div>
+    <div style="margin-top:14px;text-align:center">
+      <label style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--grey);cursor:pointer;opacity:.75">
+        <input type="checkbox" id="adminChk" style="margin:0" onchange="setAdminMode(this.checked)">
+        🔓 Admin režim — pokračovat i bez dokladů a povinných údajů (jméno řidiče doplním ručně, nebo až na papíře)
+      </label>
+    </div>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">Zpracovávám doklady...</div>
+    <div style="color:var(--grey);font-size:13px">Prosím čekejte</div>
+    <div class="loading-steps">
+      <div class="lstep" id="ls1"><span class="lstep-icon">🚘</span> Čtu řidičský průkaz</div>
+      <div class="lstep" id="ls2"><span class="lstep-icon">🪪</span> Čtu občanský průkaz / pas</div>
+      <div class="lstep" id="ls3"><span class="lstep-icon">🔍</span> Lustruji v CEE</div>
+      <div class="lstep" id="ls4"><span class="lstep-icon">📝</span> Vyplňuji smlouvu</div>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="result-grid">
+      <div class="result-card lustrace-result" id="lustraceCard">
+        <div class="lustrace-status">
+          <div class="lustrace-icon" id="lustraceIcon"></div>
+          <div class="lustrace-text"><h3 id="lustraceTitle"></h3><p id="lustraceDesc"></p></div>
+        </div>
+        <div class="lustrace-meta">
+          <div class="meta-item"><span class="label">Počet exekucí</span><span class="value" id="pocetExekuci">—</span></div>
+          <div class="meta-item"><span class="label">Cena lustrace</span><span class="value" id="cenaLustrace">—</span></div>
+          <div class="meta-item"><span class="label">Zbývající kredit</span><span class="value" id="kreditZbytek">—</span></div>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">Extrahované údaje</div>
+        <div class="data-row"><span class="data-label">Celé jméno</span><span class="data-value" id="resJmeno">—</span></div>
+        <div class="data-row"><span class="data-label">Datum nar.</span><span class="data-value" id="resDatum">—</span></div>
+        <div class="data-row"><span class="data-label">Číslo ŘP</span><span class="data-value" id="resRP">—</span></div>
+        <div class="data-row"><span class="data-label">Platnost ŘP</span><span class="data-value" id="resPlatnostRP">—</span></div>
+        <div class="data-row"><span class="data-label">Číslo OP/Pas</span><span class="data-value" id="resOP">—</span></div>
+        <div class="data-row"><span class="data-label">Platnost OP</span><span class="data-value" id="resPlatnostOP">—</span></div>
+        <div class="data-row"><span class="data-label">Adresa</span><span class="data-value" id="resAdresa">—</span></div>
+      </div>
+      <div class="result-card">
+        <div class="card-title">Nájemní smlouva</div>
+        <div id="smlouvaContent"></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-label">Ke stažení</div>
+    <div class="actions" id="actions"></div>
+    <div id="vyfakturujNajemOpt" style="display:none;margin-top:8px;font-size:12px;opacity:.85;line-height:2">
+      <span style="margin-right:14px">Typ faktury:
+        <label style="cursor:pointer;margin-left:6px"><input type="radio" name="vyfTyp" value="zalohova" checked style="margin:0 3px 0 0">zálohová</label>
+        <label style="cursor:pointer;margin-left:10px"><input type="radio" name="vyfTyp" value="ostra" style="margin:0 3px 0 0">běžná (ostrá)</label>
+      </span>
+      <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+        <input type="checkbox" id="vyfakturujNajemChk" checked style="margin:0">
+        vystavit i nájemné (1. faktura = kauce + 1. měsíc, pravidelná od 2. měsíce; denně = kauce + celá doba)
+      </label>
+    </div>
+    <div class="error-box" id="vyfakturujStatus"></div>
+    <div id="docusealSmsOpt" style="display:none;margin-top:8px;font-size:12px;opacity:.8">
+      <label style="cursor:pointer;display:flex;align-items:center;gap:6px">
+        <input type="checkbox" id="docusealSmsChk" style="margin:0">
+        Poslat odkaz k podpisu i SMS na telefon nájemce (přibližně +5 Kč za zprávu)
+      </label>
+    </div>
+    <div class="error-box" id="docusealStatus"></div>
+    <div style="margin-top:18px"><button class="btn-reset" onclick="reset()">← Zpracovat dalšího nájemce</button></div>
+  </div>
+
+  <!-- PANEL HISTORIE -->
+  <div id="historyPanel" style="display:none;animation:fadeUp .3s ease">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+      <div>
+        <div class="section-label">Historie smluv</div>
+        <div style="color:var(--grey);font-size:13px;margin-top:4px">Kliknutím na záznam načtete údaje zpět do formuláře</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <input id="historySearch" placeholder="🔍 Hledat..." oninput="filterHistory()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;outline:none;width:220px" />
+        <button onclick="toggleHistory()" class="btn-reset">✕ Zavřít</button>
+      </div>
+    </div>
+    <div id="historyList"></div>
+  </div>
+
+</main>
+
+<footer>RX Auto s.r.o. &nbsp;·&nbsp; Aviatická 1092/8, Praha &nbsp;·&nbsp; Lustrace: ispis.cz &nbsp;·&nbsp; Data zpracovávána důvěrně</footer>
+
+<script>
+const state = {
+  rp:{front:null,back:null,data:null,needs_back:false},
+  op:{front:null,back:null,data:null,needs_back:false},
+  modalType:null,modalBackB64:null,modalBackMime:null,
+  formData:null,
+  lastOsobniData:null,
+  lastSmlouvaFilename:null,
+  lastPodpisPozice:null,
+  smartFiles:[],
+};
+
+function toImages(doc){
+  const imgs=[{data:doc.front.b64,media_type:doc.front.mime}];
+  if(doc.back) imgs.push({data:doc.back.b64,media_type:doc.back.mime});
+  return imgs;
+}
+
+async function handleUpload(type,input){
+  const file=input.files[0]; if(!file) return;
+  let b64,mime;
+  try{ ({b64,mime}=await readFile(file)); }
+  catch(err){ setBadge(type,'warn-badge','⚠️ '+err.message); return; }
+  state[type].front={b64,mime,name:file.name};
+  state[type].back=null; state[type].data=null; state[type].needs_back=false;
+  showPreview(type,URL.createObjectURL(file),file.name);
+  setBadge(type,'warn-badge','⏳ Kontroluji...');
+  const res=await fetch('/api/check',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({doc_type:type,images:[{data:b64,media_type:mime}]})});
+  const check=await res.json();
+  applyCheckResult(type, check);
+}
+
+function applyCheckResult(type, check){
+  if(check.error){
+    console.log('ERROR:', check.error);
+    setBadge(type,'done-badge','✓ Nahráno');
+    setCardReady(type);
+  } else if(check.potrebuje_zadi){
+    state[type].data=check.data; state[type].needs_back=true;
+    openBackModal(type,check.chybi);
+    setBadge(type,'warn-badge','⚠️ Chybí zadní strana');
+  } else {
+    state[type].data=check.data;
+    setBadge(type,'done-badge','✓ Nahráno');
+    setCardReady(type);
+  }
+  updateButton(); updateStepper();
+}
+
+async function handleSmartUpload(input){
+  const files = Array.from(input.files || []);
+  if(!files.length) return;
+  state.smartFiles = files.slice();
+  await processSmartFiles(state.smartFiles);
+}
+
+// Fotka z mobilu: přidává se k dosavadním (např. nejdřív přední, pak zadní strana ŘP)
+async function handleCameraPhoto(input){
+  const f = (input.files||[])[0]; input.value='';
+  if(!f) return;
+  state.smartFiles = (state.smartFiles||[]).concat([f]).slice(-4);
+  await processSmartFiles(state.smartFiles);
+}
+
+async function processSmartFiles(files){
+  if(files.length > 4){
+    showError('Nahrajte maximálně 4 fotky najednou.');
+    return;
+  }
+
+  const zone = document.getElementById('smartUploadZone');
+  const statusEl = document.getElementById('smartStatus');
+  zone.classList.add('processing');
+  statusEl.style.display = 'block';
+  statusEl.textContent = `⏳ Rozpoznávám ${files.length} fotek...`;
+
+  try {
+    const images = await Promise.all(files.map(async f => {
+      const {b64,mime} = await readFile(f);
+      return {data: b64, media_type: mime, _name: f.name};
+    }));
+
+    const res = await fetch('/api/classify', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({images: images.map(i => ({data:i.data, media_type:i.media_type}))})
+    });
+    const result = await res.json();
+
+    if(result.error){
+      statusEl.textContent = '⚠️ ' + result.error;
+      zone.classList.remove('processing');
+      return;
+    }
+
+    const cls = result.classification || [];
+    let foundRp = false, foundOp = false;
+
+    if(result.rp){
+      foundRp = true;
+      const rpIdxs = cls.filter(c => c.typ === 'ridicsky_prukaz').map(c => c.index);
+      const firstIdx = rpIdxs[0];
+      const img = images[firstIdx];
+      state.rp.front = {b64: img.data, mime: img.media_type, name: img._name};
+      state.rp.back = rpIdxs.length > 1 ? (() => { const i2 = images[rpIdxs[1]]; return {b64:i2.data, mime:i2.media_type}; })() : null;
+      state.rp.data = result.rp.data;
+      state.rp.needs_back = result.rp.potrebuje_zadi;
+      showPreview('rp', `data:${img.media_type};base64,${img.data}`, img._name);
+      if(result.rp.potrebuje_zadi){
+        setBadge('rp','warn-badge','⚠️ Chybí zadní strana');
+        openBackModal('rp', result.rp.chybi);
+      } else {
+        setBadge('rp','done-badge', rpIdxs.length>1 ? '✓ Rozpoznáno (obě strany)' : '✓ Rozpoznáno');
+        setCardReady('rp');
+      }
+    }
+
+    if(result.op){
+      foundOp = true;
+      const opIdxs = cls.filter(c => c.typ === 'doklad_totoznosti').map(c => c.index);
+      const firstIdx = opIdxs[0];
+      const img = images[firstIdx];
+      state.op.front = {b64: img.data, mime: img.media_type, name: img._name};
+      state.op.back = opIdxs.length > 1 ? (() => { const i2 = images[opIdxs[1]]; return {b64:i2.data, mime:i2.media_type}; })() : null;
+      state.op.data = result.op.data;
+      state.op.needs_back = result.op.potrebuje_zadi;
+      showPreview('op', `data:${img.media_type};base64,${img.data}`, img._name);
+      if(result.op.potrebuje_zadi){
+        setBadge('op','warn-badge','⚠️ Chybí zadní strana');
+        if(!state.rp.needs_back) openBackModal('op', result.op.chybi);
+      } else {
+        setBadge('op','done-badge', opIdxs.length>1 ? '✓ Rozpoznáno (obě strany)' : '✓ Rozpoznáno');
+        setCardReady('op');
+      }
+    }
+
+    if(foundRp || foundOp){
+      const _n=d=>d&&((d.jmeno||'')+' '+(d.prijmeni||'')).trim();
+      statusEl.textContent = `✅ Rozpoznáno: ${foundRp?'řidičský průkaz'+(_n(state.rp.data)?' ('+_n(state.rp.data)+')':''):''}${foundRp&&foundOp?' + ':''}${foundOp?'doklad totožnosti'+(_n(state.op.data)?' ('+_n(state.op.data)+')':''):''}${(foundRp&&foundOp)?'':' — přidej fotku druhého dokladu'}`;
+    } else {
+      statusEl.textContent = '⚠️ Nepodařilo se rozpoznat žádný doklad. Zkus fotku znovu (rovně, bez odlesků).';
+    }
+
+    updateButton(); updateStepper();
+  } catch(err){
+    statusEl.textContent = '⚠️ Chyba: ' + err.message;
+  } finally {
+    zone.classList.remove('processing');
+  }
+}
+
+function openBackModal(type,chybi){
+  state.modalType=type; state.modalBackB64=null; state.modalBackMime=null;
+  const labels={cislo_rp:'číslo ŘP',datum_vydani_rp:'datum vydání ŘP',platnost_rp:'platnost ŘP',
+    cislo_op:'číslo dokladu',datum_vydani_op:'datum vydání',platnost_op:'platnost dokladu',adresa:'adresa bydliště'};
+  document.getElementById('mBackIcon').textContent=type==='rp'?'🚘':'🪪';
+  document.getElementById('mBackTitle').textContent=type==='rp'?'Zadní strana ŘP':'Zadní strana OP';
+  document.getElementById('mBackDesc').textContent='Nahrajte zadní stranu pro doplnění chybějících údajů.';
+  const missing=document.getElementById('mBackMissing');
+  const list=document.getElementById('mBackList');
+  if(chybi&&chybi.length){list.innerHTML=chybi.map(c=>`<li>${labels[c]||c}</li>`).join('');missing.style.display='block';}
+  else missing.style.display='none';
+  document.getElementById('mBackPreview').style.display='none';
+  document.getElementById('mBackOk').disabled=true;
+  document.getElementById('mBackInput').value='';
+  document.getElementById('modalBack').classList.add('show');
+}
+
+function handleModalBack(input){
+  const file=input.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    state.modalBackB64=e.target.result.split(',')[1];
+    state.modalBackMime=file.type||'image/jpeg';
+    const p=document.getElementById('mBackPreview');
+    p.src=e.target.result; p.style.display='block';
+    document.getElementById('mBackOk').disabled=false;
+  };
+  r.readAsDataURL(file);
+}
+
+async function confirmBack(){
+  const type=state.modalType;
+  state[type].back={b64:state.modalBackB64,mime:state.modalBackMime};
+  document.getElementById('mBackOk').disabled=true;
+  document.getElementById('mBackOk').textContent='⏳';
+  const res=await fetch('/api/check',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({doc_type:type,images:toImages(state[type])})});
+  const check=await res.json();
+  state[type].data=check.data||state[type].data;
+  state[type].needs_back=false;
+  closeBackModal();
+  setBadge(type,'done-badge','✓ Nahráno (obě strany)');
+  setCardReady(type);
+  document.getElementById('mBackOk').textContent='✓ Potvrdit';
+  document.getElementById('mBackOk').disabled=false;
+  updateButton(); updateStepper();
+}
+
+function skipBack(){
+  const type=state.modalType;
+  state[type].needs_back=false;
+  closeBackModal();
+  setBadge(type,'done-badge','✓ Nahráno');
+  setCardReady(type);
+  updateButton(); updateStepper();
+}
+
+function closeBackModal(){document.getElementById('modalBack').classList.remove('show');}
+
+// FORMULÁŘ
+const DOC_FIELDS=[['op','cislo_op'],['op','datum_vydani_op'],['op','platnost_op'],['rp','cislo_rp'],['rp','datum_vydani_rp'],['rp','platnost_rp']];
+function fillDocFields(){
+  DOC_FIELDS.forEach(([t,f])=>{
+    const el=document.getElementById('fi_doc_'+f); if(!el) return;
+    const d=state[t]&&state[t].data; const v=d&&d[f];
+    el.value=(v&&v!=='None')?v:'';
+  });
+}
+function openFormModal(skipLustrace){
+  state.skipLustrace = !!skipLustrace;
+  fillDocFields();
+  autoTypVozidla();
+  { const af=document.getElementById('adminFields'); if(af) af.style.display=state.adminMode?'contents':'none';
+    if(state.adminMode){
+      const d=state.rp.data||state.op.data||{};
+      const cele=((d.jmeno||'')+' '+(d.prijmeni||'')).trim();
+      if(cele && !document.getElementById('fi_adm_jmeno').value) document.getElementById('fi_adm_jmeno').value=cele;
+      if(d.datum_narozeni && !document.getElementById('fi_adm_datum_narozeni').value) document.getElementById('fi_adm_datum_narozeni').value=d.datum_narozeni;
+      if(d.adresa && !document.getElementById('fi_adm_adresa').value) document.getElementById('fi_adm_adresa').value=d.adresa;
+    } }
+  document.getElementById('modalForm').classList.add('show');
+}
+function closeFormModal(){
+  document.getElementById('modalForm').classList.remove('show');
+  if(state.lastSmlouvaFilename && document.getElementById('results').style.display==='none'
+     && document.getElementById('loading').style.display!=='block')
+    document.getElementById('results').style.display='block';
+}
+
+function submitForm(){
+  const flexi = document.getElementById('fi_flexi').checked;
+  const nahradni = document.getElementById('fi_nahradni_vozidlo').checked;
+  const fields=['vozidlo','datum_zacatku','cena','sjednany_najezd','jistina','email','telefon'];
+  if(!flexi) fields.push('datum_konce','pocet_intervalu');
+  const isFirma = document.getElementById('fi_typ_najemce').value === 'firma';
+  const ridicJeZastupce = document.getElementById('fi_ridic_je_zastupce').value === '1';
+  if(isFirma){
+    fields.push('firma_ico','firma_nazev','firma_sidlo','firma_zastupce');
+    if(!ridicJeZastupce && !nahradni) fields.push('zmocneni');
+  }
+  let valid=true;
+  if(state.adminMode){
+    fields.length=0;
+    document.querySelectorAll('.form-field.has-error').forEach(f=>f.classList.remove('has-error'));
+  }
+  fields.forEach(f=>{
+    const el=document.getElementById(`fi_${f}`);
+    const ff=document.getElementById(`ff_${f}`);
+    if(!el.value.trim()){
+      ff.classList.add('has-error');
+      el.classList.add('error');
+      valid=false;
+    } else {
+      ff.classList.remove('has-error');
+      el.classList.remove('error');
+    }
+  });
+  if(!valid) return;
+  const _prevCislo=(state.formData||{}).cislo_smlouvy||'';
+  state.formData={
+    cislo_smlouvy: _prevCislo,
+    vozidlo: document.getElementById('fi_vozidlo').value,
+    datum_zacatku: document.getElementById('fi_datum_zacatku').value,
+    datum_konce: document.getElementById('fi_datum_konce').value,
+    cena: document.getElementById('fi_cena').value,
+    cena_dph: document.getElementById('fi_cena_dph').value,
+    mena: document.getElementById('fi_mena').value,
+    interval_ceny: document.getElementById('fi_interval_ceny').value,
+    pocet_intervalu: document.getElementById('fi_pocet_intervalu').value,
+    sjednany_najezd: document.getElementById('fi_sjednany_najezd').value,
+    interval_najezdu: document.getElementById('fi_interval_najezdu').value,
+    jistina: document.getElementById('fi_jistina').value,
+    email: document.getElementById('fi_email').value,
+    telefon: document.getElementById('fi_telefon').value,
+    korespondencni_adresa: document.getElementById('fi_korespondencni_adresa').value,
+    misto_predani: document.getElementById('fi_misto_predani').value,
+    misto_vraceni: document.getElementById('fi_misto_vraceni').value,
+    stav_tachometru_predani: document.getElementById('fi_stav_tachometru_predani').value,
+    stav_nadrze: document.getElementById('fi_stav_nadrze').value,
+    palivo: document.getElementById('fi_palivo').value,
+    poskozeni_nakres: state.nakresPredani||'',
+    poskozeni_predani: document.getElementById('fi_poskozeni_predani').value,
+    cas_predani: document.getElementById('fi_cas_predani').value,
+    flexi: flexi,
+    nahradni_vozidlo: nahradni,
+  };
+  state.docOverride={};
+  DOC_FIELDS.forEach(([t,f])=>{ const v=document.getElementById('fi_doc_'+f).value.trim(); if(v) state.docOverride[f]=v; });
+  state.typVozidla = document.getElementById('fi_typ_vozidla').value;
+  state.firmaData = isFirma ? {
+    ico: document.getElementById('fi_firma_ico').value,
+    nazev: document.getElementById('fi_firma_nazev').value,
+    sidlo: document.getElementById('fi_firma_sidlo').value,
+    dic: document.getElementById('fi_firma_dic').value,
+    zastupce: document.getElementById('fi_firma_zastupce').value,
+    ridic_je_zastupce: ridicJeZastupce,
+    zmocneni: document.getElementById('fi_zmocneni').value,
+  } : null;
+  closeFormModal();
+  analyze(state.skipLustrace);
+}
+
+// Live validace — odstraní error při psaní
+['vozidlo','datum_zacatku','datum_konce','cena','pocet_intervalu','sjednany_najezd','jistina','email','telefon',
+ 'firma_ico','firma_nazev','firma_sidlo','firma_zastupce','zmocneni'].forEach(f=>{
+  const el=document.getElementById(`fi_${f}`);
+  if(el) el.addEventListener('input',()=>{
+    if(el.value.trim()){
+      document.getElementById(`ff_${f}`).classList.remove('has-error');
+      el.classList.remove('error');
+    }
+  });
+});
+
+async function analyze(skipLustrace){
+  if(!state.rp.data){
+    if(state.rp.front){
+      const res=await fetch('/api/check',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({doc_type:'rp',images:toImages(state.rp)})});
+      state.rp.data=(await res.json()).data;
+    } else state.rp.data={};
+  }
+  if(!state.op.data){
+    if(state.op.front){
+      const res=await fetch('/api/check',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({doc_type:'op',images:toImages(state.op)})});
+      state.op.data=(await res.json()).data;
+    } else state.op.data={};
+  }
+  if(state.adminMode){
+    const cele=(document.getElementById('fi_adm_jmeno').value||'').trim();
+    const [jm,...pr]=cele.split(' ');
+    ['rp','op'].forEach(t=>{ const d=state[t].data=state[t].data||{};
+      if(cele){ d.jmeno=jm; d.prijmeni=pr.join(' '); }
+      const dn=document.getElementById('fi_adm_datum_narozeni').value.trim(); if(dn) d.datum_narozeni=dn;
+      const ad=document.getElementById('fi_adm_adresa').value.trim(); if(ad) d.adresa=ad;
+    });
+  }
+  { const ov=state.docOverride||{};
+    DOC_FIELDS.forEach(([t,f])=>{ if(ov[f] && state[t].data) state[t].data[f]=ov[f]; }); }
+  document.getElementById('uploadSection').style.display='none';
+  document.getElementById('results').style.display='none';
+  document.getElementById('loading').style.display='block';
+  setLStep(1,'active'); await sleep(500);
+  setLStep(1,'done'); setLStep(2,'active'); await sleep(400);
+  setLStep(2,'done'); setLStep(3,'active');
+  try{
+    const response=await fetch('/api/process',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({rp_data:state.rp.data,op_data:state.op.data,smlouva_data:state.formData,
+        firma_data:state.firmaData||null,typ_vozidla:state.typVozidla||'osobni',admin:!!state.adminMode,
+        demo:state.isDemo||false,skip_lustrace:!!skipLustrace})});
+    setLStep(3,'done'); setLStep(4,'active'); await sleep(400);
+    setLStep(4,'done'); await sleep(300);
+    const data=await response.json();
+    document.getElementById('loading').style.display='none';
+    if(data.error){document.getElementById('uploadSection').style.display='block';showError(data.error);return;}
+    showResults(data);
+  } catch(err){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('uploadSection').style.display='block';
+    showError(err.message);
+  }
+}
+
+function opravitUdaje(){
+  // Vrátí se do formuláře; po potvrzení se smlouva přegeneruje se STEJNÝM číslem
+  // (číslo drží state.formData.cislo_smlouvy) a lustrace se neopakuje.
+  document.getElementById('results').style.display='none';
+  openFormModal(true);
+}
+
+function showResults(data){
+  const od=data.osobni_data||{},lus=data.lustrace||{},sml=data.smlouva||{};
+  state.lastOsobniData=od;
+  if(data.cislo_smlouvy && state.formData) state.formData.cislo_smlouvy=data.cislo_smlouvy;
+  state.lastSmlouvaFilename=sml.filename||null;
+  state.lastPodpisPozice=sml.podpis_pozice||null;
+  setStep(3,'active');
+  document.getElementById('resJmeno').textContent=`${od.jmeno||''} ${od.prijmeni||''}`.trim()||'—';
+  document.getElementById('resDatum').textContent=od.datum_narozeni||'—';
+  document.getElementById('resRP').textContent=od.cislo_rp||'—';
+  document.getElementById('resPlatnostRP').textContent=od.platnost_rp||'—';
+  document.getElementById('resOP').textContent=od.cislo_op||'—';
+  document.getElementById('resPlatnostOP').textContent=od.platnost_op||'—';
+  document.getElementById('resAdresa').textContent=od.adresa||'—';
+  const icon=document.getElementById('lustraceIcon'),card=document.getElementById('lustraceCard');
+  if(lus.ma_exekuce){
+    icon.textContent='❗';icon.className='lustrace-icon warn';card.className='result-card lustrace-result danger';
+    document.getElementById('lustraceTitle').textContent=`${lus.pocet_exekuci} exekuce nalezeny!`;
+    document.getElementById('lustraceTitle').className='danger';
+    document.getElementById('lustraceDesc').textContent='Doporučujeme nepronajímat vozidlo.';
+  } else {
+    icon.textContent='✓';icon.className='lustrace-icon ok';card.className='result-card lustrace-result success';
+    document.getElementById('lustraceTitle').textContent='Bez exekucí';
+    document.getElementById('lustraceTitle').className='ok';
+    document.getElementById('lustraceDesc').textContent='Nájemce je v pořádku. Smlouva je připravena.';
+  }
+  document.getElementById('pocetExekuci').textContent=lus.pocet_exekuci??'—';
+  document.getElementById('cenaLustrace').textContent=lus.cena_kc?`${lus.cena_kc.toFixed(2)} Kč`:'—';
+  document.getElementById('kreditZbytek').textContent=lus.kredit_kc?`${lus.kredit_kc.toFixed(2)} Kč`:'—';
+  const sc=document.getElementById('smlouvaContent');
+  if(sml.filename){
+    sc.innerHTML=`<div class="data-row"><span class="data-label">Stav</span><span class="data-value" style="color:var(--green-light)">✓ Vyplněna</span></div>
+      <div class="data-row"><span class="data-label">Soubor</span><span class="data-value" style="font-size:11px;opacity:.65">${sml.filename}</span></div>`;
+  } else {
+    sc.innerHTML=`<div style="color:var(--grey);font-size:12px;line-height:1.6">${sml.error||'Šablona nenalezena.'}</div>`;
+  }
+  const act=document.getElementById('actions');act.innerHTML='';
+  if(sml.filename) act.innerHTML+=`<a class="btn-dl primary" href="/download/${encodeURIComponent(sml.filename)}">📄 Stáhnout smlouvu — V2 (PDF)</a>`;
+  if(sml.filename_v1) act.innerHTML+=`<a class="btn-dl secondary" href="/download/${encodeURIComponent(sml.filename_v1)}">📊 Stáhnout smlouvu — V1 (Excel)</a>`;
+  if(lus.pdf_name) act.innerHTML+=`<a class="btn-dl secondary" href="/download/${encodeURIComponent(lus.pdf_name)}">📋 Výpis CEE (PDF)</a>`;
+  if(sml.filename) act.innerHTML+=`<button class="btn-dl secondary" id="vyfakturujBtn" onclick="importToVyfakturuj()">🧾 Importovat do Vyfakturuj</button>`;
+  act.innerHTML+=`<button class="btn-dl secondary" onclick="opravitUdaje()">✏️ Opravit údaje</button>`;
+  if(sml.filename) act.innerHTML+=`<button class="btn-dl secondary" id="podpisBtn" onclick="openPodpis()">🖊️ Podepsat na místě</button>`;
+  if(sml.filename) act.innerHTML+=`<button class="btn-dl secondary" id="docusealBtn" onclick="sendToDocuseal()">✍️ Odeslat k podpisu</button>`;
+  if(sml.filename) act.innerHTML+=`<button class="btn-dl secondary" id="docusealDlBtn" onclick="stahnoutPodepsanou()" style="display:none">⬇️ Stáhnout podepsanou</button>`;
+  document.getElementById('docusealSmsOpt').style.display=sml.filename?'block':'none';
+  document.getElementById('vyfakturujNajemOpt').style.display=sml.filename?'block':'none';
+  document.getElementById('vyfakturujStatus').style.display='none';
+  document.getElementById('docusealStatus').style.display='none';
+  document.getElementById('results').style.display='block';
+}
+
+function showDocusealStatus(msg, isError, html){
+  const box=document.getElementById('docusealStatus');
+  if(html) box.innerHTML=(isError?'⚠️ ':'✅ ')+msg;
+  else box.textContent=(isError?'⚠️ ':'✅ ')+msg;
+  box.style.color=isError?'':'var(--green-light, #4caf82)';
+  box.style.display='block';
+}
+
+async function stahnoutPodepsanou(){
+  const btn=document.getElementById('docusealDlBtn');
+  const original=btn.textContent;
+  btn.disabled=true; btn.textContent='⏳ Zjišťuji stav...';
+  try{
+    const res=await fetch('/api/docuseal-stazeni',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({submission_id:state.lastDocusealId,smlouva_filename:state.lastSmlouvaFilename||''})});
+    const data=await res.json();
+    btn.disabled=false;
+    if(!data.success){ btn.textContent=original; showDocusealStatus(data.error||'Chyba', true); return; }
+    if(data.hotovo){
+      btn.textContent='✅ Podepsaná stažena';
+      showDocusealStatus(`${data.zprava} <a href="/download/${encodeURIComponent(data.filename)}" style="color:var(--gold)">📄 Otevřít podepsanou smlouvu</a>`
+        +(data.audit_url?` · <a href="${data.audit_url}" target="_blank" style="color:var(--gold)">certifikát podpisu</a>`:''), false, true);
+    } else {
+      btn.textContent=original;
+      showDocusealStatus(data.zprava, true);
+    }
+  } catch(err){ btn.disabled=false; btn.textContent=original; showDocusealStatus('Chyba: '+err.message, true); }
+}
+
+async function sendToDocuseal(){
+  const btn=document.getElementById('docusealBtn');
+  const smsChk=document.getElementById('docusealSmsChk');
+  const wantSms=!!(smsChk && smsChk.checked);
+  const original=btn.textContent;
+  document.getElementById('docusealStatus').style.display='none';
+  btn.disabled=true; btn.textContent='⏳ Odesílám k podpisu...';
+  try{
+    const res=await fetch('/api/docuseal-send',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({osobni_data:state.lastOsobniData||{},smlouva_data:state.formData||{},
+        smlouva_filename:state.lastSmlouvaFilename||'', podpis_pozice:state.lastPodpisPozice||null,
+        send_sms:wantSms})});
+    const data=await res.json();
+    if(data.success){
+      state.lastDocusealId=data.submission_id||null;
+      btn.textContent='✅ Odesláno k podpisu';
+      btn.title=`Odesláno na ${data.email}`;
+      { const b=document.getElementById('docusealDlBtn'); if(b) b.style.display='inline-block'; }
+      let msg=`Smlouva byla odeslána k podpisu nájemci na e-mail ${data.email}.`;
+      if(wantSms){
+        msg+=data.sms_sent ? ' SMS s odkazem byla také odeslána.'
+          : (data.sms_skipped_no_phone ? ' SMS se nepodařilo odeslat — nájemce nemá ve smlouvě vyplněný telefon.' : '');
+      }
+      showDocusealStatus(msg, false);
+    } else {
+      btn.disabled=false; btn.textContent=original;
+      showDocusealStatus(data.error||'Odeslání k podpisu se nezdařilo.', true);
+    }
+  } catch(err){
+    btn.disabled=false; btn.textContent=original;
+    showDocusealStatus('Odeslání k podpisu se nezdařilo: '+err.message, true);
+  }
+}
+
+function showVyfakturujStatus(msg, isError){
+  const box=document.getElementById('vyfakturujStatus');
+  box.textContent=(isError?'⚠️ ':'✅ ')+msg;
+  box.style.color=isError?'':'var(--green-light, #4caf82)';
+  box.style.display='block';
+}
+
+async function importToVyfakturuj(){
+  const menaSml=(state.formData&&state.formData.mena)||'CZK';
+  if(menaSml!=='CZK' && !confirm(`Pozor: smlouva je v ${menaSml} — faktury ve Vyfakturuj se vystaví v ${menaSml}. Pokračovat?`)) return;
+  const btn=document.getElementById('vyfakturujBtn');
+  const original=btn.textContent;
+  document.getElementById('vyfakturujStatus').style.display='none';
+  btn.disabled=true; btn.textContent='⏳ Vystavuji faktury...';
+  try{
+    const res=await fetch('/api/vyfakturuj-import',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({osobni_data:state.lastOsobniData||{},smlouva_data:state.formData||{},
+        firma_data:state.firmaData||null,
+        vcetne_najmu:document.getElementById('vyfakturujNajemChk').checked,
+        typ_dokladu:(document.querySelector('input[name="vyfTyp"]:checked')||{}).value||'zalohova'})});
+    const data=await res.json();
+    if(data.success){
+      btn.textContent='✅ Vystaveno ve Vyfakturuj';
+      const souhrn=(data.zpravy&&data.zpravy.length)?data.zpravy.join(' · '):`Faktura „${data.name}" založena.`;
+      btn.title=souhrn;
+      showVyfakturujStatus(souhrn+' — odeslat zákazníkovi můžeš přímo z Vyfakturuj (e-mail obsahuje QR platbu).', false);
+    } else {
+      btn.disabled=false; btn.textContent=original;
+      showVyfakturujStatus(data.error||'Import do Vyfakturuj se nezdařil.', true);
+    }
+  } catch(err){
+    btn.disabled=false; btn.textContent=original;
+    showVyfakturujStatus('Import do Vyfakturuj se nezdařil: '+err.message, true);
+  }
+}
+
+// HELPERS
+function readFile(file){
+  // Každou fotku překódujeme přes canvas: zmenšení na max 2000 px + převod na JPEG.
+  // Řeší příliš velké fotky (48MP z iPhonu má přes 8000 px — API je odmítá),
+  // HEIC přejmenované na .jpeg i nahlášený špatný typ souboru.
+  const jePdf=(file.type||'').toLowerCase()==='application/pdf'||/\.pdf$/i.test(file.name||'');
+  if(jePdf) return new Promise(res=>{const r=new FileReader();r.onload=e=>res({b64:e.target.result.split(',')[1],mime:'application/pdf'});r.readAsDataURL(file);});
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=()=>{
+      const k=Math.min(1, 2000/Math.max(img.width,img.height));
+      const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(img.width*k)); c.height=Math.max(1,Math.round(img.height*k));
+      const ctx=c.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height);
+      ctx.drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);
+      res({b64:c.toDataURL('image/jpeg',0.87).split(',')[1],mime:'image/jpeg'});
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url);
+      rej(new Error('Fotku „'+(file.name||'')+'" se nepodařilo načíst — nejspíš formát HEIC. Ulož ji jako JPG/PNG (nebo pořiď fotku znovu) a nahraj ji ještě jednou.')); };
+    img.src=url;
+  });
+}
+function showPreview(type,url,name){const p=document.getElementById(`${type}Preview`);p.src=url;p.style.display='block';const fn=document.getElementById(`${type}FileName`);fn.textContent=name;fn.style.display='block';}
+function setBadge(type,cls,text){const b=document.getElementById(`${type}Badge`);b.className='card-badge '+cls;b.textContent=text;}
+function setCardReady(type){document.getElementById(`${type}Card`).classList.add('ready');document.getElementById(`${type}Check`).style.display='block';}
+function updateButton(){const ok=state.adminMode||(state.rp.front&&!state.rp.needs_back&&state.op.front&&!state.op.needs_back);document.getElementById('analyzeBtn').disabled=!ok;document.getElementById('contractOnlyBtn').disabled=!ok;}
+function setAdminMode(on){
+  state.adminMode=!!on;
+  const af=document.getElementById('adminFields'); if(af) af.style.display=on?'contents':'none';
+  updateButton();
+}
+function updateStepper(){if(state.rp.front){setStep(1,'done');setStep(2,'active');}if(state.op.front){setStep(2,'done');}}
+function setStep(n,s){const c=document.getElementById(`sc${n}`),l=document.getElementById(`sl${n}`);c.className='step-circle '+s;l.className='step-label '+s;if(s==='done')c.textContent='✓';else if(c.textContent==='✓')c.textContent=n;if(n<3){const ln=document.getElementById(`line${n}`);s==='done'?ln.classList.add('done'):ln.classList.remove('done');}}
+function setLStep(n,s){const el=document.getElementById(`ls${n}`);el.className='lstep '+s;const icons=['','🚘','🪪','🔍','📝'];el.querySelector('.lstep-icon').textContent=s==='done'?'✅':icons[n];}
+function showError(msg){const eb=document.getElementById('errorBox');eb.textContent='⚠️ '+msg;eb.style.display='block';}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function reset(){
+  state.rp={front:null,back:null,data:null,needs_back:false};
+  state.op={front:null,back:null,data:null,needs_back:false};
+  state.formData=null;
+  state.isDemo=false;
+  state.skipLustrace=false;
+  state.isDemo=false;
+  state.lastOsobniData=null;
+  state.lastSmlouvaFilename=null;
+  state.lastPodpisPozice=null;
+  ['rp','op'].forEach(t=>{document.getElementById(`${t}Input`).value='';document.getElementById(`${t}Preview`).style.display='none';document.getElementById(`${t}FileName`).style.display='none';document.getElementById(`${t}Card`).classList.remove('ready');document.getElementById(`${t}Check`).style.display='none';});
+  document.getElementById('rpBadge').textContent='① Řidičský průkaz';document.getElementById('rpBadge').className='card-badge rp-badge';
+  document.getElementById('opBadge').textContent='② OP / Pas / ID';document.getElementById('opBadge').className='card-badge op-badge';
+  document.getElementById('analyzeBtn').disabled=true;
+  document.getElementById('contractOnlyBtn').disabled=true;
+  document.getElementById('results').style.display='none';
+  document.getElementById('uploadSection').style.display='block';
+  document.getElementById('errorBox').style.display='none';
+  document.getElementById('vyfakturujStatus').style.display='none';
+  document.getElementById('docusealStatus').style.display='none';
+  document.getElementById('docusealSmsOpt').style.display='none';
+  { const vo=document.getElementById('vyfakturujNajemOpt'); if(vo){vo.style.display='none';} const vc=document.getElementById('vyfakturujNajemChk'); if(vc) vc.checked=true; }
+  state.smartFiles=[];
+  { const ds=document.getElementById('docStatus'); if(ds) ds.style.display='none'; const ss=document.getElementById('smartStatus'); if(ss) ss.style.display='none'; }
+  { const pi=document.getElementById('popisInput'); if(pi) pi.value=''; const ps=document.getElementById('popisStatus'); if(ps) ps.style.display='none'; }
+  { const smsChk=document.getElementById('docusealSmsChk'); if(smsChk) smsChk.checked=false; }
+  [1,2,3].forEach(n=>{const c=document.getElementById(`sc${n}`);c.className='step-circle';c.textContent=n;document.getElementById(`sl${n}`).className='step-label';});
+  setStep(1,'active');
+  [1,2,3,4].forEach(n=>document.getElementById(`ls${n}`).className='lstep');
+  ['vozidlo','datum_zacatku','datum_konce','cena','pocet_intervalu','sjednany_najezd','jistina','email','telefon','misto_predani','misto_vraceni','stav_tachometru_predani'].forEach(f=>{
+    document.getElementById(`fi_${f}`).value='';
+    document.getElementById(`ff_${f}`).classList.remove('has-error');
+    document.getElementById(`fi_${f}`).classList.remove('error');
+  });
+  setMena('CZK');
+  setCenaDph('bez_dph');
+  setFlexi(false);
+  document.getElementById('fi_nahradni_vozidlo').checked=false; updateZmocneni();
+  state.typManual=false; setTypVozidla('osobni',false);
+  state.formData=null; state.lastSmlouvaFilename=null; state.lastOsobniData=null;
+  document.getElementById('fi_stav_nadrze').value='';
+  document.getElementById('fi_palivo').value='';
+  document.getElementById('fi_cas_predani').value='';
+  document.getElementById('fi_poskozeni_predani').value='';
+  state.nakresPredani=null; state.nakresVraceni=null;
+  { const i1=document.getElementById('nakresPredaniInfo'); if(i1) i1.style.display='none'; }
+  document.getElementById('lbl_pocet').textContent='Počet měsíců';
+}
+
+['rpCard','opCard'].forEach(id=>{
+  const card=document.getElementById(id);
+  card.addEventListener('dragover',e=>{e.preventDefault();card.style.borderColor='rgba(201,168,76,0.55)';});
+  card.addEventListener('dragleave',()=>{card.style.borderColor='';});
+  card.addEventListener('drop',e=>{e.preventDefault();card.style.borderColor='';const file=e.dataTransfer.files[0];const type=id==='rpCard'?'rp':'op';const input=document.getElementById(`${type}Input`);const dt=new DataTransfer();dt.items.add(file);input.files=dt.files;handleUpload(type,input);});
+});
+
+function setTypNajemce(val){
+  document.getElementById('fi_typ_najemce').value = val;
+  document.getElementById('tnaj_fyzicka').classList.toggle('active', val==='fyzicka');
+  document.getElementById('tnaj_firma').classList.toggle('active', val==='firma');
+  document.getElementById('firmaFields').style.display = (val==='firma') ? 'contents' : 'none';
+}
+
+function setTypVozidla(val, manual){
+  document.getElementById('fi_typ_vozidla').value = val;
+  if(manual) state.typManual = true;
+  ['osobni','hatchback','kombi','suv','coupe','kabriolet','dodavka','prives','motorka'].forEach(v=>{
+    const b=document.getElementById('tv_'+v); if(b) b.classList.toggle('active', val===v);
+  });
+}
+
+// Automatické určení typu karoserie podle názvu vozidla (jen pokud uživatel typ nezvolil ručně)
+function detectTypVozidla(text){
+  const t=' '+(text||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')+' ';
+  if(/\b(cabrio|cabriolet|kabriolet|roadster|spider|spyder|convertible|mx-?5|z4|slk|slc|boxster|volante)\b/.test(t)) return 'kabriolet';
+  if(/\b(coupe|kupe|tt|r8|911|cayman|718|mustang|camaro|brz|gt ?86|supra|4c|rcz|a5|a7|4 series|6 series|8 series|gran coupe|sportback)\b/.test(t)) return 'coupe';
+  if(/\b(combi|kombi|touring|variant|avant|estate|wagon|sportswagon|sport tourer|shooting brake)\b|\bsw\b/.test(t)) return 'kombi';
+  if(/\b(suv|crossover|kodiaq|karoq|kamiq|tiguan|touareg|t-roc|t-cross|taigo|atteca|ateca|arona|formentor|tavascan|enyaq|id\.? ?[45]|q[2-8]|x[1-7]|ix[1-3]?|glc|gle|gla|glb|gls|eqa|eqb|eqc|xc ?[4-9]0|ex[3-9]0|c40|rav ?4|c-hr|yaris cross|corolla cross|land ?cruiser|highlander|bz4x|kuga|puma|ecosport|captur|kadjar|arkana|austral|duster|bayon|sportage|sorento|stonic|niro|ev6|ev9|tucson|santa ?fe|kona|qashqai|x-trail|juke|ariya|outlander|asx|eclipse cross|cx-?[3-9]0?|cx-?5|mokka|grandland|crossland|frontera|3008|5008|2008|c5 aircross|c3 aircross|c4 cactus|ds ?[37]|jimny|vitara|s-cross|compass|renegade|wrangler|cherokee|cayenne|macan|bentayga|urus|defender|discovery|evoque|velar|range rover|model [xy]|cupra born suv|polestar 3|lynk|seal u|atto 3|zs|hs|mg ?4x|jeep|pajero|hilux|ranger|amarok|navara|l200)\b/.test(t)) return 'suv';
+  if(/\b(octavia|superb|scala|fabia|rapid|polo|golf|up!?|ibiza|leon|arosa|i10|i20|i30|clio|megane|208|108|308|corsa|astra|yaris|aygo|500|panda|fiesta|focus|c3|c4|civic|jazz|mini|a1|a3|1 series|serie 1|id\.? ?[23]|born|corolla|mazda ?3|swift|ignis|ceed|rio|picanto|sandero|twingo|zoe|e-up|citigo|mii|adam|karl)\b/.test(t)) return 'hatchback';
+  if(/\b(sedan|limuzina|limousine|saloon|jetta|camry|accord|elantra|sonata|vento|model [3s]|c ?class|e ?class|s ?class|[357] series)\b/.test(t)) return 'osobni';
+  return null;
+}
+function autoTypVozidla(){
+  if(state.typManual) return;
+  const cur=document.getElementById('fi_typ_vozidla').value;
+  if(!['osobni','hatchback','kombi','suv','coupe','kabriolet'].includes(cur)) return;
+  const el=document.getElementById('fi_vozidlo'); if(!el) return;
+  const typ=detectTypVozidla(el.value);
+  if(typ) setTypVozidla(typ,false);
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const el=document.getElementById('fi_vozidlo'); if(el) el.addEventListener('input',autoTypVozidla);
+});
+
+function updateZmocneni(){
+  const ridicJe = document.getElementById('fi_ridic_je_zastupce').value === '1';
+  const nahradni = document.getElementById('fi_nahradni_vozidlo').checked;
+  const show = !ridicJe && !nahradni;
+  document.getElementById('ff_zmocneni').style.display = show ? '' : 'none';
+  if(!show){ document.getElementById('ff_zmocneni').classList.remove('has-error'); document.getElementById('fi_zmocneni').classList.remove('error'); }
+}
+
+function setRidicJeZastupce(val){
+  document.getElementById('fi_ridic_je_zastupce').value = val ? '1' : '0';
+  document.getElementById('ridic_ano').classList.toggle('active', val===true);
+  document.getElementById('ridic_ne').classList.toggle('active', val===false);
+  updateZmocneni();
+}
+
+function setFlexi(on){
+  const chk = document.getElementById('fi_flexi'); chk.checked = !!on;
+  const kon = document.getElementById('fi_datum_konce'), poc = document.getElementById('fi_pocet_intervalu');
+  kon.disabled = !!on; poc.disabled = !!on;
+  if(on){
+    kon.value=''; poc.value=''; poc.placeholder='flexi';
+    ['ff_datum_konce','ff_pocet_intervalu'].forEach(id=>document.getElementById(id).classList.remove('has-error'));
+    kon.classList.remove('error'); poc.classList.remove('error');
+  } else {
+    poc.placeholder='vyplní se automaticky'; autoCalcDelka();
+  }
+}
+
+let aresTimeout=null;
+function onIcoInput(){
+  clearTimeout(aresTimeout);
+  const ico=document.getElementById('fi_firma_ico').value.trim();
+  const statusEl=document.getElementById('ares_status');
+  if(ico.length<8){ statusEl.textContent=''; return; }
+  statusEl.textContent='Hledám v ARES…'; statusEl.style.color='var(--grey)';
+  aresTimeout=setTimeout(async ()=>{
+    try{
+      const res=await fetch('/api/ares',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ico})});
+      const data=await res.json();
+      if(data.error){ statusEl.textContent='⚠ '+data.error; statusEl.style.color='var(--red-light)'; return; }
+      document.getElementById('fi_firma_nazev').value = data.nazev || '';
+      document.getElementById('fi_firma_sidlo').value = data.sidlo || '';
+      document.getElementById('fi_firma_dic').value = data.dic || '';
+      statusEl.textContent='✓ Nalezeno v ARES'; statusEl.style.color='var(--gold-light)';
+      ['ff_firma_nazev','ff_firma_sidlo'].forEach(id=>{
+        document.getElementById(id).classList.remove('has-error');
+      });
+    }catch(err){
+      statusEl.textContent='⚠ Nepodařilo se ověřit (zkontrolujte připojení)'; statusEl.style.color='var(--red-light)';
+    }
+  }, 500);
+}
+
+function setMena(val){
+  document.getElementById('fi_mena').value = val;
+  document.getElementById('cur_czk').classList.toggle('active', val==='CZK');
+  document.getElementById('cur_eur').classList.toggle('active', val==='EUR');
+}
+
+function setCenaDph(val){
+  document.getElementById('fi_cena_dph').value = val;
+  document.getElementById('tb_cena_bez_dph').classList.toggle('active', val==='bez_dph');
+  document.getElementById('tb_cena_s_dph').classList.toggle('active', val==='s_dph');
+}
+
+
+function applyPrefill(p){
+  const vyplneno=[];
+  const put=(id,val,label)=>{ if(val){ document.getElementById('fi_'+id).value=val; vyplneno.push(label); } };
+  if(p.typ_vozidla) setTypVozidla(p.typ_vozidla);
+  if(p.ico){ setTypNajemce('firma'); document.getElementById('fi_firma_ico').value=p.ico; vyplneno.push('IČO'); onIcoInput(); }
+  else if(p.firma_nazev){ setTypNajemce('firma'); put('firma_nazev',p.firma_nazev,'firma'); }
+  if(p.nahradni_vozidlo){ document.getElementById('fi_nahradni_vozidlo').checked=true; updateZmocneni(); vyplneno.push('náhradní vozidlo'); }
+  if(p.flexi){ setFlexi(true); vyplneno.push('flexi'); }
+  if(p.mena) setMena(p.mena);
+  if(p.interval_ceny){ setInterval('ceny',p.interval_ceny); }
+  if(p.interval_najezdu && p.sjednany_najezd!=='Neomezený'){ setInterval('najezdu',p.interval_najezdu); }
+  if(p.cena_dph) setCenaDph(p.cena_dph);
+  put('vozidlo',p.vozidlo,'vozidlo'); put('cena',p.cena,'cena'); put('jistina',p.jistina,'jistina');
+  put('sjednany_najezd',p.sjednany_najezd,'nájezd'); put('datum_zacatku',p.datum_zacatku,'začátek'); put('datum_konce',p.datum_konce,'konec');
+  autoTypVozidla();
+  put('email',p.email,'e-mail'); put('telefon',p.telefon,'telefon'); put('misto_predani',p.misto_predani,'místo předání'); put('misto_vraceni',p.misto_vraceni,'místo vrácení');
+  autoCalcDelka();
+  ['vozidlo','cena','jistina','sjednany_najezd','datum_zacatku','datum_konce','email','telefon','pocet_intervalu'].forEach(f=>{
+    const el=document.getElementById('fi_'+f), ff=document.getElementById('ff_'+f);
+    if(el && el.value.trim()){ el.classList.remove('error'); if(ff) ff.classList.remove('has-error'); }
+  });
+  const cenaTxt=p.cena?` · ${p.cena} ${p.cena_dph==='s_dph'?'s DPH':(p.cena_dph==='bez_dph'?'bez DPH':'(DPH nezadáno — zkontroluj přepínač)')}`:'';
+  const ridicTxt=p.ridic?` Řidič v dokumentu: ${p.ridic} (zkontroluj, že odpovídá dokladům).`:'';
+  return {vyplneno, text: vyplneno.length
+    ? `✅ Předvyplněno: ${vyplneno.join(', ')}${cenaTxt}.${ridicTxt} Zkontroluj v následujícím formuláři a doplň zbytek.`
+    : '⚠️ Nenašel jsem žádné použitelné údaje.'};
+}
+
+function setPrefillStatus(id, msg, ok){
+  const st=document.getElementById(id);
+  st.style.display='block'; st.style.color=ok?'var(--green-light, #4caf82)':'var(--red-light)';
+  st.textContent=msg;
+}
+
+async function parsePopis(){
+  const txt=document.getElementById('popisInput').value.trim();
+  const btn=document.getElementById('popisBtn');
+  if(!txt){ setPrefillStatus('popisStatus','⚠️ Napiš nejdřív základní údaje o pronájmu.',false); return; }
+  btn.disabled=true; const orig=btn.textContent; btn.textContent='⏳ Čtu...';
+  document.getElementById('popisStatus').style.display='none';
+  try{
+    const res=await fetch('/api/parse-popis',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt})});
+    const data=await res.json();
+    if(!data.success){ setPrefillStatus('popisStatus','⚠️ '+(data.error||'Nepodařilo se přečíst popis.'),false); return; }
+    const r=applyPrefill(data.pole);
+    setPrefillStatus('popisStatus',r.text,r.vyplneno.length>0);
+  }catch(err){
+    setPrefillStatus('popisStatus','⚠️ Nepodařilo se přečíst popis: '+err.message,false);
+  }finally{ btn.disabled=false; btn.textContent=orig; }
+}
+
+async function handleOtherDoc(input){
+  const files=Array.from(input.files||[]); input.value='';
+  if(!files.length) return;
+  if(files.length>4){ setPrefillStatus('docStatus','⚠️ Nahraj maximálně 4 soubory.',false); return; }
+  setPrefillStatus('docStatus',`⏳ Čtu dokument (${files.length})...`,true);
+  try{
+    const payload=[];
+    for(const f of files){
+      if(f.type==='application/pdf'){
+        if(f.size>9000000){ setPrefillStatus('docStatus','⚠️ PDF je větší než 9 MB.',false); return; }
+        const {b64}=await new Promise(res=>{const r=new FileReader();r.onload=e=>res({b64:e.target.result.split(',')[1]});r.readAsDataURL(f);});
+        payload.push({data:b64,media_type:'application/pdf'});
+      } else {
+        const {b64,mime}=await readFile(f);
+        payload.push({data:b64,media_type:mime});
+      }
+    }
+    const res=await fetch('/api/extract-doc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:payload})});
+    const data=await res.json();
+    if(!data.success){ setPrefillStatus('docStatus','⚠️ '+(data.error||'Dokument se nepodařilo přečíst.'),false); return; }
+    const r=applyPrefill(data.pole);
+    setPrefillStatus('docStatus',r.text,r.vyplneno.length>0);
+  }catch(err){
+    setPrefillStatus('docStatus','⚠️ Dokument se nepodařilo přečíst: '+err.message,false);
+  }
+}
+
+function fmtDatumCz(iso){
+  if(!iso) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if(!m) return iso;
+  return `${m[3]}.${m[2]}.${m[1]}`;
+}
+
+function setInterval(type, val) {
+  if(type==='ceny') {
+    document.getElementById('fi_interval_ceny').value=val;
+    document.getElementById('tb_mesicne').classList.toggle('active', val==='měsíčně');
+    document.getElementById('tb_denne').classList.toggle('active', val==='denně');
+    document.getElementById('lbl_pocet').textContent = val==='měsíčně' ? 'Počet měsíců' : 'Počet dní';
+    autoCalcDelka();
+  } else {
+    document.getElementById('fi_interval_najezdu').value=val;
+    document.getElementById('tn_rok').classList.toggle('active', val==='rok');
+    document.getElementById('tn_mesic').classList.toggle('active', val==='měsíc');
+    document.getElementById('tn_den').classList.toggle('active', val==='den');
+    document.getElementById('tn_pronajem').classList.toggle('active', val==='pronájem');
+  }
+}
+
+function autoCalcDelka(){
+  if(document.getElementById('fi_flexi').checked) return;
+  const zac = document.getElementById('fi_datum_zacatku').value;
+  const kon = document.getElementById('fi_datum_konce').value;
+  if(!zac || !kon) return;
+
+  const d1 = new Date(zac), d2 = new Date(kon);
+  const dnyRozdil = Math.round((d2 - d1) / 86400000);
+  if(dnyRozdil <= 0) return;
+
+  const interval = document.getElementById('fi_interval_ceny').value;
+  const pocetEl = document.getElementById('fi_pocet_intervalu');
+  const ffEl = document.getElementById('ff_pocet_intervalu');
+  const lblEl = document.getElementById('lbl_pocet');
+
+  let pocet;
+  if(interval === 'denně'){
+    pocet = dnyRozdil;
+    lblEl.textContent = 'Počet dní';
+  } else {
+    // počet měsíců — vždy v měsících (započatý měsíc se počítá celý),
+    // nikdy ve dnech: fakturace je měsíční a do smlouvy patří měsíce
+    let mesice = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+    if(d2.getDate() > d1.getDate()) mesice += 1;
+    pocet = Math.max(1, mesice);
+    lblEl.textContent = (d2.getDate() === d1.getDate()) ? 'Počet měsíců' : 'Počet měsíců (započatý měsíc = celý)';
+  }
+
+  pocetEl.value = pocet;
+  ffEl.classList.remove('has-error');
+  pocetEl.classList.remove('error');
+}
+
+function demoMode(){
+  // Nastav demo data bez nahráváni dokladů
+  state.rp.front={b64:"demo",mime:"image/jpeg",name:"demo_rp.jpg"};
+  state.rp.data={...{"jmeno":"Jan","prijmeni":"Novák","datum_narozeni":"15.06.1985","cislo_rp":"E123456","datum_vydani_rp":"10.03.2020","platnost_rp":"10.03.2030","adresa":null}};
+  state.rp.needs_back=false;
+  state.op.front={b64:"demo",mime:"image/jpeg",name:"demo_op.jpg"};
+  state.op.data={...{"jmeno":"Jan","prijmeni":"Novák","datum_narozeni":"15.06.1985","rodne_cislo":"850615/1234","cislo_op":"123456789","datum_vydani_op":"10.03.2020","platnost_op":"10.03.2030","adresa":"Václavské náměstí 1, Praha 1","je_pas":false}};
+  state.op.needs_back=false;
+  // Zobraz jako nahrané
+  ["rp","op"].forEach(t=>{
+    document.getElementById(`${t}Card`).classList.add("ready");
+    document.getElementById(`${t}Check`).style.display="block";
+    setBadge(t,"done-badge","✓ Demo data");
+    const fn=document.getElementById(`${t}FileName`);fn.textContent="demo_doklad.jpg";fn.style.display="block";
+  });
+  setStep(1,"done");setStep(2,"done");
+  document.getElementById("analyzeBtn").disabled=false;
+  // Ulož příznak demo
+  state.isDemo=true;
+}
+
+// === HISTORIE ===
+let allHistory = [];
+
+async function restartGenerator(){
+  try{ await fetch('/api/restart',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}); }catch(e){}
+  document.body.style.opacity='0.4'; document.body.style.pointerEvents='none';
+  const t0=Date.now();
+  const zkus=async()=>{
+    try{ const r=await fetch('/api/history',{cache:'no-store'}); if(r.ok){ location.reload(); return; } }catch(e){}
+    if(Date.now()-t0<30000) setTimeout(zkus,1000);
+    else { document.body.style.opacity=''; document.body.style.pointerEvents='';
+      alert('Server se po restartu neozval — spusť ho ikonou RX Generátor v Docku.'); }
+  };
+  setTimeout(zkus,1500);
+}
+
+async function vypnoutGenerator(){
+  if(!confirm('Vypnout generátor? Server se ukončí a stránka přestane fungovat.')) return;
+  try{ await fetch('/api/shutdown',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}); }catch(e){}
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#999;font-size:15px;text-align:center;padding:20px">⏻ Generátor je vypnutý.<br><br>Znovu ho spustíš aplikací „RX Generátor" v Docku<br>nebo souborem Spustit_generator.command.</div>';
+}
+
+async function toggleHistory() {
+  const panel = document.getElementById('historyPanel');
+  const main = document.getElementById('uploadSection');
+  const results = document.getElementById('results');
+  const loading = document.getElementById('loading');
+
+  if(panel.style.display === 'none') {
+    // Ulož aktuální stav
+    panel._prevMain = main.style.display;
+    panel._prevResults = results.style.display;
+    // Zobraz historii, skryj ostatní
+    panel.style.display = 'block';
+    main.style.display = 'none';
+    results.style.display = 'none';
+    loading.style.display = 'none';
+    await loadHistory();
+  } else {
+    panel.style.display = 'none';
+    // Obnov předchozí stav
+    main.style.display = panel._prevMain || 'block';
+    results.style.display = panel._prevResults || 'none';
+  }
+}
+
+async function loadHistory() {
+  const res = await fetch('/api/history');
+  allHistory = await res.json();
+  renderHistory(allHistory);
+}
+
+function renderHistory(items) {
+  const el = document.getElementById('historyList');
+  if(!items.length) {
+    el.innerHTML = '<div class="hist-empty">📋 Zatím žádné záznamy</div>';
+    return;
+  }
+  el.innerHTML = items.map(e => `
+    <div class="history-row" onclick="loadFromHistory('${e.id}')">
+      <div class="hist-avatar">👤</div>
+      <div class="hist-main">
+        <div class="hist-name">${e.jmeno || '—'}</div>
+        <div class="hist-meta">
+          <span>🚗 ${e.vozidlo || '—'}</span>
+          <span>📅 ${fmtDatumCz(e.datum_zacatku) || '—'} – ${fmtDatumCz(e.datum_konce) || '—'}</span>
+          <span>💰 ${e.cena ? e.cena + ' Kč/' + (e.interval_ceny || '') : '—'}</span>
+          <span style="color:var(--gold-dim)">🕐 ${e.datum}</span>
+        </div>
+      </div>
+      <div class="hist-actions" onclick="event.stopPropagation()">
+        <button class="hist-btn hist-btn-load" onclick="loadFromHistory('${e.id}')">↩ Načíst</button>
+        <button class="hist-btn hist-btn-load" onclick="openVraceni('${e.id}')">🔁 Vrácení</button>
+        <button class="hist-btn hist-btn-del" onclick="deleteHistory('${e.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterHistory() {
+  const q = document.getElementById('historySearch').value.toLowerCase();
+  const filtered = allHistory.filter(e =>
+    (e.jmeno||'').toLowerCase().includes(q) ||
+    (e.vozidlo||'').toLowerCase().includes(q) ||
+    (e.email||'').toLowerCase().includes(q) ||
+    (e.cislo_rp||'').toLowerCase().includes(q)
+  );
+  renderHistory(filtered);
+}
+
+function loadFromHistory(id) {
+  const e = allHistory.find(x => x.id === id);
+  if(!e) return;
+
+  // Zavři historii
+  document.getElementById('historyPanel').style.display = 'none';
+  document.getElementById('uploadSection').style.display = 'block';
+
+  // Předvyplň demo data s historickými osobními údaji
+  state.rp.front = {b64:'demo', mime:'image/jpeg', name:'z_historie.jpg'};
+  state.rp.data = {
+    jmeno: e.jmeno ? e.jmeno.split(' ')[0] : '',
+    prijmeni: e.jmeno ? e.jmeno.split(' ').slice(1).join(' ') : '',
+    datum_narozeni: e.datum_narozeni || '',
+    cislo_rp: e.cislo_rp || '',
+    datum_vydani_rp: e.datum_vydani_rp || '', platnost_rp: e.platnost_rp || '', adresa: e.adresa || '',
+    misto_narozeni: e.misto_narozeni || '', zeme_vydani: e.zeme_rp || '',
+  };
+  state.rp.needs_back = false;
+  state.op.front = {b64:'demo', mime:'image/jpeg', name:'z_historie.jpg'};
+  state.op.data = {
+    jmeno: e.jmeno ? e.jmeno.split(' ')[0] : '',
+    prijmeni: e.jmeno ? e.jmeno.split(' ').slice(1).join(' ') : '',
+    datum_narozeni: e.datum_narozeni || '',
+    cislo_op: e.cislo_op || '', rodne_cislo: e.rodne_cislo || '',
+    datum_vydani_op: e.datum_vydani_op || '', platnost_op: e.platnost_op || '',
+    misto_narozeni: e.misto_narozeni || '', zeme_vydani: e.zeme_op || '',
+    adresa: e.adresa || '', je_pas: false,
+  };
+  state.op.needs_back = false;
+
+  // Označ jako nahrané
+  ['rp','op'].forEach(t => {
+    document.getElementById(`${t}Card`).classList.add('ready');
+    document.getElementById(`${t}Check`).style.display = 'block';
+    setBadge(t, 'done-badge', '✓ Z historie');
+    const fn = document.getElementById(`${t}FileName`);
+    fn.textContent = e.jmeno || 'z_historie'; fn.style.display = 'block';
+  });
+  setStep(1,'done'); setStep(2,'done');
+  document.getElementById('analyzeBtn').disabled = false;
+  { const b2=document.getElementById('analyzeBtn2'); if(b2) b2.disabled = false; }
+  { const b3=document.getElementById('contractOnlyBtn'); if(b3) b3.disabled = false; }
+
+  // Předvyplň formulář
+  setTimeout(() => {
+    const fields = {
+      vozidlo: e.vozidlo, datum_zacatku: e.datum_zacatku,
+      datum_konce: e.datum_konce, cena: e.cena,
+      pocet_intervalu: e.pocet_intervalu, sjednany_najezd: e.sjednany_najezd,
+      jistina: e.jistina, email: e.email, telefon: e.telefon,
+      misto_predani: e.misto_predani, misto_vraceni: e.misto_vraceni,
+      stav_tachometru_predani: e.stav_tachometru_predani,
+      korespondencni_adresa: e.korespondencni_adresa,
+    };
+    Object.entries(fields).forEach(([k,v]) => {
+      const el = document.getElementById('fi_' + k);
+      if(el && v) el.value = v;
+    });
+    if(e.interval_ceny) setInterval('ceny', e.interval_ceny);
+    if(e.interval_najezdu) setInterval('najezdu', e.interval_najezdu);
+    if(e.mena) setMena(e.mena);
+    setCenaDph(e.cena_dph === 's_dph' ? 's_dph' : 'bez_dph');
+    if(e.flexi) setFlexi(true);
+    if(e.nahradni_vozidlo){ document.getElementById('fi_nahradni_vozidlo').checked=true; updateZmocneni(); }
+    if(e.stav_nadrze) document.getElementById('fi_stav_nadrze').value=e.stav_nadrze;
+    if(e.palivo) document.getElementById('fi_palivo').value=e.palivo;
+    if(e.poskozeni_predani) document.getElementById('fi_poskozeni_predani').value=e.poskozeni_predani;
+    if(e.cas_predani) document.getElementById('fi_cas_predani').value=e.cas_predani;
+    if(e.typ_vozidla){ setTypVozidla(e.typ_vozidla,true); }
+    else { state.typManual=false; autoTypVozidla(); }
+    if(e.firma){
+      setTypNajemce('firma');
+      const F=e.firma;
+      const set=(id,v)=>{ const el=document.getElementById(id); if(el&&v) el.value=v; };
+      set('fi_firma_ico',F.ico); set('fi_firma_nazev',F.nazev); set('fi_firma_sidlo',F.sidlo);
+      set('fi_firma_dic',F.dic); set('fi_firma_zastupce',F.zastupce); set('fi_zmocneni',F.zmocneni);
+      setRidicJeZastupce(F.ridic_je_zastupce !== false);
+    }
+    fillDocFields();
+  }, 100);
+
+  // Otevři formulář rovnou
+  openFormModal(false);
+}
+
+// ---- Přehled aktivních pronájmů na úvodní stránce ----
+function parseDatumAny(d){
+  if(!d) return null;
+  let m=/^([0-9]{4})-([0-9]{2})-([0-9]{2})/.exec(d); if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  m=/^([0-9]{1,2})\.([0-9]{1,2})\.([0-9]{4})/.exec(d); if(m) return new Date(+m[3],+m[2]-1,+m[1]);
+  return null;
+}
+async function renderActiveRentals(){
+  try{
+    const res=await fetch('/api/history'); const items=await res.json();
+    const today=new Date(); today.setHours(0,0,0,0);
+    const seen=new Set(); const active=[];
+    for(const e of items){
+      const key=(e.jmeno||'')+'|'+(e.vozidlo||'');
+      if(seen.has(key)) continue; seen.add(key);
+      const konec=parseDatumAny(e.datum_konce);
+      const zac=parseDatumAny(e.datum_zacatku);
+      if(zac && zac>today) continue;
+      if(e.flexi || (konec && konec>=today)) active.push({e,konec});
+    }
+    const box=document.getElementById('activeBox');
+    if(!active.length){ box.style.display='none'; return; }
+    const brzy=active.filter(a=>!a.e.flexi && a.konec && (a.konec-today)/864e5<=7);
+    let html=`<b style="color:var(--gold)">🚗 Aktivní pronájmy: ${active.length}</b>`;
+    if(brzy.length){
+      html+=` · <b>končí do 7 dnů:</b> `+brzy.slice(0,5).map(a=>
+        `${a.e.jmeno||'—'} (${a.e.vozidlo||'—'}) do ${fmtDatumCz(a.e.datum_konce)}`).join(', ');
+    }
+    box.innerHTML=html; box.style.display='block';
+  } catch(err){ /* bez připojení k serveru se přehled jen nezobrazí */ }
+}
+document.addEventListener('DOMContentLoaded', renderActiveRentals);
+
+// ---- Zakreslení poškození na nákresu vozidla ----
+const DIAGRAM_KEY={osobni:'car',dodavka:'van',prives:'trailer',motorka:'moto'};
+let nakresCil=null; // 'predani' | 'vraceni'
+function openNakres(cil){
+  nakresCil=cil;
+  const typ=document.getElementById('fi_typ_vozidla').value||'osobni';
+  const typHist=(cil==='vraceni' && vraceniId)?((allHistory.find(x=>x.id===vraceniId)||{}).typ_vozidla||typ):typ;
+  const key=DIAGRAM_KEY[typHist]||typHist;
+  const c=document.getElementById('nakresCanvas'), ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  const existujici=(cil==='predani')?state.nakresPredani:state.nakresVraceni;
+  const img=new Image();
+  img.onload=()=>{ ctx.drawImage(img,0,0,c.width,c.height); };
+  img.src=existujici||('/diagram/'+key+'.png');
+  c.dataset.podklad='/diagram/'+key+'.png';
+  document.getElementById('modalNakres').classList.add('show');
+}
+function closeNakres(){ document.getElementById('modalNakres').classList.remove('show'); }
+function resetNakres(){
+  const c=document.getElementById('nakresCanvas'), ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,c.width,c.height);
+  img.src=c.dataset.podklad;
+  if(nakresCil==='predani'){ state.nakresPredani=null; document.getElementById('nakresPredaniInfo').style.display='none'; }
+  else { state.nakresVraceni=null; document.getElementById('nakresVraceniInfo').style.display='none'; }
+}
+function ulozNakres(){
+  const c=document.getElementById('nakresCanvas');
+  const data=c.toDataURL('image/png');
+  if(nakresCil==='predani'){ state.nakresPredani=data; document.getElementById('nakresPredaniInfo').style.display='inline';
+    if(state.formData) state.formData.poskozeni_nakres=data; }
+  else { state.nakresVraceni=data; document.getElementById('nakresVraceniInfo').style.display='inline'; }
+  closeNakres();
+}
+(function(){
+  const c=document.getElementById('nakresCanvas'); if(!c) return;
+  const ctx=c.getContext('2d');
+  let kresli=false;
+  const pos=e=>{ const r=c.getBoundingClientRect();
+    return [(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height]; };
+  c.addEventListener('pointerdown',e=>{ e.preventDefault(); c.setPointerCapture(e.pointerId);
+    kresli=true; ctx.lineWidth=6; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#d92b2b';
+    const [x,y]=pos(e); ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+0.1,y); ctx.stroke(); });
+  c.addEventListener('pointermove',e=>{ if(!kresli) return; e.preventDefault();
+    const [x,y]=pos(e); ctx.lineTo(x,y); ctx.stroke(); });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>c.addEventListener(ev,()=>{kresli=false;}));
+})();
+
+// ---- Vlastnoruční podpis (canvas) ----
+let podpisKreslil=false;
+function _pdCtx(){ const c=document.getElementById('podpisCanvas'); return [c, c.getContext('2d')]; }
+function openPodpis(){
+  clearPodpis();
+  const st=document.getElementById('podpisStatus'); st.style.display='none'; st.innerHTML='';
+  document.getElementById('modalPodpis').classList.add('show');
+}
+function closePodpis(){ document.getElementById('modalPodpis').classList.remove('show'); }
+function clearPodpis(){
+  const [c,ctx]=_pdCtx(); ctx.clearRect(0,0,c.width,c.height); podpisKreslil=false;
+}
+(function(){
+  const c=document.getElementById('podpisCanvas'); if(!c) return;
+  const ctx=c.getContext('2d');
+  ctx.lineWidth=4; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#1d4ed8';
+  let kresli=false;
+  const pos=e=>{ const r=c.getBoundingClientRect();
+    return [(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height]; };
+  c.addEventListener('pointerdown',e=>{ e.preventDefault(); c.setPointerCapture(e.pointerId);
+    kresli=true; podpisKreslil=true; const [x,y]=pos(e); ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+0.1,y); ctx.stroke(); });
+  c.addEventListener('pointermove',e=>{ if(!kresli) return; e.preventDefault();
+    const [x,y]=pos(e); ctx.lineTo(x,y); ctx.stroke(); });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>c.addEventListener(ev,()=>{kresli=false;}));
+})();
+async function submitPodpis(){
+  const st=document.getElementById('podpisStatus'); st.style.display='block';
+  if(!podpisKreslil){ st.innerHTML='⚠️ Podpis je prázdný.'; return; }
+  if(!state.lastSmlouvaFilename){ st.innerHTML='⚠️ Nejdřív vygeneruj smlouvu.'; return; }
+  st.innerHTML='⏳ Vkládám podpis do smlouvy…';
+  try{
+    const res=await fetch('/api/podpis-vlozit',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({smlouva_filename:state.lastSmlouvaFilename,
+        podpis_png:document.getElementById('podpisCanvas').toDataURL('image/png'),
+        osobni_data:state.lastOsobniData||{},smlouva_data:state.formData||{},
+        firma_data:state.firmaData||null,typ_vozidla:state.typVozidla||'osobni'})});
+    const data=await res.json();
+    if(!data.success){ st.innerHTML='⚠️ '+(data.error||'Chyba'); return; }
+    st.innerHTML=`✅ Podpis vložen do smlouvy.
+      <a href="/download/${encodeURIComponent(data.filename)}" style="color:var(--gold)">📄 Stáhnout podepsanou smlouvu</a>`;
+    const b=document.getElementById('podpisBtn'); if(b){ b.textContent='✅ Podepsáno na místě'; }
+  } catch(err){ st.innerHTML='⚠️ '+err.message; }
+}
+
+// ---- Vrácení vozidla / vyúčtování ----
+let vraceniId=null;
+function openVraceni(id){
+  const e=allHistory.find(x=>x.id===id); if(!e) return;
+  vraceniId=id;
+  document.getElementById('vrDesc').innerHTML=
+    `${e.jmeno||'—'} · ${e.vozidlo||'—'}<br><small style="opacity:.65">Předání: ${fmtDatumCz(e.datum_zacatku)||'—'}`+
+    `${e.stav_tachometru_predani?' · '+e.stav_tachometru_predani+' km':''}${e.stav_nadrze?' · nádrž '+e.stav_nadrze:''}</small>`;
+  document.getElementById('vr_datum').value=new Date().toISOString().slice(0,10);
+  document.getElementById('vr_km').value=''; document.getElementById('vr_nadrz').value='';
+  document.getElementById('vr_kdo').value=e.jmeno||'';
+  document.getElementById('vr_poskozeni').value=''; document.getElementById('vr_poskozeni_popis').value='';
+  document.getElementById('vr_faktura').checked=false;
+  state.nakresVraceni=null; document.getElementById('nakresVraceniInfo').style.display='none';
+  const st=document.getElementById('vrStatus'); st.style.display='none'; st.innerHTML='';
+  document.getElementById('modalVraceni').classList.add('show');
+}
+async function submitVraceni(){
+  const e=allHistory.find(x=>x.id===vraceniId)||{};
+  if(document.getElementById('vr_faktura').checked && (e.mena||'CZK')!=='CZK'
+     && !confirm(`Pozor: smlouva je v ${e.mena} — faktura ve Vyfakturuj se vystaví v ${e.mena}. Pokračovat?`)) return;
+  const st=document.getElementById('vrStatus');
+  st.style.display='block'; st.innerHTML='⏳ Počítám vyúčtování…';
+  try{
+    const res=await fetch('/api/vyuctovani',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:vraceniId,
+        datum_vraceni:document.getElementById('vr_datum').value,
+        km_vraceni:document.getElementById('vr_km').value,
+        nadrz_vraceni:document.getElementById('vr_nadrz').value,
+        kdo_vraci:document.getElementById('vr_kdo').value,
+        poskozeni_nakres:state.nakresVraceni||'',
+        poskozeni_castka:document.getElementById('vr_poskozeni').value,
+        poskozeni_popis:document.getElementById('vr_poskozeni_popis').value,
+        vystavit_fakturu:document.getElementById('vr_faktura').checked})});
+    const data=await res.json();
+    if(!data.success){ st.innerHTML='⚠️ '+(data.error||'Chyba'); return; }
+    const v=data.vysledek; let info=[];
+    if(v.najeto!=null) info.push(`najeto <b>${v.najeto.toLocaleString('cs-CZ')} km</b>`);
+    if(v.prekroceni_km!=null) info.push(v.prekroceni_km>0
+      ? `překročení <b>${v.prekroceni_km.toLocaleString('cs-CZ')} km</b> → doplatek <b>${Math.round(v.doplatek_s).toLocaleString('cs-CZ')} Kč vč. DPH</b>`
+      : `nájezd v limitu (povoleno ${v.povoleno_km.toLocaleString('cs-CZ')} km)`);
+    if(v.poskozeni) info.push(`poškození <b>${Math.round(v.poskozeni).toLocaleString('cs-CZ')} ${v.mena}</b>`);
+    if(v.celkem_k_uhrade) info.push(`celkem k úhradě <b>${Math.round(v.celkem_k_uhrade).toLocaleString('cs-CZ')} ${v.mena}</b>`);
+    if(v.faktura) info.push(v.faktura);
+    if(v.faktura_chyba) info.push(`⚠️ faktura: ${v.faktura_chyba}`);
+    st.innerHTML='✅ '+(info.join(' · ')||'Hotovo')+
+      `<br><a href="/download/${encodeURIComponent(data.filename)}" style="color:var(--gold)">📄 Stáhnout vyúčtování (PDF)</a>`+
+      (data.filename_protokol?` &nbsp;·&nbsp; <a href="/download/${encodeURIComponent(data.filename_protokol)}" style="color:var(--gold)">📋 Předávací protokol s vrácením (PDF)</a>`:'');
+  } catch(err){ st.innerHTML='⚠️ '+err.message; }
+}
+
+async function deleteHistory(id) {
+  await fetch('/api/history/delete', {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id})});
+  await loadHistory();
+}
+
+</script>
+<!-- DEMO BUTTON -->
+<div style="position:fixed;bottom:24px;right:24px;z-index:50">
+  <button onclick="demoMode()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.4);padding:10px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:12px;cursor:pointer;transition:all .2s;letter-spacing:.05em" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.4)'">🧪 Demo režim</button>
+</div>
+</body>
+</html>

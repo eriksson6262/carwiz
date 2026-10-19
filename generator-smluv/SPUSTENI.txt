@@ -1,0 +1,184 @@
+GENERÁTOR SMLUV — RX Auto, s.r.o.
+==================================
+
+JAK SPUSTIT (nejjednodušší způsob)
+-----------------------------------
+1) Rozbal celou tuto složku (generator_smluv) kamkoli na disk — soubory
+   uvnitř musí zůstat pohromadě.
+
+2) Poklikej na "Spustit_generator.command".
+   - Při prvním spuštění si sám doinstaluje chybějící Python knihovny
+     (může to chvíli trvat), pak spustí server a sám otevře
+     http://localhost:8765 v prohlížeči.
+   - Při dalších spuštěních už jen otevře prohlížeč, pokud server
+     ještě neběží, spustí ho.
+   - Okno terminálu, které se otevře, můžeš klidně zavřít — server
+     běží dál na pozadí.
+
+3) Pro vypnutí generátoru poklikej na "Zastavit_generator.command".
+
+Poznámka k macOS: při úplně prvním poklikání se může zobrazit varování
+"nelze ověřit vývojáře" — klikni pravým tlačítkem na soubor → Otevřít,
+a potvrď. Příště už se ptát nebude.
+
+JAK SPUSTIT RUČNĚ (alternativa přes terminál)
+----------------------------------------------
+1) Nainstaluj potřebné Python knihovny (stačí jednou):
+
+   pip3 install -r requirements.txt
+
+2) Spusť server z této složky:
+
+   python3 server.py
+
+3) V prohlížeči otevři:
+
+   http://localhost:8765
+
+Server běží, dokud terminál necháš otevřený (nebo poběží na pozadí,
+pokud jsi ho spustil přes "Spustit_generator.command"). Vygenerované
+smlouvy a historie se ukládají přímo do této složky.
+
+POŽADAVKY
+---------
+- Python 3.9+ (doporučeno 3.11)
+- Připojení k internetu je potřeba pouze pro:
+    - lustraci (kontrola exekucí) a OCR dokladů přes Anthropic API
+    - dohledání firmy přes ARES
+    - import do Vyfakturuj (viz níže) — nepovinné
+    - odeslání smlouvy k podpisu přes DocuSeal (viz níže) — nepovinné
+  Bez internetu jde smlouvu vygenerovat v demo/testovacím režimu.
+
+IMPORT DO VYFAKTURUJ (jednorázové nastavení, nepovinné)
+---------------------------------------------------------
+Po vygenerování smlouvy se u tlačítek objeví "🧾 Importovat do Vyfakturuj".
+Po kliknutí generátor ve Vyfakturuj:
+  - dohledá zákazníka (nájemce, případně firmu) v adresáři, a pokud tam
+    ještě není, založí ho,
+  - vystaví ZÁLOHOVOU FAKTURU NA JISTINU (bez DPH) — tu pak stačí ve
+    Vyfakturuj odeslat zákazníkovi e-mailem (faktura obsahuje QR platbu),
+  - při zatržení volby "Vystavit i nájemné":
+      - měsíční sazba → založí pravidelnou měsíční fakturu s názvem
+        "SPZ Jméno Příjmení řidiče" (začátek, konec, cena ze smlouvy),
+      - denní sazba → vystaví jednorázovou fakturu za celou sjednanou dobu
+        (počet dní × denní sazba, 21 % DPH).
+
+Aby tlačítko fungovalo, je potřeba JEDNOU, přímo na svém počítači:
+1) Zjistit svůj API klíč zde: https://app.vyfakturuj.cz/nastaveni/propojeni/api/
+2) V této složce zkopíruj soubor "vyfakturuj_config.example.json"
+   a přejmenuj kopii na "vyfakturuj_config.json".
+3) Otevři "vyfakturuj_config.json" v libovolném textovém editoru a
+   doplň svůj přihlašovací e-mail k Vyfakturuj a API klíč z kroku 1:
+
+   {
+     "email": "tvuj-email@example.com",
+     "api_key": "TVUJ_API_KLIC_Z_VYFAKTURUJ"
+   }
+
+4) Ulož soubor. Server ho automaticky použije při dalším importu
+   (stačí ho jen restartovat, pokud už běžel).
+
+Tento soubor s klíčem zůstává jen na tvém počítači, nikam se
+neodesílá jinam než přímo do Vyfakturuj, a nikdo jiný k němu nemá
+přístup. Pokud soubor chybí nebo je neúplný, tlačítko v aplikaci
+zobrazí jasnou chybovou hlášku s tímto návodem.
+
+PODPIS NA MÍSTĚ
+----------------
+Tlačítko "🖊️ Podepsat na místě" otevře podpisové pole — zákazník se podepíše
+prstem (tablet/mobil přes LAN režim), stylusem nebo trackpadem a podpis se
+vloží přímo do PDF smlouvy nad čáru "Nájemce". Hodí se při předání osobně;
+pro podpis na dálku slouží DocuSeal níže.
+
+ODESLÁNÍ SMLOUVY K PODPISU PŘES DOCUSEAL (jednorázové nastavení, nepovinné)
+------------------------------------------------------------------------------
+Po vygenerování smlouvy se u tlačítek pro stažení objeví i tlačítko
+"✍️ Odeslat k podpisu". Po kliknutí generátor:
+  - pošle vygenerovanou PDF smlouvu do DocuSeal i s předem umístěným
+    podpisovým polem přímo nad podpisovou čárou "Nájemce" — nájemce tak
+    hned v DocuSeal vidí, kam se má podepsat, a nemusí pole sám hledat
+    ani vkládat,
+  - DocuSeal automaticky e-mailem vyzve nájemce (na e-mail vyplněný
+    ve formuláři) k elektronickému podpisu,
+  - před odesláním lze zaškrtnout i volbu "Poslat odkaz k podpisu i SMS"
+    — DocuSeal pak pošle odkaz k podpisu i SMS zprávou na telefon
+    nájemce vyplněný ve formuláři (u DocuSeal to navíc stojí cca
+    0,20 USD za zprávu; bez zaškrtnutí se posílá jen e-mail),
+  - RX Auto (pronajímatel) nadále podepisuje mimo DocuSeal (razítkem/
+    fyzicky), jak jsi zvyklý — DocuSeal řeší jen podpis nájemce.
+
+Aby tlačítko fungovalo, je potřeba JEDNOU, přímo na svém počítači:
+1) Založit si účet na https://www.docuseal.com (cloudová verze,
+   plán Pro ~20 USD/měsíc s neomezeným počtem smluv a API přístupem;
+   lze i self-hostovat zdarma — pak do "base_url" níže dej adresu
+   svého vlastního serveru).
+2) V nastavení účtu (API / Settings → API) si vygeneruj API klíč.
+3) V této složce zkopíruj soubor "docuseal_config.example.json"
+   a přejmenuj kopii na "docuseal_config.json".
+4) Otevři "docuseal_config.json" v libovolném textovém editoru a
+   doplň svůj API klíč z kroku 2:
+
+   {
+     "api_key": "TVUJ_DOCUSEAL_API_KLIC",
+     "base_url": "https://api.docuseal.com"
+   }
+
+5) Ulož soubor a restartuj generátor (Zastavit_generator.command,
+   pak znovu Spustit_generator.command).
+
+Tento soubor s klíčem zůstává jen na tvém počítači, nikam se
+neodesílá jinam než přímo do DocuSeal, a nikdo jiný k němu nemá
+přístup. Pokud soubor chybí nebo je neúplný, tlačítko v aplikaci
+zobrazí jasnou chybovou hlášku s tímto návodem. Bez vyplněného
+e-mailu nájemce ve formuláři smlouvy tlačítko odešle chybu — e-mail
+je povinné pole formuláře, takže se to běžně nestane.
+
+VRÁCENÍ VOZIDLA A VYÚČTOVÁNÍ
+-----------------------------
+V Historii má každý záznam tlačítko "🔁 Vrácení": zadáš datum vrácení, stav
+tachometru a nádrže — aplikace spočítá povolený nájezd za dobu nájmu,
+překročení (9 Kč/km + DPH) a vygeneruje PDF "Vyúčtování vrácení vozidla".
+Na úvodní stránce se zobrazuje přehled aktivních pronájmů (a kterým končí
+nájem do 7 dnů).
+
+DALŠÍ NASTAVENÍ
+----------------
+- Částky pokut (kouření 5 000 Kč, čištění min. 1 500 Kč…) se upravují v "vop_cz.py".
+- Klíč k Anthropic API lze přesunout do souboru "anthropic_config.json"
+  ({"api_key": "sk-ant-..."}); starý zabudovaný klíč pak doporučuji zrušit
+  na console.anthropic.com.
+
+NAHRÁVÁNÍ DOKLADŮ A PŘEDVYPLNĚNÍ SMLOUVY
+----------------------------------------
+- Doklady řidiče: nahraj 1–4 fotky najednou, nebo použij "Vyfotit doklad (mobil)" —
+  aplikace sama pozná ŘP / OP / pas a jejich strany.
+- "Jiný dokument": nahraj nebo vyfoť fakturu, objednávku, e-mail nebo PDF — z něj se
+  předvyplní vozidlo, doba nájmu, cena, firma (IČO) apod. Údaje vždy zkontroluj ve formuláři.
+- "Údaje o pronájmu slovy": napiš krátký popis (např. "10000 měsíčně bez dph, kauce 15tis,
+  nájezd 2500 km měsíčně, začátek dneska, konec za půl roku, auto bmw 2 1ALB766").
+- Ve formuláři je sekce "Údaje z dokladů": zkontroluj číslo, datum vydání a platnost OP/ŘP a chybějící
+  doplň ručně (jinak zůstanou ve smlouvě prázdné). Při "Načíst" z historie se doklady, km, nádrž i
+  firma načtou zpět (u smluv vytvořených touto verzí a novějších).
+- Typ vozidla (nákres v protokolu): sedan, hatchback/liftback, kombi, SUV, coupé, kabriolet,
+  dodávka, přívěs, motorka — typ se sám určí podle názvu modelu (Kodiaq → SUV, Superb Combi
+  → kombi); ruční volba má přednost. Nákresy mají popisky stran (levý/pravý bok, předek…).
+- Náhradní vozidlo + firma: smlouva i protokol uvádí, že podepisuje jen řidič (zástupce firmy ne).
+- Focení přímo z mobilu: mobil musí otevřít generátor v síti. Vytvoř ve složce prázdný soubor
+  "lan_mode.txt" a restartuj generátor — v terminálu se vypíše adresa pro mobil (stejná Wi-Fi).
+  POZOR: v tomto režimu je aplikace dostupná komukoli ve stejné síti. Vypnutí: soubor smaž
+  a restartuj.
+
+STRUKTURA
+---------
+server.py                          - backend (lokální webserver, port 8765)
+smlouva_v2.py                      - generátor PDF smlouvy + protokolu (v2)
+vop_cz.py                          - text Všeobecných obchodních podmínek (2. strana smlouvy) —
+                                     změny částek/pokut/pravidel se dělají tady
+index.html                         - webové rozhraní
+RX_logo.jpg                        - logo do hlavičky smlouvy
+NS RX Retail Osobni Claude.xlsx    - šablona pro starší (v1) formát smlouvy
+vyfakturuj_config.example.json     - vzor konfigurace pro import do Vyfakturuj
+docuseal_config.example.json       - vzor konfigurace pro odeslání k podpisu
+fonts/                             - fonty pro PDF (diakritika)
+diagrams/sablony/                  - nákresy vozidel do protokolu
+                                      (osobní, dodávka, přívěs, motorka)
