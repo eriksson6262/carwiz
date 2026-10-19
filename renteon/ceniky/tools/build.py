@@ -321,9 +321,10 @@ def _shapes():
         if dt.date(2026, 12, 20) <= pd <= dt.date(2026, 12, 29): continue
         run = v[14]; vals = {}
         for du in (14, 10, 7, 4, 3):
-            if du in v: run = max(run, v[du])
-            vals[du] = run
-        out[(L, k)].append((pd, {band: min(CURVE_MAX, vals[du] / v[14]) for band, du in CURVE_DURS}))
+            if du in v:
+                run = max(run, v[du]); vals[du] = run
+        # jen pásma, pro která konkurence nabízí danou délku (chybějící se doplní z Prahy / sousední délky)
+        out[(L, k)].append((pd, {band: min(CURVE_MAX, vals[du] / v[14]) for band, du in CURVE_DURS if du in vals}))
     return out
 
 
@@ -331,12 +332,19 @@ SHAPES = _shapes()
 
 
 def shape_for(L, k, a, b):
-    for key in ((L, k), ('PRG', k), (L, 'C'), ('PRG', 'C')):
-        lst = SHAPES.get(key)
-        if not lst: continue
-        inp = [sh for pd, sh in lst if a <= pd <= b] or [sh for pd, sh in lst]
-        return {band: st.median(sh[band] for sh in inp) for band, _ in CURVE_DURS}
-    return None
+    res = {}
+    for band, _ in CURVE_DURS:
+        for key in ((L, k), (L, 'C')):   # jen konkurence na téže pobočce
+            lst = SHAPES.get(key) or []
+            inp = [sh[band] for pd, sh in lst if a <= pd <= b and band in sh] or [sh[band] for pd, sh in lst if band in sh]
+            if inp:
+                res[band] = st.median(inp); break
+        else:
+            res[band] = 1.0
+    order = [bb for bb, _ in CURVE_DURS]
+    for i in range(len(order) - 2, -1, -1):   # kratší pásmo nikdy levnější než delší
+        res[order[i]] = max(res[order[i]], res[order[i + 1]])
+    return res if any(v > 1.0 for v in res.values()) else None
 
 
 def length_curve(rows, changes, country):
@@ -347,7 +355,7 @@ def length_curve(rows, changes, country):
     for r in rows:
         L = oid2L.get(r['Oid']); k = SIPP2K.get(r['S'])
         a, b = D(r['F']), D(r['T'])
-        if not L or not k or b < TODAY or (a <= dt.date(2026, 12, 27) and b >= dt.date(2026, 12, 24)) \
+        if not L or not k or b < TODAY or (a >= dt.date(2026, 12, 24) and b <= dt.date(2026, 12, 27)) \
                 or any(r['D'].get(x) is None for x in order):
             out.append(r); continue
         sh = shape_for(L, k, max(a, TODAY), b)
