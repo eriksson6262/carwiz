@@ -19,3 +19,5 @@ IMPORT obsahuje řádky od TODAY (jako export s "Datum od"), hlavička z posledn
   Ostrava: nejlevnější všude, ale ne o moc → cíl = 0,97 × nejlevnější konkurent (OSR_MODE=target; 'flat' = dřívější plošně −10 %).
   Kanály: data/DC.json + data/CT.json (CarTrawler easyJet) + data/WZ.json (Wizz Air); každý kanál vlastní kalibrace, bere se nejnižší faktor (CHANNELS=DC,CT,WZ).
   Komprimovaný sběr (sup + res[L,p,du,cw,comp]) rozbaluje reprice.expand / expand_dc.py. Opraveno: živý PL bez pole 'O' (build/export).
+- 19.10.2026 (večer): přidán kanál Rentalcars.com (data/RC.json, stejný komprimovaný formát jako DC; sběr přes /api/search-results v prohlížeči,
+  dodavatel = suppliers[depots[route.pickUpDepotId].supplierId], cena vehicle.price.amount EUR celkem s DPH). Aurum/CHECK24 nezařazen (CAPTCHA).

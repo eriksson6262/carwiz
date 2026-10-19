@@ -259,7 +259,7 @@ def expand(x):
 
 # Erik 19.10.2026: Carwiz se prodává i přes CarTrawler (easyJet, Wizz Air) – cíle musí platit i tam.
 # Každý kanál má vlastní kalibraci DC≈k·R+b; pro vzorek (pobočka, datum, délka, třída) se bere nejnižší faktor.
-CHANNELS = [c for c in os.environ.get('CHANNELS', 'DC,CT,WZ').split(',') if c]
+CHANNELS = [c for c in os.environ.get('CHANNELS', 'DC,CT,WZ,RC').split(',') if c]
 
 if __name__ == '__main__':
     cz, sk, dc = load()
