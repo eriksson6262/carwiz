@@ -34,7 +34,7 @@
 </style>
 <div class="vx">
   <h1 id="top">Výnosy a flotila 2024–2026</h1>
-  <p class="lead">Výnos bez DPH a bez přeúčtovaných pokut (pokuty a jejich zpracování jsou samostatně), podle data vyúčtování; Renteon CZ v Kč, SK v €. Vozidla = průměrný počet aut půjčovny v měsíci. Srovnání leden–září; říjen 2026 je jen do 20. 10. Bratislava začala v březnu 2024.</p>
+  <p class="lead">Výnos bez DPH a bez přeúčtovaných pokut = Renteon (krátkodobé, podle data vyúčtování) + Vyfakturuj (dlouhodobí klienti kromě HAVEX Mobility, podle DUZP). CZ v Kč, SK v €. Vozidla = Ø aut půjčovny v Renteonu + auta fakturovaná ve Vyfakturuj, která v Renteonu nejsou (ta jsou přiřazena Praze). Global Assistance = Ostrava. Srovnání leden–září; říjen 2026 je jen do 20. 10. Bratislava začala v březnu 2024.</p>
 
   <div class="tiles" id="tiles"></div>
 
@@ -44,7 +44,7 @@
     <div class="card" id="graf-BTS"><h2>Bratislava – výnos, vozidla a smlouvy po měsících</h2><p class="note">Sloupce: výnos bez pokut (€) · plná čára: Ø vozidel · přerušovaná: počet smluv (pravá osa) · barva = rok</p><div class="legend lg"></div><div class="chart dash-skeleton" data-source="vf" data-branch="BTS"></div></div>
   </div>
 
-  <div class="card" id="rozpad" style="margin-bottom: var(--cds-gap-lg)"><h2>Rozpad výnosu po měsících</h2><p class="note">Nájem, pojištění, poplatky (bez pokut), škody, ostatní a zvlášť přeúčtované pokuty včetně poplatku za zpracování</p>
+  <div class="card" id="rozpad" style="margin-bottom: var(--cds-gap-lg)"><h2>Rozpad výnosu po měsících</h2><p class="note">Renteon (nájem, pojištění, poplatky, škody, ostatní), Vyfakturuj (dlouhodobé pronájmy) a zvlášť přeúčtované pokuty včetně poplatku za zpracování</p>
     <div class="tabs"></div><div class="legend lg2"></div><div class="chart dash-skeleton" id="rozpad-chart" data-source="vf"></div></div>
 
   <div class="card" id="tabulka"><h2>Měsíce v číslech</h2><p class="note">Výnos bez pokut, Ø vozidel, výnos na vůz, smlouvy, dny, rozpad a pokuty</p>
@@ -53,12 +53,12 @@
       <table data-source="vf" data-row-key="mesic,pobocka">
         <thead><tr>
           <th data-field="mesic">Měsíc</th><th data-field="pobocka">Pobočka</th>
-          <th data-field="vynos_bez_pokut">Výnos bez pokut</th><th data-field="vozidel">Vozidel</th>
+          <th data-field="vynos_bez_pokut">Výnos bez pokut</th><th data-field="vynos_renteon" class="hide-n">z toho Renteon</th><th data-field="vf_najem_renteon_auta" class="hide-n">Vyfakt. – auta z Renteonu</th><th data-field="vf_najem_mimo_renteon" class="hide-n">Vyfakt. – mimo Renteon</th><th data-field="vozidel">Vozidel</th><th data-field="vf_vozidel_mimo" class="hide-n">z toho mimo Renteon</th>
           <th data-field="vynos_na_vuz">Výnos na vůz</th><th data-field="smluv">Smluv</th>
           <th data-field="dni" class="hide-n">Dní</th><th data-field="najem" class="hide-n">Nájem</th>
           <th data-field="pojisteni" class="hide-n">Pojištění</th><th data-field="poplatky_bez_pokut" class="hide-n">Poplatky bez pokut</th>
           <th data-field="skody" class="hide-n">Škody</th><th data-field="pokuty" class="hide-n">Pokuty</th>
-          <th data-field="zprac_pokut" class="hide-n">Zprac. pokut</th><th data-field="pocet_pokut" class="hide-n">Počet pokut</th>
+          <th data-field="zprac_pokut" class="hide-n">Zprac. pokut</th><th data-field="vf_pokuty" class="hide-n">Pokuty Vyfakt.</th><th data-field="pocet_pokut" class="hide-n">Počet pokut</th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -69,7 +69,7 @@
 dash.calc('souhrn', {
   inputs: ['vf'],
   title: 'Leden–září 2024, 2025 a 2026',
-  description: 'Součty leden–září po pobočkách: výnos bez pokut, pokuty vč. zpracování, smlouvy; Ø vozidel = průměr měsíců; výnos na vůz = výnos / Ø vozidel / 9.',
+  description: 'Součty leden–září po pobočkách: výnos bez pokut (Renteon + Vyfakturuj), z toho Renteon a Vyfakturuj, pokuty vč. zpracování (Renteon i Vyfakturuj), smlouvy Renteon; Ø vozidel = průměr měsíců; výnos na vůz = výnos / Ø vozidel / 9.',
   fn: (vf) => ['PRG', 'OSR', 'BTS'].map(p => {
     const sel = (y) => vf.filter(r => r.pobocka === p && r.mesic.slice(0, 4) === y && Number(r.mesic.slice(5, 7)) <= 9);
     const sum = (a, k) => a.reduce((s, r) => s + Number(r[k]), 0);
@@ -77,7 +77,9 @@ dash.calc('souhrn', {
     const o = { pobocka: p };
     [['2024', sel('2024')], ['2025', a], ['2026', b]].forEach(([y, s]) => {
       o['v' + y] = sum(s, 'vynos_bez_pokut');
-      o['pok' + y] = sum(s, 'pokuty') + sum(s, 'zprac_pokut');
+      o['pok' + y] = sum(s, 'pokuty') + sum(s, 'zprac_pokut') + sum(s, 'vf_pokuty');
+      o['ren' + y] = sum(s, 'vynos_renteon');
+      o['vf' + y] = sum(s, 'vf_najem_renteon_auta') + sum(s, 'vf_najem_mimo_renteon');
       o['sml' + y] = sum(s, 'smluv');
       o['voz' + y] = sum(s, 'vozidel') / s.length;
       o['nv' + y] = o['v' + y] / o['voz' + y] / 9;
@@ -106,11 +108,11 @@ dash.calc('souhrn', {
   const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt) e.textContent = txt; return e; };
   const mark = (el, field, p) => { el.dataset.source = 'souhrn'; el.dataset.field = field; el.dataset.where = 'pobocka=' + p; el.classList.add('dash-skeleton'); el.textContent = '—'; return el; };
   ['PRG', 'OSR', 'BTS'].forEach(p => {
-    const c = mk('div', 'card'); c.appendChild(mk('h2', '', names[p])); c.appendChild(mk('p', 'note', `Leden–září 2026, ${cur[p]} bez DPH a bez pokut`));
+    const c = mk('div', 'card'); c.appendChild(mk('h2', '', names[p])); c.appendChild(mk('p', 'note', `Leden–září 2026, ${cur[p]} bez DPH a bez pokut, Renteon + Vyfakturuj`));
     c.appendChild(mark(mk('div', 'big'), 'v2026', p));
-    const row = (label, ...fields) => { const r = mk('div', 'row'); r.appendChild(mk('span', '', label)); const b = mk('b'); fields.forEach((f, i) => { if (i) b.appendChild(document.createTextNode(' → ')); b.appendChild(mark(mk('span'), f, p)); }); r.appendChild(b); c.appendChild(r); };
-    row('Leden–září 2025', 'v2025'); row('Leden–září 2024', 'v2024'); row('Změna proti 2025', 'zmena'); row('Změna proti 2024', 'zmena24');
-    row('Smlouvy 2024 → 2025 → 2026', 'sml2024', 'sml2025', 'sml2026'); row('Změna smluv proti 2025', 'zmena_sml');
+    const row = (label, ...fields) => { const r = mk('div', 'row'); r.appendChild(mk('span', '', label)); const b = mk('b'); fields.forEach((f, i) => { if (i) b.appendChild(document.createTextNode(fields[0].startsWith('ren') ? ' / ' : ' → ')); b.appendChild(mark(mk('span'), f, p)); }); r.appendChild(b); c.appendChild(r); };
+    row('z toho Renteon / Vyfakturuj', 'ren2026', 'vf2026'); row('Leden–září 2025', 'v2025'); row('Leden–září 2024', 'v2024'); row('Změna proti 2025', 'zmena'); row('Změna proti 2024', 'zmena24');
+    row('Smlouvy Renteon 2024 → 2025 → 2026', 'sml2024', 'sml2025', 'sml2026'); row('Změna smluv proti 2025', 'zmena_sml');
     row('Ø vozidel 2024 → 2025 → 2026', 'voz2024', 'voz2025', 'voz2026'); row('Výnos na vůz/měs.', 'nv2024', 'nv2025', 'nv2026'); row('Pokuty vč. zprac. (vyčleněno)', 'pok2024', 'pok2025', 'pok2026');
     tilesEl.appendChild(c);
   });
@@ -181,9 +183,9 @@ dash.calc('souhrn', {
         tip.appendChild(mk('div', 'h', MES[mo - 1] + ' – ' + p));
         YRS.forEach(yr => {
           const r = get(yr, mo); const d = mk('div'); const sw = mk('i', 'sw'); sw.style.background = COL[yr]; sw.style.marginRight = '6px'; d.appendChild(sw);
-          d.appendChild(document.createTextNode(r ? `${yr}: ${nf.format(r.vynos_bez_pokut)} ${cur[p]} · ${nf1.format(r.vozidel)} voz. · ${nf.format(r.smluv)} smluv · ${nf.format(r.vynos_na_vuz)} ${cur[p]}/vůz` : `${yr}: —`));
+          d.appendChild(document.createTextNode(r ? `${yr}: ${nf.format(r.vynos_bez_pokut)} ${cur[p]} (Renteon ${nf.format(r.vynos_renteon)} + Vyfakturuj ${nf.format(Number(r.vf_najem_renteon_auta) + Number(r.vf_najem_mimo_renteon))}) · ${nf1.format(r.vozidel)} voz. · ${nf.format(r.smluv)} smluv · ${nf.format(r.vynos_na_vuz)} ${cur[p]}/vůz` : `${yr}: —`));
           tip.appendChild(d);
-          if (r) tip.appendChild(mk('div', 'sub', `nájem ${nf.format(r.najem)} · pojištění ${nf.format(r.pojisteni)} · poplatky ${nf.format(r.poplatky_bez_pokut)} · škody ${nf.format(r.skody)} · pokuty ${nf.format(Number(r.pokuty) + Number(r.zprac_pokut))}`));
+          if (r) tip.appendChild(mk('div', 'sub', `nájem ${nf.format(r.najem)} · pojištění ${nf.format(r.pojisteni)} · poplatky ${nf.format(r.poplatky_bez_pokut)} · škody ${nf.format(r.skody)} · pokuty ${nf.format(Number(r.pokuty) + Number(r.zprac_pokut) + Number(r.vf_pokuty))}`));
         });
         tip.style.display = 'block';
         const [mx] = d3.pointer(ev, el);
@@ -192,16 +194,17 @@ dash.calc('souhrn', {
       .on('mouseleave', () => { tip.style.display = 'none'; });
   }
 
-  const PARTS = [['najem', 'Nájem'], ['pojisteni', 'Pojištění'], ['poplatky_bez_pokut', 'Poplatky (bez pokut)'], ['skody', 'Škody'], ['ostatni', 'Ostatní'], ['pok', 'Pokuty vč. zpracování']];
-  const partColor = i => i === 5 ? 'var(--cds-chart-muted)' : dash.colors[i + 2];
+  const PARTS = [['najem', 'Nájem (Renteon)'], ['pojisteni', 'Pojištění'], ['poplatky_bez_pokut', 'Poplatky (bez pokut)'], ['skody', 'Škody'], ['ostatni', 'Ostatní'], ['vf_najem_renteon_auta', 'Vyfakturuj – auta z Renteonu'], ['vf_najem_mimo_renteon', 'Vyfakturuj – auta mimo Renteon'], ['pok', 'Pokuty vč. zpracování']];
+  const PCOL = [2, 3, 4, 5, 6, 0, 1];
+  const partColor = i => i === 7 ? 'var(--cds-chart-muted)' : dash.colors[PCOL[i]];
   function breakdown(rows) {
     const el = document.getElementById('rozpad-chart');
     el.classList.remove('dash-skeleton'); el.innerHTML = '';
     const lg = el.parentNode.querySelector('.lg2'); lg.innerHTML = '';
     PARTS.forEach(([k, t], i) => { const s = mk('span'); const sw = mk('i', 'sw'); sw.style.background = partColor(i); s.appendChild(sw); s.appendChild(document.createTextNode(t)); lg.appendChild(s); });
     const data = rows.filter(r => r.pobocka === branch).map(r => {
-      const o = { mesic: r.mesic }; PARTS.slice(0, 5).forEach(([k]) => o[k] = Number(r[k]));
-      o.pok = Number(r.pokuty) + Number(r.zprac_pokut); o.total = d3.sum(PARTS, ([k]) => o[k]); return o;
+      const o = { mesic: r.mesic }; PARTS.slice(0, 7).forEach(([k]) => o[k] = Number(r[k]));
+      o.pok = Number(r.pokuty) + Number(r.zprac_pokut) + Number(r.vf_pokuty); o.total = d3.sum(PARTS, ([k]) => o[k]); return o;
     });
     const W = Math.max(300, el.clientWidth), H = 300, m = { t: 12, r: 12, b: 26, l: 56 };
     const x = d3.scaleBand(data.map(d => d.mesic), [m.l, W - m.r]).padding(0.2);
@@ -234,9 +237,9 @@ dash.calc('souhrn', {
     rows.filter(r => r.pobocka === branch).forEach(r => {
       const tr = document.createElement('tr'); tr.dataset.key = r.mesic + ',' + r.pobocka;
       const c = ' ' + cur[r.pobocka];
-      [r.mesic, r.pobocka, nf.format(r.vynos_bez_pokut) + c, nf1.format(r.vozidel), nf.format(r.vynos_na_vuz) + c, nf.format(r.smluv), nf.format(r.dni),
-       nf.format(r.najem) + c, nf.format(r.pojisteni) + c, nf.format(r.poplatky_bez_pokut) + c, nf.format(r.skody) + c, nf.format(r.pokuty) + c, nf.format(r.zprac_pokut) + c, nf.format(r.pocet_pokut)]
-        .forEach((t, i) => { const td = document.createElement('td'); td.textContent = t; if (i >= 6) td.className = 'hide-n'; tr.appendChild(td); });
+      const cells = [[r.mesic], [r.pobocka], [nf.format(r.vynos_bez_pokut) + c], [nf.format(r.vynos_renteon) + c, 1], [nf.format(r.vf_najem_renteon_auta) + c, 1], [nf.format(r.vf_najem_mimo_renteon) + c, 1], [nf1.format(r.vozidel)], [nf.format(r.vf_vozidel_mimo), 1], [nf.format(r.vynos_na_vuz) + c], [nf.format(r.smluv)], [nf.format(r.dni), 1],
+       [nf.format(r.najem) + c, 1], [nf.format(r.pojisteni) + c, 1], [nf.format(r.poplatky_bez_pokut) + c, 1], [nf.format(r.skody) + c, 1], [nf.format(r.pokuty) + c, 1], [nf.format(r.zprac_pokut) + c, 1], [nf.format(r.vf_pokuty) + c, 1], [nf.format(r.pocet_pokut), 1]];
+      cells.forEach(([t, h]) => { const td = document.createElement('td'); td.textContent = t; if (h) td.className = 'hide-n'; tr.appendChild(td); });
       tb.appendChild(tr);
     });
   }
