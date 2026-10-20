@@ -8,7 +8,8 @@ Auta pro OSEK Group s.r.o. (IČO 19581025) jsou od HAVEX Mobility a AUTOCENTRUM 
   - `5RRRRNNNN .pdf` = faktura HAVEX (jen číst, **nikdy nepřikládat**).
   - `<RZ>_<datum>_..._priloha_fa_dodavatel_N.pdf` = výzva úřadu, ta se přikládá.
   - Spark má HAVEX poštu jen cca od 9/2025; starší doklady jsou v Gmailu rxpokuty (vyhledávání indexuje text PDF).
-- **Jičín opravy po PU**: faktury 2211xxxxxx. Zbytek k úhradě RX = nekrytý základ (spoluúčast Kooperativy) + DPH. DPH si RX odečte, OSEK se účtuje jen nekrytý základ s 0 % DPH. Faktury Jičína se nepřikládají.
+- **Jičín opravy po PU**: faktury 2211xxxxxx. Faktury Jičína se nepřikládají.
+- **Spoluúčast na OSEK: vždy 10 000 Kč za každou pojistnou událost (PU Kooperativa), 0 % DPH** – bez ohledu na skutečnou spoluúčast u pojišťovny (pokyn Erika 20.10.2026).
 
 ## Párování
 - Datum přestupku samotné nestačí, ověřit i částku. U zahraničních pokut je částka OSEK často = pokuta HAVEX + 250 Kč.
