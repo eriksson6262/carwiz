@@ -33,15 +33,15 @@
 @media (max-width: 40rem) { .vx .hide-n { display: none; } }
 </style>
 <div class="vx">
-  <h1 id="top">Výnosy a flotila 2025–2026</h1>
-  <p class="lead">Výnos bez DPH a bez přeúčtovaných pokut (pokuty a jejich zpracování jsou samostatně), podle data vyúčtování; Renteon CZ v Kč, SK v €. Vozidla = průměrný počet aut půjčovny v měsíci. Srovnání leden–září; říjen 2026 je jen do 20. 10.</p>
+  <h1 id="top">Výnosy a flotila 2024–2026</h1>
+  <p class="lead">Výnos bez DPH a bez přeúčtovaných pokut (pokuty a jejich zpracování jsou samostatně), podle data vyúčtování; Renteon CZ v Kč, SK v €. Vozidla = průměrný počet aut půjčovny v měsíci. Srovnání leden–září; říjen 2026 je jen do 20. 10. Bratislava začala v březnu 2024.</p>
 
   <div class="tiles" id="tiles"></div>
 
   <div class="charts">
-    <div class="card" id="graf-PRG"><h2>Praha – výnos, vozidla a smlouvy po měsících</h2><p class="note">Sloupce: výnos bez pokut (Kč) · čáry: Ø vozidel (pravá osa) · barva = rok</p><div class="legend lg"></div><div class="chart dash-skeleton" data-source="vf" data-branch="PRG"></div></div>
-    <div class="card" id="graf-OSR"><h2>Ostrava – výnos, vozidla a smlouvy po měsících</h2><p class="note">Sloupce: výnos bez pokut (Kč) · čáry: Ø vozidel (pravá osa) · barva = rok</p><div class="legend lg"></div><div class="chart dash-skeleton" data-source="vf" data-branch="OSR"></div></div>
-    <div class="card" id="graf-BTS"><h2>Bratislava – výnos, vozidla a smlouvy po měsících</h2><p class="note">Sloupce: výnos bez pokut (€) · čáry: Ø vozidel (pravá osa) · barva = rok</p><div class="legend lg"></div><div class="chart dash-skeleton" data-source="vf" data-branch="BTS"></div></div>
+    <div class="card" id="graf-PRG"><h2>Praha – výnos, vozidla a smlouvy po měsících</h2><p class="note">Sloupce: výnos bez pokut (Kč) · plná čára: Ø vozidel · přerušovaná: počet smluv (pravá osa) · barva = rok</p><div class="legend lg"></div><div class="chart dash-skeleton" data-source="vf" data-branch="PRG"></div></div>
+    <div class="card" id="graf-OSR"><h2>Ostrava – výnos, vozidla a smlouvy po měsících</h2><p class="note">Sloupce: výnos bez pokut (Kč) · plná čára: Ø vozidel · přerušovaná: počet smluv (pravá osa) · barva = rok</p><div class="legend lg"></div><div class="chart dash-skeleton" data-source="vf" data-branch="OSR"></div></div>
+    <div class="card" id="graf-BTS"><h2>Bratislava – výnos, vozidla a smlouvy po měsících</h2><p class="note">Sloupce: výnos bez pokut (€) · plná čára: Ø vozidel · přerušovaná: počet smluv (pravá osa) · barva = rok</p><div class="legend lg"></div><div class="chart dash-skeleton" data-source="vf" data-branch="BTS"></div></div>
   </div>
 
   <div class="card" id="rozpad" style="margin-bottom: var(--cds-gap-lg)"><h2>Rozpad výnosu po měsících</h2><p class="note">Nájem, pojištění, poplatky (bez pokut), škody, ostatní a zvlášť přeúčtované pokuty včetně poplatku za zpracování</p>
@@ -68,14 +68,14 @@
 <script>
 dash.calc('souhrn', {
   inputs: ['vf'],
-  title: 'Leden–září 2026 vs 2025',
+  title: 'Leden–září 2024, 2025 a 2026',
   description: 'Součty leden–září po pobočkách: výnos bez pokut, pokuty vč. zpracování, smlouvy; Ø vozidel = průměr měsíců; výnos na vůz = výnos / Ø vozidel / 9.',
   fn: (vf) => ['PRG', 'OSR', 'BTS'].map(p => {
     const sel = (y) => vf.filter(r => r.pobocka === p && r.mesic.slice(0, 4) === y && Number(r.mesic.slice(5, 7)) <= 9);
     const sum = (a, k) => a.reduce((s, r) => s + Number(r[k]), 0);
     const a = sel('2025'), b = sel('2026');
     const o = { pobocka: p };
-    [['2025', a], ['2026', b]].forEach(([y, s]) => {
+    [['2024', sel('2024')], ['2025', a], ['2026', b]].forEach(([y, s]) => {
       o['v' + y] = sum(s, 'vynos_bez_pokut');
       o['pok' + y] = sum(s, 'pokuty') + sum(s, 'zprac_pokut');
       o['sml' + y] = sum(s, 'smluv');
@@ -84,6 +84,7 @@ dash.calc('souhrn', {
     });
     o.zmena = o.v2026 / o.v2025 - 1;
     o.zmena_sml = o.sml2026 / o.sml2025 - 1;
+    o.zmena24 = o.v2024 ? o.v2026 / o.v2024 - 1 : null;
     return o;
   })
 });
@@ -108,8 +109,9 @@ dash.calc('souhrn', {
     const c = mk('div', 'card'); c.appendChild(mk('h2', '', names[p])); c.appendChild(mk('p', 'note', `Leden–září 2026, ${cur[p]} bez DPH a bez pokut`));
     c.appendChild(mark(mk('div', 'big'), 'v2026', p));
     const row = (label, ...fields) => { const r = mk('div', 'row'); r.appendChild(mk('span', '', label)); const b = mk('b'); fields.forEach((f, i) => { if (i) b.appendChild(document.createTextNode(' → ')); b.appendChild(mark(mk('span'), f, p)); }); r.appendChild(b); c.appendChild(r); };
-    row('Leden–září 2025', 'v2025'); row('Změna výnosu', 'zmena'); row('Smlouvy 2025 → 2026', 'sml2025', 'sml2026'); row('Změna smluv', 'zmena_sml');
-    row('Ø vozidel 2025 → 2026', 'voz2025', 'voz2026'); row('Výnos na vůz/měs.', 'nv2025', 'nv2026'); row('Pokuty vč. zprac. (vyčleněno)', 'pok2025', 'pok2026');
+    row('Leden–září 2025', 'v2025'); row('Leden–září 2024', 'v2024'); row('Změna proti 2025', 'zmena'); row('Změna proti 2024', 'zmena24');
+    row('Smlouvy 2024 → 2025 → 2026', 'sml2024', 'sml2025', 'sml2026'); row('Změna smluv proti 2025', 'zmena_sml');
+    row('Ø vozidel 2024 → 2025 → 2026', 'voz2024', 'voz2025', 'voz2026'); row('Výnos na vůz/měs.', 'nv2024', 'nv2025', 'nv2026'); row('Pokuty vč. zprac. (vyčleněno)', 'pok2024', 'pok2025', 'pok2026');
     tilesEl.appendChild(c);
   });
 
@@ -126,7 +128,7 @@ dash.calc('souhrn', {
       const p = el.dataset.where.split('=')[1], f = el.dataset.field;
       const r = s.data.find(x => x.pobocka === p); if (!r) return;
       const v = r[f];
-      if (f.startsWith('zmena')) { el.textContent = pct(v); el.style.color = v >= 0 ? 'var(--color-ok)' : 'var(--color-bad)'; }
+      if (f.startsWith('zmena')) { if (v == null || !isFinite(v)) { el.textContent = '—'; return; } el.textContent = pct(v); el.style.color = v >= 0 ? 'var(--color-ok)' : 'var(--color-bad)'; }
       else if (f.startsWith('voz')) el.textContent = nf1.format(v);
       else if (f.startsWith('sml')) el.textContent = nf.format(v);
       else el.textContent = nf.format(v) + ' ' + cur[p];
@@ -137,19 +139,19 @@ dash.calc('souhrn', {
 
   function chart(el, rows, p) {
     el.classList.remove('dash-skeleton'); el.innerHTML = '';
-    const COL = { '2025': dash.colors[1], '2026': dash.colors[0] };
+    const YRS = ['2024', '2025', '2026'];
+    const COL = { '2024': dash.colors[2], '2025': dash.colors[1], '2026': dash.colors[0] };
     const lg = el.parentNode.querySelector('.lg'); lg.innerHTML = '';
-    [['sw', '2025', 'Výnos 2025'], ['ln', '2025', 'Vozidel 2025'], ['sw', '2026', 'Výnos 2026'], ['ln', '2026', 'Vozidel 2026']].forEach(([c, y, t]) => {
-      const s = mk('span'); const i = mk('i', c); if (c === 'sw') { i.style.background = COL[y]; i.style.opacity = .55; } else i.style.borderColor = COL[y]; s.appendChild(i); s.appendChild(document.createTextNode(t)); lg.appendChild(s);
-    });
+    YRS.forEach(y => { const s = mk('span'); const i = mk('i', 'sw'); i.style.background = COL[y]; s.appendChild(i); s.appendChild(document.createTextNode(y)); lg.appendChild(s); });
+    [['', 'Ø vozidel'], ['dashed', 'Počet smluv']].forEach(([st, t]) => { const s = mk('span'); const i = mk('i', 'ln'); i.style.borderColor = 'var(--color-fg-muted)'; if (st) i.style.borderTopStyle = st; s.appendChild(i); s.appendChild(document.createTextNode(t)); lg.appendChild(s); });
     const W = Math.max(300, el.clientWidth), H = 300, m = { t: 12, r: 44, b: 26, l: 56 };
     const data = rows.filter(r => r.pobocka === p);
     const get = (y, mo) => data.find(r => r.mesic === `${y}-${String(mo).padStart(2, '0')}`);
     const months = d3.range(1, 13);
     const x0 = d3.scaleBand(months, [m.l, W - m.r]).paddingInner(0.25);
-    const x1 = d3.scaleBand(['2025', '2026'], [0, x0.bandwidth()]).padding(0.08);
+    const x1 = d3.scaleBand(YRS, [0, x0.bandwidth()]).padding(0.08);
     const y = d3.scaleLinear([0, (d3.max(data, r => Number(r.vynos_bez_pokut)) || 1) * 1.08], [H - m.b, m.t]).nice();
-    const y2 = d3.scaleLinear([0, (d3.max(data, r => Number(r.vozidel)) || 1) * 1.15], [H - m.b, m.t]).nice();
+    const y2 = d3.scaleLinear([0, (d3.max(data, r => Math.max(Number(r.vozidel), Number(r.smluv))) || 1) * 1.1], [H - m.b, m.t]).nice();
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
     svg.append('g').selectAll('line').data(y.ticks(5)).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', d => y(d)).attr('y2', d => y(d)).attr('stroke', 'var(--cds-chart-grid)');
     const ax = svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(d => cmp.format(d)).tickSize(0)); ax.select('.domain').remove(); axisStyle(ax);
@@ -157,23 +159,27 @@ dash.calc('souhrn', {
     const axb = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x0).tickFormat(d => MES[d - 1]).tickSize(0).tickPadding(8)); axb.select('.domain').attr('stroke', 'var(--cds-chart-axis)'); axisStyle(axb);
     if (W < 520) axb.selectAll('.tick').filter((d, i) => i % 2).select('text').remove();
     const bars = [];
-    months.forEach(mo => ['2025', '2026'].forEach(yr => { const r = get(yr, mo); if (r) bars.push({ mo, yr, v: Number(r.vynos_bez_pokut) }); }));
+    months.forEach(mo => YRS.forEach(yr => { const r = get(yr, mo); if (r) bars.push({ mo, yr, v: Number(r.vynos_bez_pokut) }); }));
     svg.append('g').selectAll('rect').data(bars).join('rect')
       .attr('x', d => x0(d.mo) + x1(d.yr)).attr('width', Math.min(32, x1.bandwidth()))
       .attr('y', d => y(d.v)).attr('height', d => y(0) - y(d.v)).attr('rx', 3)
-      .attr('fill', d => COL[d.yr]).attr('fill-opacity', 0.45);
-    ['2025', '2026'].forEach(yr => {
+      .attr('fill', d => COL[d.yr]).attr('fill-opacity', 0.4);
+    YRS.forEach(yr => {
       const pts = months.map(mo => ({ mo, r: get(yr, mo) })).filter(d => d.r);
-      const line = d3.line().x(d => x0(d.mo) + x0.bandwidth() / 2).y(d => y2(Number(d.r.vozidel)));
-      svg.append('path').datum(pts).attr('d', line).attr('fill', 'none').attr('stroke', COL[yr]).attr('stroke-width', 2.5).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
-      svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', d => x0(d.mo) + x0.bandwidth() / 2).attr('cy', d => y2(Number(d.r.vozidel))).attr('r', 3).attr('fill', COL[yr]);
+      const cx = d => x0(d.mo) + x0.bandwidth() / 2;
+      [['vozidel', null, 2.5], ['smluv', '5 4', 2]].forEach(([k, dashA, sw]) => {
+        const line = d3.line().x(cx).y(d => y2(Number(d.r[k])));
+        svg.append('path').datum(pts).attr('d', line).attr('fill', 'none').attr('stroke', COL[yr]).attr('stroke-width', sw).attr('stroke-dasharray', dashA).attr('stroke-linecap', dashA ? null : 'round').attr('stroke-linejoin', 'round');
+        svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', cx).attr('cy', d => y2(Number(d.r[k]))).attr('r', dashA ? 2.2 : 3)
+          .attr('fill', dashA ? 'var(--color-panel)' : COL[yr]).attr('stroke', COL[yr]).attr('stroke-width', dashA ? 1.5 : 0);
+      });
     });
     const tip = mk('div', 'tip'); el.appendChild(tip);
     svg.append('g').selectAll('rect').data(months).join('rect').attr('x', d => x0(d) - x0.step() * x0.paddingInner() / 2).attr('width', x0.step()).attr('y', m.t).attr('height', H - m.t - m.b).attr('fill', 'transparent')
       .on('mousemove', (ev, mo) => {
         tip.textContent = '';
         tip.appendChild(mk('div', 'h', MES[mo - 1] + ' – ' + p));
-        ['2025', '2026'].forEach(yr => {
+        YRS.forEach(yr => {
           const r = get(yr, mo); const d = mk('div'); const sw = mk('i', 'sw'); sw.style.background = COL[yr]; sw.style.marginRight = '6px'; d.appendChild(sw);
           d.appendChild(document.createTextNode(r ? `${yr}: ${nf.format(r.vynos_bez_pokut)} ${cur[p]} · ${nf1.format(r.vozidel)} voz. · ${nf.format(r.smluv)} smluv · ${nf.format(r.vynos_na_vuz)} ${cur[p]}/vůz` : `${yr}: —`));
           tip.appendChild(d);

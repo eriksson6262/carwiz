@@ -5,8 +5,9 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.chart import BarChart, LineChart, Reference
 from openpyxl.utils import get_column_letter as L
 
-rows=list(csv.DictReader(open(sys.argv[1] if len(sys.argv)>1 else 'data/vynosy_flotila_v2.csv')))
-F='Arial'; C25='E07B39'; C26='2F6DB5'
+rows=list(csv.DictReader(open(sys.argv[1] if len(sys.argv)>1 else 'data/vynosy_flotila.csv')))
+F='Arial'; C24='2BA58F'; C25='E07B39'; C26='2F6DB5'
+YEARS=['2024','2025','2026']; YC={'2024':C24,'2025':C25,'2026':C26}
 hdr=Font(name=F,bold=True,color='FFFFFF'); hfill=PatternFill('solid',fgColor='1F2937')
 f=Font(name=F); fb=Font(name=F,bold=True); blue=Font(name=F,color='0000FF'); grey=Font(name=F,italic=True,color='6B7280')
 thin=Border(bottom=Side(style='thin',color='D1D5DB'))
@@ -54,19 +55,19 @@ def sif(col,key,p): return f'SUMIFS({D(col)},{D("mesic")},{key},{D("pobocka")},"
 for p in ['PRG','OSR','BTS']:
     ws=wb.create_sheet(p)
     ws['A1']=f"{names[p]} – výnos bez DPH a bez pokut ({cur[p]}), smlouvy a flotila po měsících"; ws['A1'].font=Font(name=F,bold=True,size=14)
-    for col,t in [(1,'Měsíc'),(2,'Klíč 2025'),(3,'Klíč 2026')]:
+    for col,t in [(1,'Měsíc'),(2,'Klíč 2024'),(3,'Klíč 2025'),(4,'Klíč 2026')]:
         c=ws.cell(3,col,t); c.font=hdr; c.fill=hfill
-    start=4
-    for yi,y in enumerate(['2025','2026']):
+    start=5
+    for yi,y in enumerate(YEARS):
         for fi,(k,t) in enumerate(fields):
-            c=ws.cell(3,start+yi*NF+fi,f"{t} {y}"); c.font=hdr; c.fill=PatternFill('solid',fgColor=C25 if y=='2025' else C26)
+            c=ws.cell(3,start+yi*NF+fi,f"{t} {y}"); c.font=hdr; c.fill=PatternFill('solid',fgColor=YC[y])
             c.alignment=Alignment(wrap_text=True,horizontal='center')
     for m in range(12):
         r=4+m
         ws.cell(r,1,MES[m]).font=f
-        ws.cell(r,2,f"2025-{m+1:02d}"); ws.cell(r,3,f"2026-{m+1:02d}")
-        for yi in range(2):
-            key=f"$B{r}" if yi==0 else f"$C{r}"; base=start+yi*NF
+        for yi,y in enumerate(YEARS): ws.cell(r,2+yi,f"{y}-{m+1:02d}")
+        for yi in range(3):
+            key=f"${L(2+yi)}{r}"; base=start+yi*NF
             for fi,(k,t) in enumerate(fields):
                 c=ws.cell(r,base+fi)
                 if k=='nv':
@@ -80,7 +81,7 @@ for p in ['PRG','OSR','BTS']:
                 c.font=f; c.number_format='0.0' if k=='vozidel' else '#,##0'; c.border=thin
     tr=17
     ws.cell(tr,1,'Leden–září').font=fb
-    for yi in range(2):
+    for yi in range(3):
         base=start+yi*NF
         for fi,(k,t) in enumerate(fields):
             col=L(base+fi); c=ws.cell(tr,base+fi)
@@ -88,40 +89,44 @@ for p in ['PRG','OSR','BTS']:
             elif k=='nv': c.value=f'={L(base+IV)}{tr}/{L(base+IVOZ)}{tr}/9'
             else: c.value=f'=SUM({col}4:{col}12)'
             c.font=fb; c.number_format='0.0' if k=='vozidel' else '#,##0'
-    ws.cell(18,1,'Změna 2026/2025').font=fb
-    for fi in range(NF):
-        c=ws.cell(18,start+NF+fi,f'=IFERROR({L(start+NF+fi)}17/{L(start+fi)}17-1,"")'); c.number_format='+0.0%;-0.0%;0.0%'; c.font=fb
+    ws.cell(18,1,'Změna proti předch. roku').font=fb
+    for yi in (1,2):
+        for fi in range(NF):
+            c=ws.cell(18,start+yi*NF+fi,f'=IFERROR({L(start+yi*NF+fi)}17/{L(start+(yi-1)*NF+fi)}17-1,"")'); c.number_format='+0.0%;-0.0%;0.0%'; c.font=fb
     ws.cell(19,1,'Výnos bez pokut = výnos celkem − přeúčtované pokuty − poplatek za zpracování. Výnos na vůz = výnos bez pokut / Ø vozidel. Říjen 2026 neúplný (do 20. 10.).').font=grey
-    ws.column_dimensions['A'].width=16; ws.column_dimensions['B'].hidden=True; ws.column_dimensions['C'].hidden=True
-    for i in range(4,4+2*NF): ws.column_dimensions[L(i)].width=12
-    ws.row_dimensions[3].height=32; ws.freeze_panes='D4'
+    ws.column_dimensions['A'].width=16
+    for cc in 'BCD': ws.column_dimensions[cc].hidden=True
+    for i in range(5,5+3*NF): ws.column_dimensions[L(i)].width=12
+    ws.row_dimensions[3].height=32; ws.freeze_panes='E4'
 
     # chart 1: bars výnos + lines vozidla, colour per year
     bar=BarChart(); bar.type='col'; bar.grouping='clustered'; bar.overlap=-10; bar.gapWidth=60
-    bar.title=f"{names[p]}: výnos bez pokut ({cur[p]}) a Ø vozidel"; bar.y_axis.title=f"Výnos {cur[p]}"
-    for yi,col in enumerate([C25,C26]):
+    bar.title=f"{names[p]}: výnos bez pokut ({cur[p]}), Ø vozidel (plná) a smlouvy (přerušovaná)"; bar.y_axis.title=f"Výnos {cur[p]}"
+    for yi,col in enumerate([C24,C25,C26]):
         bar.add_data(Reference(ws,min_col=start+yi*NF+IV,min_row=3,max_row=15),titles_from_data=True)
         s=bar.series[-1]; s.graphicalProperties.solidFill=col; s.graphicalProperties.line.solidFill=col
     bar.set_categories(Reference(ws,min_col=1,min_row=4,max_row=15))
     line=LineChart()
-    for yi,col in enumerate([C25,C26]):
-        line.add_data(Reference(ws,min_col=start+yi*NF+IVOZ,min_row=3,max_row=15 if yi==0 else 13),titles_from_data=True)
-        s=line.series[-1]; s.graphicalProperties.line.solidFill=col; s.graphicalProperties.line.width=38000
-        s.marker.symbol='circle'; s.marker.size=7; s.marker.graphicalProperties.solidFill=col; s.marker.graphicalProperties.line.solidFill=col; s.smooth=False
-    line.y_axis.axId=200; line.y_axis.title='Ø vozidel'; line.y_axis.crosses='max'; line.y_axis.majorGridlines=None
-    bar+=line; bar.height=10; bar.width=26; bar.legend.position='b'
+    for yi,col in enumerate([C24,C25,C26]):
+        for ci,dash_ in ((IVOZ,None),(ISML,'dash')):
+            line.add_data(Reference(ws,min_col=start+yi*NF+ci,min_row=3,max_row=13 if yi==2 else 15),titles_from_data=True)
+            s=line.series[-1]; s.graphicalProperties.line.solidFill=col; s.graphicalProperties.line.width=32000 if dash_ is None else 22000
+            if dash_: s.graphicalProperties.line.dashStyle='dash'
+            s.marker.symbol='circle' if dash_ is None else 'triangle'; s.marker.size=6; s.marker.graphicalProperties.solidFill=col; s.marker.graphicalProperties.line.solidFill=col; s.smooth=False
+    line.y_axis.axId=200; line.y_axis.title='Ø vozidel / počet smluv'; line.y_axis.crosses='max'; line.y_axis.majorGridlines=None
+    bar+=line; bar.height=11; bar.width=30; bar.legend.position='b'
     ws.add_chart(bar,'A21')
 
     # chart 2: smlouvy po měsících (same colours)
     sm=BarChart(); sm.type='col'; sm.grouping='clustered'; sm.gapWidth=60; sm.title=f"{names[p]}: počet smluv"
-    for yi,col in enumerate([C25,C26]):
+    for yi,col in enumerate([C24,C25,C26]):
         sm.add_data(Reference(ws,min_col=start+yi*NF+ISML,min_row=3,max_row=15),titles_from_data=True)
         s=sm.series[-1]; s.graphicalProperties.solidFill=col; s.graphicalProperties.line.solidFill=col
     sm.set_categories(Reference(ws,min_col=1,min_row=4,max_row=15)); sm.height=10; sm.width=18; sm.legend.position='b'
-    ws.add_chart(sm,'Q21')
+    ws.add_chart(sm,'S21')
 
     # timeline breakdown
-    t0=43
+    t0=45
     ws.cell(t0-1,1,'Rozpad výnosu po měsících').font=Font(name=F,bold=True,size=12)
     th=['Měsíc','Nájem','Pojištění','Poplatky bez pokut','Škody','Ostatní','Pokuty vč. zprac.','Výnos celkem','Smluv']
     for i,h in enumerate(th): c=ws.cell(t0,1+i,h); c.font=hdr; c.fill=hfill
@@ -145,26 +150,26 @@ for p in ['PRG','OSR','BTS']:
 
 # ---- Souhrn
 ss=wb.create_sheet('Souhrn',0)
-ss['A1']='Výnosy, smlouvy a flotila – leden–září 2025 vs 2026'; ss['A1'].font=Font(name=F,bold=True,size=14)
-ss['A2']='Výnos bez DPH a bez přeúčtovaných pokut (CZ v Kč, SK v €); pokuty vč. zpracování vyčleněny zvlášť. Hodnoty z listů poboček.'; ss['A2'].font=grey
-h=['Pobočka','Měna','Výnos bez pokut 2025','Výnos bez pokut 2026','Změna výnosu','Smluv 2025','Smluv 2026','Změna smluv',
-   'Ø vozidel 2025','Ø vozidel 2026','Výnos na vůz/měs. 2025','Výnos na vůz/měs. 2026','Změna výnosu na vůz',
-   'Výnos na smlouvu 2025','Výnos na smlouvu 2026','Nájem 2025','Nájem 2026','Pojištění 2025','Pojištění 2026','Poplatky bez pokut 2025','Poplatky bez pokut 2026','Škody 2025','Škody 2026','Pokuty vč. zprac. 2025','Pokuty vč. zprac. 2026']
-for i,t in enumerate(h,1):
-    c=ss.cell(4,i,t); c.font=hdr; c.fill=hfill; c.alignment=Alignment(wrap_text=True,horizontal='center')
-ss.row_dimensions[4].height=44
+ss['A1']='Výnosy, smlouvy a flotila – leden–září 2024, 2025 a 2026'; ss['A1'].font=Font(name=F,bold=True,size=14)
+ss['A2']='Výnos bez DPH a bez přeúčtovaných pokut (CZ v Kč, SK v €); pokuty vč. zpracování vyčleněny zvlášť. Hodnoty z listů poboček. Bratislava od března 2024.'; ss['A2'].font=grey
+metrics=[('vynos_bez_pokut','Výnos bez pokut','#,##0'),('smluv','Smluv','#,##0'),('vozidel','Ø vozidel','0.0'),('nv','Výnos na vůz/měs.','#,##0'),('vs','Výnos na smlouvu','#,##0'),
+         ('najem','Nájem','#,##0'),('pojisteni','Pojištění','#,##0'),('poplatky_bez_pokut','Poplatky bez pokut','#,##0'),('skody','Škody','#,##0'),('pok','Pokuty vč. zprac.','#,##0')]
 fidx={k:i for i,(k,_) in enumerate(fields)}
-for j,p in enumerate(['PRG','OSR','BTS']):
-    r=5+j
-    ss.cell(r,1,names[p]).font=fb; ss.cell(r,2,cur[p]).font=f
-    g=lambda yi,k: f"={p}!{L(4+yi*NF+fidx[k])}17"
-    vals=[g(0,'vynos_bez_pokut'),g(1,'vynos_bez_pokut'),f'=D{r}/C{r}-1',g(0,'smluv'),g(1,'smluv'),f'=G{r}/F{r}-1',
-          g(0,'vozidel'),g(1,'vozidel'),g(0,'nv'),g(1,'nv'),f'=L{r}/K{r}-1',f'=C{r}/F{r}',f'=D{r}/G{r}',
-          g(0,'najem'),g(1,'najem'),g(0,'pojisteni'),g(1,'pojisteni'),g(0,'poplatky_bez_pokut'),g(1,'poplatky_bez_pokut'),g(0,'skody'),g(1,'skody'),g(0,'pok'),g(1,'pok')]
-    for i,v in enumerate(vals):
-        c=ss.cell(r,3+i,v); c.font=Font(name=F,color='000000' if v.startswith('=') and '!' not in v else '008000')
-        c.number_format='+0.0%;-0.0%;0.0%' if i in (2,5,10) else ('0.0' if i in (6,7) else '#,##0')
-for i,w in enumerate([18,7]+[12]*23,1): ss.column_dimensions[L(i)].width=w
-ss.freeze_panes='C5'
-ss['A9']='Pozn.: v 2025 se pokuty za celou flotilu fakturovaly převážně přes pobočku Ostrava (účty bez smlouvy); od září 2025 jsou u smluv pobočky rezervace.'; ss['A9'].font=grey
+r=4
+for p in ['PRG','OSR','BTS']:
+    ss.cell(r,1,f"{names[p]} ({cur[p]})").font=Font(name=F,bold=True,size=12)
+    for i,t in enumerate(['Ukazatel','2024','2025','2026','2025 vs 2024','2026 vs 2025']):
+        c=ss.cell(r+1,1+i,t); c.font=hdr; c.fill=hfill if i in (0,4,5) else PatternFill('solid',fgColor=YC[t])
+    for j,(k,t,fmt) in enumerate(metrics):
+        rr=r+2+j; ss.cell(rr,1,t).font=f
+        for yi in range(3):
+            if k=='vs': v=f'=IFERROR({L(2+yi)}{r+2}/{L(2+yi)}{r+3},"")'; fc='000000'
+            else: v=f"={p}!{L(5+yi*NF+fidx[k])}17"; fc='008000'
+            c=ss.cell(rr,2+yi,v); c.font=Font(name=F,color=fc); c.number_format=fmt
+        for ci,(a,b) in enumerate([('C','B'),('D','C')]):
+            c=ss.cell(rr,5+ci,f'=IFERROR({a}{rr}/{b}{rr}-1,"")'); c.number_format='+0.0%;-0.0%;0.0%'; c.font=f
+    r+=2+len(metrics)+2
+ss.column_dimensions['A'].width=24
+for cc in 'BCDEF': ss.column_dimensions[cc].width=15
+ss.cell(r,1,'Pozn.: do srpna 2025 se pokuty za celou flotilu fakturovaly převážně přes pobočku Ostrava (účty bez smlouvy); od září 2025 jsou u smluv pobočky rezervace.').font=grey
 wb.save(sys.argv[2] if len(sys.argv)>2 else 'output/Vynosy_flotila.xlsx')
