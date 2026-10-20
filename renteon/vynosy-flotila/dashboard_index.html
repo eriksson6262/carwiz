@@ -34,7 +34,7 @@
 </style>
 <div class="vx">
   <h1 id="top">Výnosy a flotila 2024–2026</h1>
-  <p class="lead">Výnos bez DPH a bez přeúčtovaných pokut = Renteon (krátkodobé, podle data vyúčtování) + Vyfakturuj (dlouhodobí klienti kromě HAVEX Mobility, podle DUZP). CZ v Kč, SK v €. Vozidla = Ø aut půjčovny v Renteonu + auta fakturovaná ve Vyfakturuj, která v Renteonu nejsou (ta jsou přiřazena Praze). Global Assistance = Ostrava. Srovnání leden–září; říjen 2026 je jen do 20. 10. Bratislava začala v březnu 2024.</p>
+  <p class="lead">Výnos bez DPH a bez přeúčtovaných pokut = Renteon (krátkodobé, podle data vyúčtování) + Vyfakturuj (dlouhodobí klienti kromě HAVEX Mobility, podle DUZP; Bratislava z firmy RX Auto SK). Prodeje aut nejsou zahrnuty. CZ v Kč, SK v €. Vozidla = Ø aut půjčovny v Renteonu + auta fakturovaná ve Vyfakturuj, která v Renteonu nejsou (ta jsou přiřazena Praze). Global Assistance = Ostrava. Srovnání leden–září; říjen 2026 je jen do 20. 10. Bratislava začala v březnu 2024.</p>
 
   <div class="tiles" id="tiles"></div>
 
@@ -79,7 +79,7 @@ dash.calc('souhrn', {
       o['v' + y] = sum(s, 'vynos_bez_pokut');
       o['pok' + y] = sum(s, 'pokuty') + sum(s, 'zprac_pokut') + sum(s, 'vf_pokuty');
       o['ren' + y] = sum(s, 'vynos_renteon');
-      o['vf' + y] = sum(s, 'vf_najem_renteon_auta') + sum(s, 'vf_najem_mimo_renteon');
+      o['vf' + y] = sum(s, 'vf_celkem');
       o['sml' + y] = sum(s, 'smluv');
       o['voz' + y] = sum(s, 'vozidel') / s.length;
       o['nv' + y] = o['v' + y] / o['voz' + y] / 9;
@@ -110,8 +110,9 @@ dash.calc('souhrn', {
   ['PRG', 'OSR', 'BTS'].forEach(p => {
     const c = mk('div', 'card'); c.appendChild(mk('h2', '', names[p])); c.appendChild(mk('p', 'note', `Leden–září 2026, ${cur[p]} bez DPH a bez pokut, Renteon + Vyfakturuj`));
     c.appendChild(mark(mk('div', 'big'), 'v2026', p));
-    const row = (label, ...fields) => { const r = mk('div', 'row'); r.appendChild(mk('span', '', label)); const b = mk('b'); fields.forEach((f, i) => { if (i) b.appendChild(document.createTextNode(fields[0].startsWith('ren') ? ' / ' : ' → ')); b.appendChild(mark(mk('span'), f, p)); }); r.appendChild(b); c.appendChild(r); };
-    row('z toho Renteon / Vyfakturuj', 'ren2026', 'vf2026'); row('Leden–září 2025', 'v2025'); row('Leden–září 2024', 'v2024'); row('Změna proti 2025', 'zmena'); row('Změna proti 2024', 'zmena24');
+    const row = (label, ...fields) => { const r = mk('div', 'row'); r.appendChild(mk('span', '', label)); const b = mk('b'); fields.forEach((f, i) => { if (i) b.appendChild(document.createTextNode(' → ')); b.appendChild(mark(mk('span'), f, p)); }); r.appendChild(b); c.appendChild(r); };
+    row('Leden–září 2025', 'v2025'); row('Leden–září 2024', 'v2024'); row('Změna proti 2025', 'zmena'); row('Změna proti 2024', 'zmena24');
+    row('Renteon 2024 → 2025 → 2026', 'ren2024', 'ren2025', 'ren2026'); row('Vyfakturuj 2024 → 2025 → 2026', 'vf2024', 'vf2025', 'vf2026');
     row('Smlouvy Renteon 2024 → 2025 → 2026', 'sml2024', 'sml2025', 'sml2026'); row('Změna smluv proti 2025', 'zmena_sml');
     row('Ø vozidel 2024 → 2025 → 2026', 'voz2024', 'voz2025', 'voz2026'); row('Výnos na vůz/měs.', 'nv2024', 'nv2025', 'nv2026'); row('Pokuty vč. zprac. (vyčleněno)', 'pok2024', 'pok2025', 'pok2026');
     tilesEl.appendChild(c);
@@ -145,6 +146,7 @@ dash.calc('souhrn', {
     const COL = { '2024': dash.colors[2], '2025': dash.colors[1], '2026': dash.colors[0] };
     const lg = el.parentNode.querySelector('.lg'); lg.innerHTML = '';
     YRS.forEach(y => { const s = mk('span'); const i = mk('i', 'sw'); i.style.background = COL[y]; s.appendChild(i); s.appendChild(document.createTextNode(y)); lg.appendChild(s); });
+    [[0.9, 'Renteon (sytá část)'], [0.3, 'Vyfakturuj (světlá část)']].forEach(([op, t]) => { const s = mk('span'); const i = mk('i', 'sw'); i.style.background = 'var(--color-fg-muted)'; i.style.opacity = op; s.appendChild(i); s.appendChild(document.createTextNode(t)); lg.appendChild(s); });
     [['', 'Ø vozidel'], ['dashed', 'Počet smluv']].forEach(([st, t]) => { const s = mk('span'); const i = mk('i', 'ln'); i.style.borderColor = 'var(--color-fg-muted)'; if (st) i.style.borderTopStyle = st; s.appendChild(i); s.appendChild(document.createTextNode(t)); lg.appendChild(s); });
     const W = Math.max(300, el.clientWidth), H = 300, m = { t: 12, r: 44, b: 26, l: 56 };
     const data = rows.filter(r => r.pobocka === p);
@@ -152,7 +154,7 @@ dash.calc('souhrn', {
     const months = d3.range(1, 13);
     const x0 = d3.scaleBand(months, [m.l, W - m.r]).paddingInner(0.25);
     const x1 = d3.scaleBand(YRS, [0, x0.bandwidth()]).padding(0.08);
-    const y = d3.scaleLinear([0, (d3.max(data, r => Number(r.vynos_bez_pokut)) || 1) * 1.08], [H - m.b, m.t]).nice();
+    const y = d3.scaleLinear([0, (d3.max(data, r => Math.max(0, Number(r.vynos_renteon)) + Math.max(0, Number(r.vf_celkem))) || 1) * 1.08], [H - m.b, m.t]).nice();
     const y2 = d3.scaleLinear([0, (d3.max(data, r => Math.max(Number(r.vozidel), Number(r.smluv))) || 1) * 1.1], [H - m.b, m.t]).nice();
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
     svg.append('g').selectAll('line').data(y.ticks(5)).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', d => y(d)).attr('y2', d => y(d)).attr('stroke', 'var(--cds-chart-grid)');
@@ -161,11 +163,11 @@ dash.calc('souhrn', {
     const axb = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x0).tickFormat(d => MES[d - 1]).tickSize(0).tickPadding(8)); axb.select('.domain').attr('stroke', 'var(--cds-chart-axis)'); axisStyle(axb);
     if (W < 520) axb.selectAll('.tick').filter((d, i) => i % 2).select('text').remove();
     const bars = [];
-    months.forEach(mo => YRS.forEach(yr => { const r = get(yr, mo); if (r) bars.push({ mo, yr, v: Number(r.vynos_bez_pokut) }); }));
+    months.forEach(mo => YRS.forEach(yr => { const r = get(yr, mo); if (r) { const ren = Math.max(0, Number(r.vynos_renteon)), vfv = Math.max(0, Number(r.vf_celkem)); bars.push({ mo, yr, y0: 0, y1: ren, op: 0.9 }); bars.push({ mo, yr, y0: ren, y1: ren + vfv, op: 0.32 }); } }));
     svg.append('g').selectAll('rect').data(bars).join('rect')
       .attr('x', d => x0(d.mo) + x1(d.yr)).attr('width', Math.min(32, x1.bandwidth()))
-      .attr('y', d => y(d.v)).attr('height', d => y(0) - y(d.v)).attr('rx', 3)
-      .attr('fill', d => COL[d.yr]).attr('fill-opacity', 0.4);
+      .attr('y', d => y(d.y1)).attr('height', d => Math.max(0, y(d.y0) - y(d.y1))).attr('rx', 2)
+      .attr('fill', d => COL[d.yr]).attr('fill-opacity', d => d.op);
     YRS.forEach(yr => {
       const pts = months.map(mo => ({ mo, r: get(yr, mo) })).filter(d => d.r);
       const cx = d => x0(d.mo) + x0.bandwidth() / 2;
@@ -183,7 +185,7 @@ dash.calc('souhrn', {
         tip.appendChild(mk('div', 'h', MES[mo - 1] + ' – ' + p));
         YRS.forEach(yr => {
           const r = get(yr, mo); const d = mk('div'); const sw = mk('i', 'sw'); sw.style.background = COL[yr]; sw.style.marginRight = '6px'; d.appendChild(sw);
-          d.appendChild(document.createTextNode(r ? `${yr}: ${nf.format(r.vynos_bez_pokut)} ${cur[p]} (Renteon ${nf.format(r.vynos_renteon)} + Vyfakturuj ${nf.format(Number(r.vf_najem_renteon_auta) + Number(r.vf_najem_mimo_renteon))}) · ${nf1.format(r.vozidel)} voz. · ${nf.format(r.smluv)} smluv · ${nf.format(r.vynos_na_vuz)} ${cur[p]}/vůz` : `${yr}: —`));
+          d.appendChild(document.createTextNode(r ? `${yr}: ${nf.format(r.vynos_bez_pokut)} ${cur[p]} (Renteon ${nf.format(r.vynos_renteon)} + Vyfakturuj ${nf.format(r.vf_celkem)}) · ${nf1.format(r.vozidel)} voz. · ${nf.format(r.smluv)} smluv · ${nf.format(r.vynos_na_vuz)} ${cur[p]}/vůz` : `${yr}: —`));
           tip.appendChild(d);
           if (r) tip.appendChild(mk('div', 'sub', `nájem ${nf.format(r.najem)} · pojištění ${nf.format(r.pojisteni)} · poplatky ${nf.format(r.poplatky_bez_pokut)} · škody ${nf.format(r.skody)} · pokuty ${nf.format(Number(r.pokuty) + Number(r.zprac_pokut) + Number(r.vf_pokuty))}`));
         });

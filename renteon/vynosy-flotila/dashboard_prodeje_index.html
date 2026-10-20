@@ -1,0 +1,189 @@
+<style>
+.px { font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+.px h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0 0 var(--cds-gap-xs); }
+.px .lead { color: var(--color-fg-muted); font-size: var(--cds-font-size-body); margin: 0 0 var(--cds-gap-lg); max-width: 62rem; }
+.px .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-lg); }
+.px .card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); }
+.px .card h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
+.px .note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 0 0 var(--cds-gap-sm); }
+.px .big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+.px .row { display: flex; justify-content: space-between; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: var(--cds-gap-xs); font-variant-numeric: tabular-nums; }
+.px .row b { color: var(--color-fg); font-weight: 500; }
+.px .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-lg); }
+.px .chart { position: relative; min-height: 300px; }
+.px .legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-bottom: var(--cds-gap-sm); }
+.px .legend span { display: inline-flex; align-items: center; gap: 6px; }
+.px .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex: none; }
+.px .ln { width: 16px; height: 0; border-top: 2.5px solid; display: inline-block; }
+.px .tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; display: none; white-space: nowrap; z-index: 2; }
+.px .tip .h { color: var(--cds-text-secondary); margin-bottom: 2px; }
+.px .tabs { display: flex; gap: var(--cds-gap-xs); margin-bottom: var(--cds-gap-sm); flex-wrap: wrap; align-items: center; }
+.px .tabs button { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); cursor: pointer; }
+.px .tabs button[aria-pressed=true] { background: var(--color-fg); color: var(--color-bg); }
+.px .tabs input { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); min-width: 12rem; flex: 1; }
+.px .tbl { max-height: 30rem; overflow: auto; }
+.px table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.px th, .px td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--color-border-line); }
+.px td.n, .px th.n { text-align: right; white-space: nowrap; }
+.px th { position: sticky; top: 0; background: var(--color-panel); color: var(--color-fg-muted); font-weight: 500; }
+.px .bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--cds-chart-muted); vertical-align: middle; margin-right: 6px; }
+.px [data-dash-source-state=empty] { color: transparent; }
+.px [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+@media (max-width: 40rem) { .px .hide-n { display: none; } }
+</style>
+<div class="px">
+  <h1 id="top">Prodeje aut 2024–2026</h1>
+  <p class="lead">Tržby z prodeje vozidel bez DPH podle Vyfakturuj – jen faktury a daňové doklady (k přijatým zálohám), podle DUZP. Konečná faktura zálohu odečítá, takže součet je čistý. RX Auto s.r.o. v Kč, RX Auto SK v €. Počet aut = unikátní VIN (auto se počítá v měsíci, kdy se poprvé objeví – u záloh tedy dřív než konečná faktura). Říjen 2026 neúplný.</p>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="card" id="graf" style="margin-bottom: var(--cds-gap-lg)"><h2>Tržby a počet prodaných aut po měsících – RX Auto s.r.o.</h2>
+    <p class="note">Sloupce: tržby bez DPH (Kč), sytá část faktury, světlá daňové doklady k zálohám · čára: počet aut (pravá osa)</p>
+    <div class="legend" id="lg"></div><div class="chart dash-skeleton" id="chart" data-source="mesice"></div></div>
+
+  <div class="grid2">
+    <div class="card" id="odberatele"><h2>Největší odběratelé</h2><p class="note">Tržby bez DPH za rok</p>
+      <div class="tabs" id="tabsY"></div>
+      <div class="tbl"><table data-source="odberatele" data-row-key="rok,zeme,odberatel"><thead><tr><th data-field="odberatel">Odběratel</th><th data-field="trzby" class="n">Tržby</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="card" id="rocne-card"><h2>Rok po roku</h2><p class="note">Leden–září a celý rok</p>
+      <div class="tbl"><table data-source="rocne" data-row-key="zeme,rok"><thead><tr><th data-field="rok">Rok</th><th data-field="zeme">Firma</th><th data-field="trzby" class="n">Tržby</th><th data-field="auta" class="n">Aut</th><th data-field="prumer" class="n">Ø na auto</th><th data-field="trzby_ix" class="n hide-n">Tržby I–IX</th><th data-field="auta_ix" class="n hide-n">Aut I–IX</th></tr></thead><tbody></tbody></table></div></div>
+  </div>
+
+  <div class="card" id="auta"><h2>Prodaná auta</h2><p class="note">Každé auto jednou (první doklad s jeho VIN); částka je z toho dokladu</p>
+    <div class="tabs" id="tabsA"><input type="search" id="q" placeholder="Hledat VIN, model, odběratele…"></div>
+    <div class="tbl"><table data-source="auta" data-row-key="id"><thead><tr><th data-field="datum">Datum</th><th data-field="vuz">Vůz</th><th data-field="vin" class="hide-n">VIN</th><th data-field="odberatel">Odběratel</th><th data-field="castka" class="n">Částka</th><th data-field="doklad" class="hide-n">Doklad</th><th data-field="id" class="hide-n">ID</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<script>
+dash.calc('rocne', {
+  inputs: ['mesice'],
+  title: 'Prodeje po letech',
+  description: 'Součet tržeb a aut po firmě a roce, celý rok a leden–září; Ø na auto = tržby / počet aut.',
+  fn: (mesice) => {
+    const out = {};
+    for (const r of mesice) {
+      const k = r.zeme + '|' + r.mesic.slice(0, 4);
+      const o = out[k] = out[k] || { zeme: r.zeme, rok: r.mesic.slice(0, 4), mena: r.mena, trzby: 0, auta: 0, trzby_ix: 0, auta_ix: 0 };
+      o.trzby += Number(r.trzby_celkem); o.auta += Number(r.pocet_aut);
+      if (Number(r.mesic.slice(5, 7)) <= 9) { o.trzby_ix += Number(r.trzby_celkem); o.auta_ix += Number(r.pocet_aut); }
+    }
+    return Object.values(out).filter(o => o.trzby || o.auta).map(o => ({ ...o, prumer: o.auta ? o.trzby / o.auta : 0 }));
+  }
+});
+</script>
+<script>
+(function () {
+  const nf = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 });
+  const cmp = new Intl.NumberFormat('cs-CZ', { notation: 'compact', maximumFractionDigits: 1 });
+  const MES = ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'];
+  const COL = { '2024': dash.colors[2], '2025': dash.colors[1], '2026': dash.colors[0] };
+  const cur = z => z === 'SK' ? '€' : 'Kč';
+  const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const root = document.querySelector('.px');
+  let year = '2025', q = '';
+
+  // tiles markup
+  const tiles = document.getElementById('tiles');
+  const mark = (el, f, z, y) => { el.dataset.source = 'rocne'; el.dataset.field = f; el.dataset.where = `zeme=${z}&rok=${y}`; el.classList.add('dash-skeleton'); el.textContent = '—'; return el; };
+  [['CZ', '2024'], ['CZ', '2025'], ['CZ', '2026'], ['SK', '2024']].forEach(([z, y]) => {
+    const c = mk('div', 'card'); c.appendChild(mk('h2', '', (z === 'CZ' ? 'RX Auto s.r.o. ' : 'RX Auto SK ') + y));
+    c.appendChild(mk('p', 'note', y === '2026' ? 'Leden – 20. října, bez DPH' : 'Celý rok, bez DPH'));
+    c.appendChild(mark(mk('div', 'big'), 'trzby', z, y));
+    const r1 = mk('div', 'row'); r1.appendChild(mk('span', '', 'Prodaných aut')); r1.appendChild(mark(mk('b'), 'auta', z, y)); c.appendChild(r1);
+    const r2 = mk('div', 'row'); r2.appendChild(mk('span', '', 'Ø na auto')); r2.appendChild(mark(mk('b'), 'prumer', z, y)); c.appendChild(r2);
+    tiles.appendChild(c);
+  });
+
+  const tabsY = document.getElementById('tabsY');
+  ['2024', '2025', '2026'].forEach(y => { const b = mk('button', '', y); b.dataset.y = y; b.addEventListener('click', () => { year = y; drawOdb(); }); tabsY.appendChild(b); });
+  document.getElementById('q').addEventListener('input', e => { q = e.target.value.toLowerCase(); drawCars(); });
+
+  function fillTiles(d) {
+    root.querySelectorAll('[data-source="rocne"]').forEach(el => {
+      if (el.closest('table')) return;
+      if (d.status !== 'ok') { el.textContent = '—'; return; }
+      el.classList.remove('dash-skeleton');
+      const p = new URLSearchParams(el.dataset.where); const r = d.data.find(x => x.zeme === p.get('zeme') && x.rok === p.get('rok'));
+      if (!r) { el.textContent = '—'; return; }
+      const v = r[el.dataset.field];
+      el.textContent = el.dataset.field === 'auta' ? nf.format(v) : nf.format(v) + ' ' + cur(r.zeme);
+    });
+    const tb = document.querySelector('#rocne-card tbody'); tb.textContent = '';
+    if (d.status === 'ok') d.data.slice().sort((a, b) => a.zeme.localeCompare(b.zeme) || a.rok.localeCompare(b.rok)).forEach(r => {
+      const tr = mk('tr'); tr.dataset.key = r.zeme + ',' + r.rok;
+      [[r.rok], [r.zeme === 'CZ' ? 'RX Auto s.r.o.' : 'RX Auto SK'], [nf.format(r.trzby) + ' ' + cur(r.zeme), 'n'], [nf.format(r.auta), 'n'], [nf.format(r.prumer) + ' ' + cur(r.zeme), 'n'], [nf.format(r.trzby_ix) + ' ' + cur(r.zeme), 'n hide-n'], [nf.format(r.auta_ix), 'n hide-n']]
+        .forEach(([t, c]) => { const td = mk('td', c || '', t); tr.appendChild(td); }); tb.appendChild(tr);
+    });
+  }
+
+  function axisStyle(g) { g.attr('font-size', null).attr('font-family', null); g.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)'); }
+
+  function drawChart(d) {
+    const el = document.getElementById('chart'); const lg = document.getElementById('lg');
+    if (d.status !== 'ok') return;
+    el.classList.remove('dash-skeleton'); el.textContent = ''; lg.textContent = '';
+    ['2024', '2025', '2026'].forEach(y => { const s = mk('span'); const i = mk('i', 'sw'); i.style.background = COL[y]; s.appendChild(i); s.appendChild(document.createTextNode(y)); lg.appendChild(s); });
+    [[0.9, 'Faktury'], [0.35, 'Daňové doklady k zálohám']].forEach(([op, t]) => { const s = mk('span'); const i = mk('i', 'sw'); i.style.background = 'var(--color-fg-muted)'; i.style.opacity = op; s.appendChild(i); s.appendChild(document.createTextNode(t)); lg.appendChild(s); });
+    { const s = mk('span'); const i = mk('i', 'ln'); i.style.borderColor = 'var(--color-fg)'; s.appendChild(i); s.appendChild(document.createTextNode('Počet aut')); lg.appendChild(s); }
+    const data = d.data.filter(r => r.zeme === 'CZ').map(r => ({ m: r.mesic, fa: Number(r.trzby_faktury), dd: Number(r.trzby_danove_doklady), n: Number(r.pocet_aut), tot: Number(r.trzby_celkem), docs: Number(r.pocet_dokladu) }));
+    const W = Math.max(300, el.clientWidth), H = 300, m = { t: 12, r: 40, b: 26, l: 56 };
+    const x = d3.scaleBand(data.map(r => r.m), [m.l, W - m.r]).padding(0.18);
+    const lo = d3.min(data, r => Math.min(0, r.fa, r.dd)), hi = d3.max(data, r => Math.max(r.fa, 0) + Math.max(r.dd, 0)) || 1;
+    const y = d3.scaleLinear([lo, hi * 1.05], [H - m.b, m.t]).nice();
+    const y2 = d3.scaleLinear([0, (d3.max(data, r => r.n) || 1) * 1.15], [H - m.b, m.t]).nice();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    svg.append('g').selectAll('line').data(y.ticks(5)).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', v => y(v)).attr('y2', v => y(v)).attr('stroke', v => v === 0 ? 'var(--cds-chart-axis)' : 'var(--cds-chart-grid)');
+    const ax = svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(v => cmp.format(v)).tickSize(0)); ax.select('.domain').remove(); axisStyle(ax);
+    const ax2 = svg.append('g').attr('transform', `translate(${W - m.r},0)`).call(d3.axisRight(y2).ticks(5).tickSize(0).tickPadding(6)); ax2.select('.domain').remove(); axisStyle(ax2);
+    const step = W < 520 ? 6 : 3;
+    const axb = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickValues(data.map(r => r.m).filter((_, i) => i % step === 0)).tickFormat(v => MES[Number(v.slice(5, 7)) - 1] + ' ' + v.slice(2, 4)).tickSize(0).tickPadding(8));
+    axb.select('.domain').remove(); axisStyle(axb);
+    const segs = [];
+    data.forEach(r => {
+      const yr = r.m.slice(0, 4);
+      const fa = r.fa, dd = r.dd;
+      const posFa = Math.max(0, fa), posDd = Math.max(0, dd);
+      segs.push({ m: r.m, yr, a: 0, b: posFa, op: 0.9 }); segs.push({ m: r.m, yr, a: posFa, b: posFa + posDd, op: 0.35 });
+      if (fa < 0) segs.push({ m: r.m, yr, a: fa, b: 0, op: 0.9 }); if (dd < 0) segs.push({ m: r.m, yr, a: Math.min(0, fa) + dd, b: Math.min(0, fa), op: 0.35 });
+    });
+    svg.append('g').selectAll('rect').data(segs.filter(s => s.b !== s.a)).join('rect').attr('x', s => x(s.m)).attr('width', Math.min(32, x.bandwidth()))
+      .attr('y', s => y(Math.max(s.a, s.b))).attr('height', s => Math.abs(y(s.a) - y(s.b))).attr('fill', s => COL[s.yr]).attr('fill-opacity', s => s.op).attr('rx', 2);
+    const cx = r => x(r.m) + Math.min(32, x.bandwidth()) / 2;
+    svg.append('path').datum(data).attr('d', d3.line().x(cx).y(r => y2(r.n))).attr('fill', 'none').attr('stroke', 'var(--color-fg)').attr('stroke-width', 2).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round');
+    svg.append('g').selectAll('circle').data(data).join('circle').attr('cx', cx).attr('cy', r => y2(r.n)).attr('r', 2.5).attr('fill', 'var(--color-fg)');
+    const tip = mk('div', 'tip'); el.appendChild(tip);
+    svg.append('g').selectAll('rect').data(data).join('rect').attr('x', r => x(r.m) - x.step() * x.padding() / 2).attr('width', x.step()).attr('y', m.t).attr('height', H - m.t - m.b).attr('fill', 'transparent')
+      .on('mousemove', (ev, r) => {
+        tip.textContent = ''; tip.appendChild(mk('div', 'h', MES[Number(r.m.slice(5, 7)) - 1] + ' ' + r.m.slice(0, 4)));
+        tip.appendChild(mk('div', '', `Tržby celkem: ${nf.format(r.tot)} Kč`)); tip.appendChild(mk('div', '', `z toho faktury ${nf.format(r.fa)} · daňové doklady ${nf.format(r.dd)}`));
+        tip.appendChild(mk('div', '', `Prodaných aut: ${nf.format(r.n)} · dokladů: ${nf.format(r.docs)}`));
+        tip.style.display = 'block'; const [mx] = d3.pointer(ev, el); tip.style.left = Math.max(0, Math.min(el.clientWidth - tip.offsetWidth, mx + 12)) + 'px'; tip.style.top = '8px';
+      }).on('mouseleave', () => { tip.style.display = 'none'; });
+  }
+
+  let odb = [], cars = [];
+  function drawOdb() {
+    tabsY.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.y === year));
+    const tb = document.querySelector('#odberatele tbody'); tb.textContent = '';
+    const rows = odb.filter(r => r.rok === year).sort((a, b) => Number(b.trzby) - Number(a.trzby));
+    const max = d3.max(rows, r => Number(r.trzby)) || 1;
+    rows.forEach(r => { const tr = mk('tr'); tr.dataset.key = [r.rok, r.zeme, r.odberatel].map(encodeURIComponent).join(',');
+      const td1 = mk('td', '', r.odberatel); const td2 = mk('td', 'n'); const bar = mk('span', 'bar'); bar.style.width = Math.max(2, 80 * Math.max(0, Number(r.trzby)) / max) + 'px'; td2.appendChild(bar); td2.appendChild(document.createTextNode(nf.format(r.trzby) + ' ' + cur(r.zeme)));
+      tr.appendChild(td1); tr.appendChild(td2); tb.appendChild(tr); });
+  }
+  function drawCars() {
+    const tb = document.querySelector('#auta tbody'); tb.textContent = '';
+    cars.filter(r => !q || (r.vin + ' ' + r.vuz + ' ' + r.odberatel + ' ' + r.datum).toLowerCase().includes(q)).slice().sort((a, b) => b.datum.localeCompare(a.datum)).forEach(r => {
+      const tr = mk('tr');
+      [[r.datum], [r.vuz], [r.vin, 'hide-n'], [r.odberatel], [nf.format(r.castka) + ' ' + cur(r.zeme), 'n'], [r.doklad, 'hide-n'], [r.id, 'hide-n']].forEach(([t, c]) => tr.appendChild(mk('td', c || '', t)));
+      tb.appendChild(tr); });
+  }
+
+  dash.onData(() => {
+    const m = dash.data('mesice'), o = dash.data('odberatele'), a = dash.data('auta');
+    fillTiles(dash.data('rocne'));
+    drawChart(m);
+    if (o.status === 'ok') { odb = o.data; drawOdb(); }
+    if (a.status === 'ok') { cars = a.data; drawCars(); }
+  });
+})();
+</script>

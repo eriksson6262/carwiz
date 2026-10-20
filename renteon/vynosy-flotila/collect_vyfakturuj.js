@@ -33,3 +33,14 @@ function classify(t, cust) { const s = t.toLowerCase();
 // Pobočka podle SPZ: v Renteonu CZ api/car/getSimpleList → Id podle SPZ, api/carActivity/getSimpleListForCar (IncludeIdle)
 // → dny po měsících podle OfficeOutCode, měsíc = pobočka s nejvíc dny. Položka bez SPZ → nejčastější SPZ daného klienta.
 // Auta, která nejsou v Renteonu CZ ani SK → PRG a počítají se do vozidel PRG (distinct SPZ v měsíci).
+
+// ---- Aktualizace 21. 10. 2026: jednotná klasifikace na úrovni dokladu ----
+// Firma: přepínání v menu firmy (data-popup="vf.system.changeCompany", data-vfcid: RX Auto s.r.o. 26022, RX Auto SK 53196,
+// Carnetto RX 78596). Po exportu vždy přepnout zpět na RX Auto s.r.o. Bratislava = RX Auto SK (vše BTS).
+// Typ položky it(t): 'sale' (prodej/kupní/odkup/ojet), jinak 'rent' (pronájem, období, rozsah dat, MM/RRRR, (MM/RR), jistina,
+// přestupek/pokuta/mýtné, spoluúčast, nadlimitní km, poškození, parkování, mytí), jinak 'sale' (záloha, (ZF…), daňový doklad,
+// komise, VIN), jinak 'other'.
+// Doklad = prodej, když: má 'sale' a nemá 'rent' | položka s VIN ≥ 100 000 bez období | nemá 'rent' a položka ≥ 60 000
+// (mimo zprostředkování/rebate/úroky/provize/přefakturace). Doklad = pronájem, když má 'rent' (a GLOBAL ASSISTANCE vždy).
+// V pronájmových dokladech je položka ≥ 150 000 bez data v závorce a ne jistina = prodej auta (smíšené doklady).
+// Výnosy z pronájmu: typy 1, 16, 128, 64; prodeje: jen typy 1 (faktura) a 16 (daňový doklad), auta = unikátní VIN.

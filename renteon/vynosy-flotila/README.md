@@ -23,3 +23,8 @@ Měsíční přehled výnosů bez DPH (Renteon + Vyfakturuj), počtu smluv a pr�
 
 - S Vyfakturuj (I–IX 2024 → 2025 → 2026): PRG 19,6 → 26,0 → 27,7 mil. Kč (z toho Vyfakturuj 10,8 → 12,7 → 14,4); OSR 1,87 → 2,47 → 2,43 mil. Kč (Vyfakturuj 0,68 → 0,72 → 0,83).
 - Vyfakturuj obsahuje i prodeje aut (AUTOCENTRUM Jičín, AZISFIN, HAVEX-auto…) – ty se do výnosů z pronájmu nepočítají.
+
+## Prodeje aut (21. 10. 2026)
+- `build_prodeje.py <složka s CSV> <výstup.xlsx>` – CSV `prodeje_mesice.csv`, `prodeje_auta.csv`, `prodeje_odberatele.csv` (do `data/`, obsahují jména odběratelů → necommitovat).
+- Jen faktury a daňové doklady, podle DUZP. CZ: 2024 39,7 mil. Kč / 76 aut, 2025 127,8 mil. / 233, 2026 (do 20. 10.) 34,9 mil. / 81. SK: 2024 18× Opel Corsa AZISFIN, 276 tis. €.
+- Výnosy z pronájmu po přepočtu (I–IX, Renteon + Vyfakturuj): PRG 20,3 → 26,4 → 29,1 mil. Kč; OSR 1,88 → 2,53 → 2,65 mil. Kč; BTS 50 → 93 → 150 tis. €.

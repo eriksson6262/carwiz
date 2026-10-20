@@ -42,7 +42,7 @@ for i in range(1,NI+5): ds.column_dimensions[L(i)].width=10 if i<=4 else 13
 ds.freeze_panes='C2'
 notes=['Zdroj Renteon: CZ (rxauto.s3) a SK (cwslovakia.s6), report Realizace po kancelářích – podle data vyúčtování, bez DPH; CZ v Kč, SK v €.',
  'Pokuty = položky dokladů typu dopravní pokuta / mýtné / parkování (typ služby 14) a poplatek za zpracování, podle data dokladu; přiřazeno pobočce rezervace, doklady bez smlouvy pobočce dokladu. Odečteny z poplatků.',
- 'Zdroj Vyfakturuj: RX Auto s.r.o., faktury a daňové doklady podle DUZP, bez DPH, bez stornovaných; bez HAVEX Mobility; bez prodejů aut, záloh, kupních smluv a jistin. Položky s přestupkem/pokutou/admin. poplatkem = Vyfakturuj – pokuty.',
+ 'Zdroj Vyfakturuj: RX Auto s.r.o. (PRG, OSR) a RX Auto SK s. r. o. (BTS), faktury, daňové, opravné a příjmové doklady podle DUZP, bez DPH, bez stornovaných; bez HAVEX Mobility; bez prodejů aut (viz samostatný přehled) a jistin. Položky s přestupkem/pokutou/admin. poplatkem = Vyfakturuj – pokuty.',
  'Pobočka pro Vyfakturuj: podle SPZ v textu položky a toho, na které pobočce (OUT) byl vůz v daném měsíci v Renteonu nejvíc dní; GLOBAL ASSISTANCE = Ostrava; auta, která v Renteonu nejsou (dlouhodobá flotila), = Praha a jsou přičtena k počtu vozidel Prahy.',
  'Ø vozidel Renteon: report Stav flotily po kancelářích, flotila Pronájem vozového parku, průměr v měsíci. Staženo 20.–21. 10. 2026; říjen 2026 neúplný.']
 for i,t in enumerate(notes): ds.cell(N+2+i,1,t).font=grey
@@ -154,7 +154,7 @@ for p in ['PRG','OSR','BTS']:
 ss=wb.create_sheet('Souhrn',0)
 ss['A1']='Výnosy, smlouvy a flotila – leden–září 2024, 2025 a 2026'; ss['A1'].font=Font(name=F,bold=True,size=14)
 ss['A2']='Výnos bez DPH a bez přeúčtovaných pokut: Renteon + Vyfakturuj (bez HAVEX Mobility, bez prodejů aut). CZ v Kč, SK v €. Pokuty vyčleněny. Bratislava od března 2024.'; ss['A2'].font=grey
-metrics=[('vynos_bez_pokut','Výnos bez pokut (Renteon + Vyfakturuj)','#,##0'),('vf','z toho Vyfakturuj','#,##0'),('smluv','Smluv Renteon','#,##0'),('vozidel','Ø vozidel','0.0'),('nv','Výnos na vůz/měs.','#,##0'),('vs','Renteon výnos na smlouvu','#,##0'),
+metrics=[('vynos_bez_pokut','Výnos bez pokut (Renteon + Vyfakturuj)','#,##0'),('renf','z toho Renteon','#,##0'),('vf','z toho Vyfakturuj','#,##0'),('smluv','Smluv Renteon','#,##0'),('vozidel','Ø vozidel','0.0'),('nv','Výnos na vůz/měs.','#,##0'),('vs','Renteon výnos na smlouvu','#,##0'),
          ('najem','Nájem Renteon','#,##0'),('pojisteni','Pojištění','#,##0'),('poplatky_bez_pokut','Poplatky bez pokut','#,##0'),('skody','Škody','#,##0'),('pok_all','Pokuty vč. zprac.','#,##0')]
 fidx={k:i for i,(k,_) in enumerate(fields)}
 r=4
@@ -165,7 +165,8 @@ for p in ['PRG','OSR','BTS']:
     for j,(k,t,fmt) in enumerate(metrics):
         rr=r+2+j; ss.cell(rr,1,t).font=f
         for yi in range(3):
-            if k=='vs': v=f'=IFERROR(({L(2+yi)}{r+2}-{L(2+yi)}{r+3})/{L(2+yi)}{r+4},"")'; fc='000000'
+            if k=='vs': v=f'=IFERROR({L(2+yi)}{r+3}/{L(2+yi)}{r+5},"")'; fc='000000'
+            elif k=='renf': v=f'={L(2+yi)}{r+2}-{L(2+yi)}{r+4}'; fc='000000'
             else: v=f"={p}!{L(5+yi*NF+fidx[k])}17"; fc='008000'
             c=ss.cell(rr,2+yi,v); c.font=Font(name=F,color=fc); c.number_format=fmt
         for ci,(a,b) in enumerate([('C','B'),('D','C')]):
