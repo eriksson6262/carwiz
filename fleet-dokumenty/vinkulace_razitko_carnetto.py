@@ -24,7 +24,10 @@ POJISTOVNA = [
     "IČO: 45272956",
 ]
 TEXT_X, TEXT_Y, TEXT_STEP = 200, 494, 13
-STAMP_X, STAMP_Y, STAMP_H = 3, 65, 89.05
+# Pozice/velikost razítka v bodech (lze přepsat env STAMP_X/STAMP_Y/STAMP_H podle ořezu razítka)
+STAMP_X = float(os.environ.get("STAMP_X", 3))
+STAMP_Y = float(os.environ.get("STAMP_Y", 65))
+STAMP_H = float(os.environ.get("STAMP_H", 89.05))
 
 
 def overlay(w, h, stamp):
