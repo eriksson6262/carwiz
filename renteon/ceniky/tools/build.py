@@ -305,6 +305,42 @@ def derive_from(rows, changes, TG, SRC, MULT):
     return out
 
 
+# 20.10.2026 (večer): brokeři (DiscoverCars) promítají nové ceny se zpožděním – při 2 bězích denně by se změna sčítala
+# (Bratislava IGAR: 39,54 → 57,74 → 78,55 €/den, přitom DC pořád ukazoval starou cenu). Jeden běh smí změnit cenu max. o ±25 %.
+STEP_MAX = float(os.environ.get('STEP_MAX', '1.25'))
+STEP_MIN = float(os.environ.get('STEP_MIN', '0.75'))
+
+
+def step_cap(rows, changes, country):
+    from reprice import TODAY
+    live = defaultdict(list)
+    for r in PLS[country]:
+        live[(r['S'], r['Oid'])].append((D(r['F']), D(r['T']), r['D']))
+    out = []; n = 0
+    for r in rows:
+        if not r.get('new') or D(r['T']) < TODAY:
+            out.append(r); continue
+        a = max(D(r['F']), TODAY)
+        lv = next((d for f, t, d in live.get((r['S'], r['Oid']), []) if f <= a <= t), None)
+        if not lv:
+            out.append(r); continue
+        d = dict(r['D']); ch = False
+        for bnd in BANDS[:7]:
+            o, v = lv.get(bnd), d.get(bnd)
+            if o and v:
+                nv = round(min(max(v, o * STEP_MIN), o * STEP_MAX), 2)
+                if abs(nv - v) > 0.004: d[bnd] = nv; ch = True
+        if ch:
+            if d.get('21-') is not None and abs(r['D']['21-'] - 3 * r['D']['7-7']) < 0.05:
+                d['21-'] = round(3 * d['7-7'], 2)
+            d['1-1'] = max(d['1-1'], d['2-3']); n += 1
+            out.append(dict(r, D=d))
+        else:
+            out.append(r)
+    print(country, 'step_cap rows', n)
+    return out
+
+
 # Erik 20.10.2026: cena se má podle délky pronájmu řídit konkurencí (2–3, 4, 7, 10, 14 dní). Když cíl vyjde pod minimum,
 # minimum dřív srovnalo všechna pásma na jednu cenu. Nově: tvar křivky €/den podle délky = křivka cílů z konkurence
 # (cíl/den pro danou délku ÷ cíl/den pro 14 dní, medián za období), nejlevnější pásmo zůstává, kratší se zvednou.
@@ -421,6 +457,8 @@ if __name__ == '__main__':
     res = {}
     for c in ('CZ', 'SK'):
         rows, ch, tabs = build(c)
+        rows = step_cap(rows, ch, c)
+        rows = apply_floor(rows, ch, c)
         rows = length_curve(rows, ch, c)
         if c == 'CZ':
             rows = pgar_from_igar(rows, ch)

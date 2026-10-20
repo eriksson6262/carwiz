@@ -39,3 +39,7 @@ IMPORT obsahuje řádky od TODAY (jako export s "Datum od"), hlavička z posledn
   check_anomalies.py = kontrola anomálií před importem (blokující / upozornění) → out/anomalies.json.
   build.py: SK řádky 25.–27.12. se už nepřepočítávají (Erik 20.10.: řádky 24.–27.12. beze změny).
   Import: ui-filereader ukládá do fileItem.Data data-URL (readAsDataURL) → ExcelFile.Data = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,…'.
+- 20.10.2026 (večer, ruční běh): build.step_cap – jeden běh smí změnit cenu max. o ±25 % proti živé (STEP_MAX/STEP_MIN); DiscoverCars ukazuje nové ceny
+  se zpožděním, takže při 2 bězích denně se změna sčítala (BTS IGAR 39,54 → 57,74 → 78,55 €/den). Rentalcars: nejdřív ?prefcurrency=EUR (Mac má CZK).
+  Přenos dat z Chromu (Claude in Chrome zkracuje výstup javascript_tool): stáhnout gzip jako soubor do ~/Downloads (a.download, Blob) → device_stage_files;
+  rentalcars.com stahování blokuje → přes tlačítko + window.open('https://www.discovercars.com/#'+base64) a stažení tam.
