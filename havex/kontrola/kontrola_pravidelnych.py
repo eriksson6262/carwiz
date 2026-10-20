@@ -10,6 +10,12 @@ Použití: python3 kontrola_pravidelnych.py data/sheet.json data/rec.json [dnes]
 import json, re, sys, datetime as dt
 from dateutil.relativedelta import relativedelta
 
+# Vozy, které jsou v přehledu tyrkysové pro HAVEX, ale fakturace na HAVEX už skončila
+# (vůz převzalo RX Auto – v přehledu má druhý řádek „RX Auto“).
+IGNOROVAT = {
+    "8H58875": "od 7.11.2025 jezdí RX Auto, HAVEX se nefakturuje",
+}
+
 def D(s):
     return dt.date.fromisoformat(s) if "-" in s else dt.date(*map(int, reversed(s.split("."))))
 
@@ -17,6 +23,8 @@ def main(sheet, rec, dnes=None):
     rows, rec = json.load(open(sheet)), json.load(open(rec))
     today = D(dnes) if dnes else dt.date.today()
     for rz, a, b, j, r, f in rows:
+        if rz in IGNOROVAT:
+            continue
         A, B = D(a), D(b)
         m = [x for x in rec if any(re.search(rf"\b{rz}\b", i[2]) for i in x[7])]
         issues = []
