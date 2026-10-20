@@ -31,3 +31,11 @@ IMPORT obsahuje řádky od TODAY (jako export s "Datum od"), hlavička z posledn
   Kde je i konkurence plochá (Ostrava – Budget má stejnou cenu/den na 7–14 dní, na 3–4 dny nic), zůstává cena plochá.
 - 20.10.2026 (Erik): cíl = co nejvíc rezervací, ale ne úplně nejlevnější. Praha ideálně 3. na trhu (PRG_MODE=rank3: těsně pod 3. nejlevnějším
   konkurentem stejné velikosti, na každém kanálu); Ostrava a Bratislava 1. (OSR 3 % pod nejlevnějším, BTS 5 % pod nejlevnějším).
+- 20.10.2026 (automatický běh 2:00): sběr konkurence v prohlížeči uložen do tools/browser/ (common.js = __mk(KEY) + komprese gzip/base64,
+  dc.js DiscoverCars s &currency=EUR – bez něj API vrací CZK!, ct.js CarTrawler easyJet/Wizz Air, rc.js Rentalcars.com (BTS: Carwiz se na RC/CT/WZ nezobrazuje)).
+  Přenos: výstup javascript_tool `KEYP1/1#<base64 gzip>#END` doplnit .padEnd(90000,'.'), aby se uložil do tool-results, pak
+  `TR=<tool-results> python3 tools/assemble_gz.py KEY data/X.json`. collect_renteon.js: termíny od dneška (dřív natvrdo od 20.10.).
+  reprice.py: RUN_TODAY=YYYY-MM-DD (místní datum, kontejner běží v UTC). konkurence_xlsx.py rozbaluje komprimovaný formát.
+  check_anomalies.py = kontrola anomálií před importem (blokující / upozornění) → out/anomalies.json.
+  build.py: SK řádky 25.–27.12. se už nepřepočítávají (Erik 20.10.: řádky 24.–27.12. beze změny).
+  Import: ui-filereader ukládá do fileItem.Data data-URL (readAsDataURL) → ExcelFile.Data = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,…'.

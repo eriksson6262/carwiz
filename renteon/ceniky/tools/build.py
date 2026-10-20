@@ -215,6 +215,9 @@ def build(country):
         xmas = a >= dt.date(2026, 12, 25) and b <= dt.date(2026, 12, 27)
         if xmas:
             new = dict(old)  # P8 unchanged
+            if country == 'SK' and b <= dt.date(2026, 12, 27):
+                # Erik 20.10.2026: řádky vyzvednutí 24.–27.12. se nemění (rezervace nechceme, přirážku dělá pravidlo +300 %)
+                out.append(dict(r, F=fmt(a), new=False)); continue
             if country == 'SK':
                 # SK: base x6 in 25.-29.12. AND mandatory rule +300 % for 24.-27.12. = double surcharge.
                 # 25.-27.12. -> neighbour (30.12.) price, rule does the surcharge; 28.-29.12. keep old high price

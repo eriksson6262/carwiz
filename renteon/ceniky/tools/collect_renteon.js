@@ -5,7 +5,7 @@ const pad=n=>String(n).padStart(2,'0');
 const add=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
 const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const rd=d=>`${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}.`;
-const jobs=[]; for(let d=new Date(2026,9,20); d<=new Date(2027,2,20); d=add(d,1)){const w=d.getDay(); for(const du of (w===5?[3,4,7,10,14,21]:w===1?[3,7,14]:[])) jobs.push([iso(d),du]);}
+const jobs=[]; const T0=new Date(); T0.setHours(0,0,0,0); for(let d=new Date(T0); d<=add(T0,151); d=add(d,1)){const w=d.getDay(); for(const du of (w===5?[3,4,7,10,14,21]:w===1?[3,7,14]:[])) jobs.push([iso(d),du]);}
 jobs.push(['2026-12-23',5],['2026-12-28',5]);
 const X=window.__RX={c:CFG.c,PL:[],RA:[],RULES:[],FA:{},err:[],done:0,running:true};
 (async()=>{

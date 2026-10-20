@@ -11,7 +11,7 @@ D = lambda s: dt.datetime.strptime(s.strip('.'), '%d.%m.%Y').date()
 ISO = lambda s: dt.date.fromisoformat(s)
 fmt = lambda d: d.strftime('%d.%m.%Y.')
 
-TODAY = dt.date.today()           # first repriced pickup day
+TODAY = dt.date.fromisoformat(os.environ['RUN_TODAY']) if os.environ.get('RUN_TODAY') else dt.date.today()   # first repriced pickup day (místní datum Praha)
 WIN_END = dt.date(2027, 2, 28)         # repricing window end (existing period boundary)
 XMAS = (dt.date(2026, 12, 24), dt.date(2026, 12, 27))
 CLASSES = {'E': ['EDAR', 'EDMR', 'EWMR'],
