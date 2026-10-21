@@ -1,5 +1,5 @@
-import csv, collections, re
-W0,W1='2025-09','2026-10'
+import csv, collections, re, os
+W0,W1='2024-01','2026-10'
 EUR=24.3
 inW=lambda m: W0<=m<=W1
 norm=lambda s: re.sub(r'^(\d[A-Z])O(\d)',r'\g<1>0\2',(s or '').replace(' ','').upper())
@@ -37,7 +37,7 @@ for fn,est in [('leasing.csv',False),('leasing_odhad_bez_pk.csv',True)]:
         zf='zpětná' in r['typ']
         cat=('leasing_odhad' if est else 'leasing')
         addc(r['mesic'],r['spz'],cat,float(r['castka_bez_dph']),'HAVEX_ZF' if zf else None)
-for r in csv.DictReader(open('pojisteni.csv')):
+for r in [x for fn in ['pojisteni.csv','pojisteni_2024.csv','pojisteni_2025-01_koop_v55.csv'] if os.path.exists(fn) for x in csv.DictReader(open(fn))]:
     if 'Carnetto' in (r['poznamka'] or '') : continue
     addc(r['mesic'],r['spz'],'pojisteni',float(r['castka']))
 catmap={'oprava':'opravy','servis':'servis','pneu':'servis','myti':'ostatni','stk_znamky':'ostatni','ostatni':'ostatni'}
@@ -75,8 +75,14 @@ if os.path.exists('najmy.csv'):
     for r in csv.DictReader(open('najmy.csv')):
         v=float(r['castka_bez_dph'] or 0)*(EUR if r['mena'].upper()=='EUR' else 1)
         addc(r['mesic'],'','najem_pobocky',v,r['pobocka'] or 'PRG')
-    # chybějící faktury 09/2025 (Q3 2025) – odhad podle běžného měsíčního nájmu
-    addc('2025-09','','najem_pobocky',2997*EUR+1100,'PRG'); addc('2025-09','','najem_pobocky',24738,'OSR')
+# odhad základního nájmu za měsíce, kde faktura v poště chybí (kategorie najem_odhad)
+def mrange(a,b):
+    y,m=int(a[:4]),int(a[5:]); out=[]
+    while '%04d-%02d'%(y,m)<=b: out.append('%04d-%02d'%(y,m)); m+=1; y,m=(y+1,1) if m==13 else (y,m)
+    return out
+for m in mrange('2024-01','2025-06'): addc(m,'','najem_odhad',1237*EUR,'PRG')   # CTP kancelář + 2 místa + služby (2997 € − 11 míst 1760 €)
+for m in mrange('2024-05','2025-06')+['2025-08']: addc(m,'','najem_odhad',1570.25*EUR,'BTS')  # BTS aero pevný nájem do 12/2025
+for m in mrange('2024-01','2025-09'): addc(m,'','najem_odhad',24738,'OSR')  # Letiště Ostrava nájem+služby+parkování (sazba 2025)
 if os.path.exists('palivo.csv'):
     for r in csv.DictReader(open('palivo.csv')):
         v=float(r['castka_bez_dph'] or 0); sp=norm(r['spz'])
@@ -84,8 +90,10 @@ if os.path.exists('palivo.csv'):
         if mm: v=float(mm.group(1))  # SK DPH není pro RX Auto s.r.o. odpočitatelná → náklad = zaplaceno
         if sp and (sp in cz or sp in sk): addc(r['mesic'],sp,'palivo',v)
         else: addc(r['mesic'],'','palivo',v,r['pobocka'] or 'PRG')
-if os.path.exists('servis2.csv'):
-    for r in csv.DictReader(open('servis2.csv')):
+for fn in ['servis2.csv','servis_2024.csv']:
+    if not os.path.exists(fn): continue
+    for r in csv.DictReader(open(fn)):
+        if r['kategorie']=='pokuty': continue
         if 'už v servis.csv' in (r['poznamka'] or ''): continue
         v=float(r['castka_bez_dph'] or 0); sp=norm(r['spz']); cat=catmap.get(r['kategorie'],'ostatni')
         if sp: addc(r['mesic'],sp,cat,v)
@@ -107,7 +115,7 @@ hv=collections.defaultdict(float)
 for (m,b,s,t),v in rev.items():
     if t=='havex': hv[m]+=v
 months=sorted({m for m,_ in brev})
-CATS=['leasing','leasing_odhad','carnetto_leasing','pojisteni','carnetto_pojisteni','servis','opravy','ostatni','palivo','najem_pobocky']
+CATS=['leasing','leasing_odhad','carnetto_leasing','pojisteni','carnetto_pojisteni','servis','opravy','ostatni','palivo','najem_pobocky','najem_odhad']
 out=[]
 for m in months:
     for b in ['PRG','OSR','BTS','HAVEX_ZF']:
@@ -122,14 +130,14 @@ for m in months:
 w=csv.DictWriter(open('pl_pobocky.csv','w'),fieldnames=out[0].keys()); w.writeheader(); w.writerows(out)
 # per car
 cars=collections.defaultdict(lambda:collections.defaultdict(float)); cb=collections.defaultdict(collections.Counter)
-for (m,b,s,cat),v in cost.items(): cars[s][cat]+=v; cb[s][b]+=1
-for (m,b,s,t),v in rev.items(): cars[s]['v_'+t]+=v; cb[s][b]+=1
+for (m,b,s,cat),v in cost.items(): cars[(s,m[:4])][cat]+=v; cb[(s,m[:4])][b]+=1
+for (m,b,s,t),v in rev.items(): cars[(s,m[:4])]['v_'+t]+=v; cb[(s,m[:4])][b]+=1
 rows=[]
-for s,d in cars.items():
+for (s,rok),d in cars.items():
     if not s: s2='(bez SPZ)'
     vyn=d['v_renteon']+d['v_vyfakturuj']+d['v_havex']; nak=sum(d[k] for k in CATS)
     info=cz.get(s,{})
-    rows.append(dict(spz=s or '(pobočka – bez SPZ)',model=info.get('model','') ,sipp=info.get('sipp',''),pobocka=cb[s].most_common(1)[0][0],
+    rows.append(dict(rok=rok,spz=s or '(pobočka – bez SPZ)',model=info.get('model','') ,sipp=info.get('sipp',''),pobocka=cb[(s,rok)].most_common(1)[0][0],
         vynos_renteon=round(d['v_renteon']),vynos_vyfakturuj=round(d['v_vyfakturuj']),vynos_havex=round(d['v_havex']),vynos_celkem=round(vyn),
         leasing=round(d['leasing']+d['leasing_odhad']+d['carnetto_leasing']),leasing_odhad=round(d['leasing_odhad']),carnetto=round(d['carnetto_leasing']+d['carnetto_pojisteni']),pojisteni=round(d['pojisteni']+d['carnetto_pojisteni']),servis_opravy=round(d['servis']+d['opravy']+d['ostatni']),palivo=round(d['palivo']),
         naklady_celkem=round(nak),vysledek=round(vyn-nak),
@@ -141,7 +149,7 @@ T=collections.defaultdict(lambda:collections.defaultdict(float))
 for r in out:
     for k in ['vynos_celkem','naklady_celkem','vysledek']+CATS: T[r['pobocka']][k]+=r[k]
 for b,d in T.items(): print(b,{k:round(v/1e6,2) for k,v in d.items()})
-print('aut',len(rows),'ztratovych',sum(1 for r in rows if r['vysledek']<0 and r['spz']!='(bez SPZ)'))
+print('aut',len({r['spz'] for r in rows}),'ztratovych',sum(1 for r in rows if r['vysledek']<0 and r['spz']!='(bez SPZ)'))
 # Carnetto měsíční souhrn
 cm=collections.defaultdict(lambda:{'pujcovne':0.0,'pojisteni':0.0,'v1':set(),'v2':set()})
 for r in csv.DictReader(open('carnetto.csv')):

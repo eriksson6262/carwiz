@@ -35,9 +35,10 @@
 </style>
 <div class="pl">
   <h1 id="top">Náklady vs výnosy půjčovny</h1>
-  <p class="lead">Září 2025 – říjen 2026 (říjen neúplný), vše v Kč bez DPH. Výnosy = Renteon bez pokut + Vyfakturuj (dlouhodobé pronájmy); Bratislava přepočtena z € kurzem 24,3. Náklady = leasing (HAVEX platební kalendáře, EURO FLEET), náklady Carnetto RX přefakturované na RX Auto (půjčovné EFS, pojištění flotily ČGP 6287974108), pojištění (Kooperativa, Generali, D.A.S.), servis a opravy (HAVEX, Auto Palace, Pavel Rejdík, SIMO CAR PLUS aj.), mytí, palivo (výpisy CCS) a nájmy poboček (CTP letiště Praha, BTS aero, Letiště Ostrava) z přijatých faktur ve Sparku. Pobočka podle toho, kde vůz v daném měsíci v Renteonu byl; auta mimo Renteon = Praha.</p>
-  <p class="warn"><b>Co v nákladech chybí:</b> mzdy, provize brokerů, franšíza, IT. Nájem 09/2025 PRG a OSR je odhad (faktura za Q3 2025 není v poště); za 10/2026 chybí palivo, nájem BTS, EFS a ČGP. Leasing starších smluv bez kalendáře je odhad z HAVEX přehledu zápůjček (k 31. 8. 2026). Vozy Carnetto/EFS mají náklady po SPZ z faktur EFS (11/2025–09/2026) a vyúčtování ČGP (04–09/2026); za 10/2026 faktury zatím nejsou. Vlastní vozy RX nemají leasing, jen pojištění. Faktury za servis a opravy jsou ve schránce až od 09/2025.</p>
+  <p class="lead">Leden 2024 – říjen 2026 (říjen neúplný), vše v Kč bez DPH. Výnosy = Renteon bez pokut + Vyfakturuj (dlouhodobé pronájmy); Bratislava přepočtena z € kurzem 24,3. Náklady = leasing (HAVEX platební kalendáře, EURO FLEET), náklady Carnetto RX přefakturované na RX Auto (půjčovné EFS, pojištění flotily ČGP 6287974108), pojištění (Kooperativa, Generali, D.A.S.), servis a opravy (HAVEX, Auto Palace, Pavel Rejdík, SIMO CAR PLUS aj.), mytí, palivo (výpisy CCS) a nájmy poboček (CTP letiště Praha, BTS aero, Letiště Ostrava) z přijatých faktur ve Sparku. Pobočka podle toho, kde vůz v daném měsíci v Renteonu byl; auta mimo Renteon = Praha.</p>
+  <p class="warn"><b>Co v nákladech chybí:</b> mzdy, provize brokerů, franšíza, IT. <b>Odhady:</b> leasing smluv bez platebního kalendáře (všechny do 06/2025) = měsíční cena z HAVEX přehledu zápůjček; nájmy poboček do 06/2025 v poště většinou nejsou – základní nájem doplněn odhadem podle pozdějších sazeb (PRG 1 237 €/měs, BTS 1 570 €/měs od 05/2024, OSR 24 738 Kč/měs), obratové nájemné 2024 chybí. <b>Neúplné:</b> pojištění ČGP 01/2024, 01–02/2025; část faktur Rejdík a SIMO CAR PLUS; mytí Auto Palace před 11/2024; za 10/2026 chybí palivo, nájem BTS, EFS a ČGP. Carnetto RX (EFS, ČGP) od 11/2025. Vlastní vozy RX nemají leasing, jen pojištění.</p>
 
+  <div class="tabs" id="tabsY" style="margin-bottom: var(--cds-gap-sm)"></div>
   <div class="tiles" id="tiles"></div>
 
   <div class="card" id="graf" style="margin-bottom: var(--cds-gap-lg)"><h2>Po měsících</h2>
@@ -54,9 +55,9 @@
       <div class="tbl"><table data-source="efs" data-row-key="mesic"><thead><tr><th class="l" data-field="mesic">Měsíc</th><th data-field="pujcovne">Půjčovné EFS</th><th data-field="pojisteni" class="hide-n">Pojištění ČGP</th><th data-field="celkem">Celkem</th><th data-field="vozu_pujcovne" class="hide-n">Vozů</th></tr></thead><tbody></tbody></table></div></div>
   </div>
 
-  <div class="card" id="auta"><h2>Ziskovost po autech</h2><p class="note">Září 2025 – říjen 2026, výnos Renteon (všechny doklady k vozu) + Vyfakturuj + HAVEX zpětná fakturace</p>
+  <div class="card" id="auta"><h2>Ziskovost po autech</h2><p class="note">Vybraný rok (přepínač nahoře), výnos Renteon (všechny doklady k vozu) + Vyfakturuj + HAVEX zpětná fakturace</p>
     <div class="tabs" id="tabsA"><input type="search" id="q" placeholder="Hledat SPZ, model…"></div>
-    <div class="tbl"><table id="tA" data-source="auta" data-row-key="spz"><thead><tr>
+    <div class="tbl"><table id="tA" data-source="auta" data-row-key="rok,spz"><thead><tr>
       <th class="l" data-field="spz">SPZ</th><th class="l hide-n" data-field="model">Model</th><th class="l" data-field="pobocka">Pobočka</th><th data-field="vynos_celkem">Výnosy</th><th data-field="leasing" class="hide-n">Leasing</th><th data-field="pojisteni" class="hide-n">Pojištění</th><th data-field="servis_opravy" class="hide-n">Servis+opravy</th><th data-field="naklady_celkem">Náklady</th><th data-field="vysledek">Výsledek</th><th class="l hide-n" data-field="poznamka">Pozn.</th>
     </tr></thead><tbody></tbody></table></div></div>
 </div>
@@ -64,14 +65,14 @@
 dash.calc('souhrn', {
   inputs: ['pl'],
   title: 'Součty za období',
-  description: 'Součet výnosů a nákladů po pobočce za září 2025 – říjen 2026; marže = výsledek / výnosy.',
+  description: 'Součet výnosů a nákladů po pobočce a roce (rok = vše: leden 2024 – říjen 2026); marže = výsledek / výnosy.',
   fn: (pl) => {
     const o = {};
-    for (const r of pl) {
-      const x = o[r.pobocka] = o[r.pobocka] || { pobocka: r.pobocka, vynos: 0, naklady: 0, leasing: 0, pojisteni: 0, servis: 0, palivo: 0, najem: 0 };
+    for (const r0 of pl) for (const rok of ['vše', r0.mesic.slice(0, 4)]) { const r = r0;
+      const x = o[rok + r.pobocka] = o[rok + r.pobocka] || { rok, pobocka: r.pobocka, vynos: 0, naklady: 0, leasing: 0, pojisteni: 0, servis: 0, palivo: 0, najem: 0 };
       x.vynos += Number(r.vynos_celkem); x.naklady += Number(r.naklady_celkem);
       x.leasing += Number(r.leasing) + Number(r.leasing_odhad) + Number(r.carnetto_leasing || 0); x.pojisteni += Number(r.pojisteni) + Number(r.carnetto_pojisteni || 0);
-      x.servis += Number(r.servis) + Number(r.opravy) + Number(r.ostatni); x.palivo += Number(r.palivo || 0); x.najem += Number(r.najem_pobocky || 0);
+      x.servis += Number(r.servis) + Number(r.opravy) + Number(r.ostatni); x.palivo += Number(r.palivo || 0); x.najem += Number(r.najem_pobocky || 0) + Number(r.najem_odhad || 0);
     }
     return Object.values(o).map(x => ({ ...x, vysledek: x.vynos - x.naklady, marze: x.vynos ? (x.vynos - x.naklady) / x.vynos : 0 }));
   }
@@ -86,17 +87,21 @@ dash.calc('souhrn', {
   const NAMES = { PRG: 'Praha', OSR: 'Ostrava', BTS: 'Bratislava', HAVEX_ZF: 'HAVEX zpětná fakturace' };
   const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
   const root = document.querySelector('.pl');
-  let br = 'PRG', q = '', sortK = 'vysledek', sortDir = 1;
+  let br = 'PRG', q = '', sortK = 'vysledek', sortDir = 1, rok = '2025';
+  const ROKY = [['2024', '2024'], ['2025', '2025'], ['2026', '2026 (I–X)'], ['vše', 'Celé období']];
 
   const tiles = document.getElementById('tiles');
   const mark = (el, f, b) => { el.dataset.source = 'souhrn'; el.dataset.field = f; el.dataset.where = 'pobocka=' + b; el.classList.add('dash-skeleton'); el.textContent = '—'; return el; };
   ['PRG', 'OSR', 'BTS', 'HAVEX_ZF'].forEach(b => {
     const c = mk('div', 'card'); c.appendChild(mk('h2', '', NAMES[b]));
-    c.appendChild(mk('p', 'note', b === 'HAVEX_ZF' ? 'Výnos z HAVEX Mobility vs leasing těch aut' : 'Výsledek 09/2025 – 10/2026'));
+    c.appendChild(mk('p', 'note', b === 'HAVEX_ZF' ? 'Výnos z HAVEX Mobility vs leasing těch aut' : 'Výsledek za vybrané období'));
     c.appendChild(mark(mk('div', 'big'), 'vysledek', b));
     [['Výnosy', 'vynos'], ['Náklady', 'naklady'], ['z toho leasing', 'leasing'], ['z toho pojištění', 'pojisteni'], ['z toho servis a opravy', 'servis'], ['z toho palivo', 'palivo'], ['z toho nájem pobočky', 'najem'], ['Marže', 'marze']].forEach(([t, f]) => { const r = mk('div', 'row'); r.appendChild(mk('span', '', t)); r.appendChild(mark(mk('b'), f, b)); c.appendChild(r); });
     tiles.appendChild(c);
   });
+  const tabsY = document.getElementById('tabsY');
+  ROKY.forEach(([k, t]) => { const x = mk('button', '', t); x.dataset.y = k; x.addEventListener('click', () => { rok = k; tabsY.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.y === rok)); fillTiles(dash.data('souhrn')); drawCars(); }); tabsY.appendChild(x); });
+  tabsY.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.y === rok));
   const tabsB = document.getElementById('tabsB'), tabsA = document.getElementById('tabsA');
   ['PRG', 'OSR', 'BTS', 'HAVEX_ZF'].forEach(b => { const x = mk('button', '', NAMES[b]); x.dataset.b = b; x.addEventListener('click', () => { br = b; redraw(); }); tabsB.appendChild(x); });
   let brA = 'vše';
@@ -108,14 +113,14 @@ dash.calc('souhrn', {
     root.querySelectorAll('[data-source="souhrn"]').forEach(el => {
       if (s.status !== 'ok') { el.textContent = '—'; return; }
       el.classList.remove('dash-skeleton');
-      const b = el.dataset.where.split('=')[1]; const r = s.data.find(x => x.pobocka === b); if (!r) { el.textContent = '—'; return; }
+      const b = el.dataset.where.split('=')[1]; const r = s.data.find(x => x.pobocka === b && x.rok === rok); if (!r) { el.textContent = '—'; return; }
       const f = el.dataset.field, v = r[f];
       if (f === 'marze') el.textContent = nf1.format(v * 100) + ' %';
       else el.textContent = nf.format(v) + ' Kč';
       if (f === 'vysledek' || f === 'marze') el.style.color = v >= 0 ? 'var(--color-ok)' : 'var(--color-bad)';
     });
   }
-  const PARTS = [['leasing', 'Leasing (kalendáře)'], ['leasing_odhad', 'Leasing (odhad)'], ['carnetto_leasing', 'Carnetto – půjčovné EFS'], ['pojisteni', 'Pojištění'], ['carnetto_pojisteni', 'Carnetto – pojištění ČGP'], ['servis', 'Servis'], ['opravy', 'Opravy'], ['ostatni', 'Ostatní (mytí, známky)'], ['palivo', 'Palivo CCS'], ['najem_pobocky', 'Nájem pobočky']];
+  const PARTS = [['leasing', 'Leasing (kalendáře)'], ['leasing_odhad', 'Leasing (odhad)'], ['carnetto_leasing', 'Carnetto – půjčovné EFS'], ['pojisteni', 'Pojištění'], ['carnetto_pojisteni', 'Carnetto – pojištění ČGP'], ['servis', 'Servis'], ['opravy', 'Opravy'], ['ostatni', 'Ostatní (mytí, známky)'], ['palivo', 'Palivo CCS'], ['najem_pobocky', 'Nájem pobočky'], ['najem_odhad', 'Nájem (odhad)']];
   const pc = i => i === 1 ? 'var(--cds-chart-muted)' : dash.colors[[0, 0, 1, 2, 3, 4][i]];
   function axisStyle(g) { g.attr('font-size', null).attr('font-family', null); g.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)'); }
   let pl = [];
@@ -152,7 +157,7 @@ dash.calc('souhrn', {
     const tb = document.querySelector('#mesice tbody'); tb.textContent = '';
     pl.filter(r => r.pobocka === br).forEach(r => { const tr = mk('tr'); tr.dataset.key = r.mesic + ',' + r.pobocka;
       const res = Number(r.vysledek);
-      [[r.mesic, 'l'], [nf.format(r.vynos_celkem)], [nf.format(r.leasing), 'hide-n'], [nf.format(r.leasing_odhad), 'hide-n'], [nf.format(Number(r.carnetto_leasing) + Number(r.carnetto_pojisteni)), 'hide-n'], [nf.format(r.pojisteni), 'hide-n'], [nf.format(Number(r.servis) + Number(r.opravy) + Number(r.ostatni)), 'hide-n'], [nf.format(r.palivo), 'hide-n'], [nf.format(r.najem_pobocky), 'hide-n'], [nf.format(r.naklady_celkem)], [nf.format(res), res >= 0 ? 'pos' : 'neg']]
+      [[r.mesic, 'l'], [nf.format(r.vynos_celkem)], [nf.format(r.leasing), 'hide-n'], [nf.format(r.leasing_odhad), 'hide-n'], [nf.format(Number(r.carnetto_leasing) + Number(r.carnetto_pojisteni)), 'hide-n'], [nf.format(r.pojisteni), 'hide-n'], [nf.format(Number(r.servis) + Number(r.opravy) + Number(r.ostatni)), 'hide-n'], [nf.format(r.palivo), 'hide-n'], [nf.format(Number(r.najem_pobocky) + Number(r.najem_odhad || 0)), 'hide-n'], [nf.format(r.naklady_celkem)], [nf.format(res), res >= 0 ? 'pos' : 'neg']]
         .forEach(([t, c]) => tr.appendChild(mk('td', c || '', t))); tb.appendChild(tr); });
   }
   function redraw() { tabsB.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.b === br)); if (pl.length) { drawChart(); drawMonths(); } }
@@ -161,7 +166,9 @@ dash.calc('souhrn', {
     tabsA.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.a === brA));
     const tb = document.querySelector('#tA tbody'); tb.textContent = '';
     const num = k => !['spz', 'model', 'pobocka', 'poznamka'].includes(k);
-    cars.filter(r => (brA === 'vše' || r.pobocka === brA) && (!q || (r.spz + ' ' + r.model + ' ' + r.poznamka).toLowerCase().includes(q)))
+    let base = cars.filter(r => rok === 'vše' || r.rok === rok);
+    if (rok === 'vše') { const agg = {}; base.forEach(r => { const x = agg[r.spz]; if (!x) { agg[r.spz] = { ...r }; return; } Object.keys(r).forEach(k => { if (!['rok', 'spz', 'model', 'sipp', 'pobocka', 'poznamka'].includes(k)) x[k] = Number(x[k]) + Number(r[k]); }); if (r.poznamka && !x.poznamka) x.poznamka = r.poznamka; }); base = Object.values(agg); }
+    base.filter(r => (brA === 'vše' || r.pobocka === brA) && (!q || (r.spz + ' ' + r.model + ' ' + r.poznamka).toLowerCase().includes(q)))
       .sort((a, b) => sortDir * (num(sortK) ? Number(a[sortK]) - Number(b[sortK]) : String(a[sortK]).localeCompare(String(b[sortK]))))
       .forEach(r => { const tr = mk('tr'); const res = Number(r.vysledek);
         [[r.spz, 'l'], [r.model, 'l hide-n'], [NAMES[r.pobocka] || r.pobocka, 'l'], [nf.format(r.vynos_celkem)], [nf.format(r.leasing), 'hide-n'], [nf.format(r.pojisteni), 'hide-n'], [nf.format(r.servis_opravy), 'hide-n'], [nf.format(r.naklady_celkem)], [nf.format(res), res >= 0 ? 'pos' : 'neg'], [r.poznamka, 'l hide-n']]

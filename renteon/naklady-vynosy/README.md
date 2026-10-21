@@ -1,6 +1,6 @@
 # Náklady vs výnosy půjčovny
 
-Měsíční P&L po pobočkách (PRG, OSR, BTS, HAVEX zpětná fakturace) a ziskovost po SPZ, 09/2025–10/2026.
+Měsíční P&L po pobočkách (PRG, OSR, BTS, HAVEX zpětná fakturace) a ziskovost po SPZ a letech, 01/2024–10/2026.
 
 **Výnosy:** Renteon (CZ+SK, `renteon/vynosy-flotila`), Vyfakturuj RX Auto + RX Auto SK (dlouhodobé pronájmy), HAVEX Mobility.
 **Náklady (Spark – přijaté faktury):**
@@ -15,3 +15,5 @@ Měsíční P&L po pobočkách (PRG, OSR, BTS, HAVEX zpětná fakturace) a zisko
 
 Pobočka vozu = dominantní pobočka v Renteonu v daném měsíci; SK vozy BTS. Kurz €: 24,3. Data se nekomitují.
 Chybí: mzdy, provize brokerů, franšíza.
+
+**Od 2024:** výnosy po autech z Renteonu (getIncomeAndExpenseComparison po měsících, CZ i SK) a z Vyfakturuj (stejná klasifikace jako `renteon/vynosy-flotila`). Leasing do 06/2025 = odhad z HAVEX přehledu zápůjček (`scripts/leasing_build.py`, P0 = 2024-01). Pojištění 2024 `scripts/pojisteni_2024.py`, servisy 2024–08/2025 `scripts/build_servis_2024.py`. Chybějící nájmy poboček do 06/2025 = odhad podle pozdějších sazeb (kategorie `najem_odhad` v `build_pl.py`).
