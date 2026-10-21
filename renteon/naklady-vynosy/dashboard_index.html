@@ -1,0 +1,178 @@
+<style>
+.pl { font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+.pl h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0 0 var(--cds-gap-xs); }
+.pl .lead { color: var(--color-fg-muted); font-size: var(--cds-font-size-body); margin: 0 0 var(--cds-gap-sm); max-width: 64rem; }
+.pl .warn { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); border-left: 3px solid var(--color-warn); padding: var(--cds-pad-xs) var(--cds-pad-sm); margin: 0 0 var(--cds-gap-lg); max-width: 64rem; }
+.pl .warn b { color: var(--color-fg); }
+.pl .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-lg); }
+.pl .card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); }
+.pl .card h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
+.pl .note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 0 0 var(--cds-gap-sm); }
+.pl .big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+.pl .row { display: flex; justify-content: space-between; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: var(--cds-gap-xs); font-variant-numeric: tabular-nums; }
+.pl .row b { color: var(--color-fg); font-weight: 500; }
+.pl .chart { position: relative; min-height: 320px; }
+.pl .legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-bottom: var(--cds-gap-sm); }
+.pl .legend span { display: inline-flex; align-items: center; gap: 6px; }
+.pl .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex: none; }
+.pl .ln { width: 16px; height: 0; border-top: 2.5px solid; display: inline-block; }
+.pl .tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; display: none; white-space: nowrap; z-index: 2; }
+.pl .tip .h { color: var(--cds-text-secondary); margin-bottom: 2px; }
+.pl .tabs { display: flex; gap: var(--cds-gap-xs); margin-bottom: var(--cds-gap-sm); flex-wrap: wrap; align-items: center; }
+.pl .tabs button { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); cursor: pointer; }
+.pl .tabs button[aria-pressed=true] { background: var(--color-fg); color: var(--color-bg); }
+.pl .tabs input { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); min-width: 10rem; flex: 1; }
+.pl .tbl { max-height: 32rem; overflow: auto; }
+.pl table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.pl th, .pl td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.pl th.l, .pl td.l { text-align: left; }
+.pl th { position: sticky; top: 0; background: var(--color-panel); color: var(--color-fg-muted); font-weight: 500; cursor: pointer; }
+.pl td.neg { color: var(--color-bad); } .pl td.pos { color: var(--color-ok); }
+.pl .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-lg); }
+.pl [data-dash-source-state=empty] { color: transparent; }
+.pl [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+@media (max-width: 40rem) { .pl .hide-n { display: none; } }
+</style>
+<div class="pl">
+  <h1 id="top">Náklady vs výnosy půjčovny</h1>
+  <p class="lead">Září 2025 – říjen 2026 (říjen neúplný), vše v Kč bez DPH. Výnosy = Renteon bez pokut + Vyfakturuj (dlouhodobé pronájmy); Bratislava přepočtena z € kurzem 24,3. Náklady = leasing (HAVEX platební kalendáře, EURO FLEET), náklady Carnetto RX přefakturované na RX Auto (půjčovné EFS, pojištění flotily ČGP 6287974108), pojištění (Kooperativa, Generali, D.A.S.), servis, opravy a ostatní (mytí, známky, nadlimitní km) z přijatých faktur ve Sparku. Pobočka podle toho, kde vůz v daném měsíci v Renteonu byl; auta mimo Renteon = Praha.</p>
+  <p class="warn"><b>Co v nákladech chybí:</b> palivo/DKV, mzdy, nájmy poboček, provize brokerů, franšíza, IT. Leasing starších smluv bez kalendáře je odhad z HAVEX přehledu zápůjček (k 31. 8. 2026). Vozy Carnetto/EFS mají náklady po SPZ z faktur EFS (11/2025–09/2026) a vyúčtování ČGP (04–09/2026); za 10/2026 faktury zatím nejsou. Vlastní vozy RX nemají leasing, jen pojištění. Faktury za servis a opravy jsou ve schránce až od 09/2025.</p>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="card" id="graf" style="margin-bottom: var(--cds-gap-lg)"><h2>Po měsících</h2>
+    <p class="note">Sloupce: náklady podle druhu · čára: výnosy · tečky: výsledek (výnosy − náklady)</p>
+    <div class="tabs" id="tabsB"></div><div class="legend" id="lg"></div>
+    <div class="chart dash-skeleton" id="chart" data-source="pl"></div></div>
+
+  <div class="grid2">
+    <div class="card" id="mesice"><h2>Měsíce v číslech</h2><p class="note">Vybraná pobočka</p>
+      <div class="tbl"><table data-source="pl" data-row-key="mesic,pobocka"><thead><tr>
+        <th class="l" data-field="mesic">Měsíc</th><th data-field="vynos_celkem">Výnosy</th><th data-field="leasing" class="hide-n">Leasing</th><th data-field="leasing_odhad" class="hide-n">Leasing odhad</th><th data-field="carnetto_leasing" class="hide-n">Carnetto</th><th data-field="pojisteni" class="hide-n">Pojištění</th><th data-field="opravy" class="hide-n">Servis+opravy</th><th data-field="naklady_celkem">Náklady</th><th data-field="vysledek">Výsledek</th>
+      </tr></thead><tbody></tbody></table></div></div>
+    <div class="card" id="carnetto"><h2>Carnetto RX – přefakturace</h2><p class="note">Půjčovné EFS a pojištění ČGP fakturované na Carnetto RX a přefakturované na RX Auto – zahrnuto v nákladech výše</p>
+      <div class="tbl"><table data-source="efs" data-row-key="mesic"><thead><tr><th class="l" data-field="mesic">Měsíc</th><th data-field="pujcovne">Půjčovné EFS</th><th data-field="pojisteni" class="hide-n">Pojištění ČGP</th><th data-field="celkem">Celkem</th><th data-field="vozu_pujcovne" class="hide-n">Vozů</th></tr></thead><tbody></tbody></table></div></div>
+  </div>
+
+  <div class="card" id="auta"><h2>Ziskovost po autech</h2><p class="note">Září 2025 – říjen 2026, výnos Renteon (všechny doklady k vozu) + Vyfakturuj + HAVEX zpětná fakturace</p>
+    <div class="tabs" id="tabsA"><input type="search" id="q" placeholder="Hledat SPZ, model…"></div>
+    <div class="tbl"><table id="tA" data-source="auta" data-row-key="spz"><thead><tr>
+      <th class="l" data-field="spz">SPZ</th><th class="l hide-n" data-field="model">Model</th><th class="l" data-field="pobocka">Pobočka</th><th data-field="vynos_celkem">Výnosy</th><th data-field="leasing" class="hide-n">Leasing</th><th data-field="pojisteni" class="hide-n">Pojištění</th><th data-field="servis_opravy" class="hide-n">Servis+opravy</th><th data-field="naklady_celkem">Náklady</th><th data-field="vysledek">Výsledek</th><th class="l hide-n" data-field="poznamka">Pozn.</th>
+    </tr></thead><tbody></tbody></table></div></div>
+</div>
+<script>
+dash.calc('souhrn', {
+  inputs: ['pl'],
+  title: 'Součty za období',
+  description: 'Součet výnosů a nákladů po pobočce za září 2025 – říjen 2026; marže = výsledek / výnosy.',
+  fn: (pl) => {
+    const o = {};
+    for (const r of pl) {
+      const x = o[r.pobocka] = o[r.pobocka] || { pobocka: r.pobocka, vynos: 0, naklady: 0, leasing: 0, pojisteni: 0, servis: 0 };
+      x.vynos += Number(r.vynos_celkem); x.naklady += Number(r.naklady_celkem);
+      x.leasing += Number(r.leasing) + Number(r.leasing_odhad) + Number(r.carnetto_leasing || 0); x.pojisteni += Number(r.pojisteni) + Number(r.carnetto_pojisteni || 0);
+      x.servis += Number(r.servis) + Number(r.opravy) + Number(r.ostatni);
+    }
+    return Object.values(o).map(x => ({ ...x, vysledek: x.vynos - x.naklady, marze: x.vynos ? (x.vynos - x.naklady) / x.vynos : 0 }));
+  }
+});
+</script>
+<script>
+(function () {
+  const nf = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 });
+  const nf1 = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 1 });
+  const cmp = new Intl.NumberFormat('cs-CZ', { notation: 'compact', maximumFractionDigits: 1 });
+  const MES = ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'];
+  const NAMES = { PRG: 'Praha', OSR: 'Ostrava', BTS: 'Bratislava', HAVEX_ZF: 'HAVEX zpětná fakturace' };
+  const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const root = document.querySelector('.pl');
+  let br = 'PRG', q = '', sortK = 'vysledek', sortDir = 1;
+
+  const tiles = document.getElementById('tiles');
+  const mark = (el, f, b) => { el.dataset.source = 'souhrn'; el.dataset.field = f; el.dataset.where = 'pobocka=' + b; el.classList.add('dash-skeleton'); el.textContent = '—'; return el; };
+  ['PRG', 'OSR', 'BTS', 'HAVEX_ZF'].forEach(b => {
+    const c = mk('div', 'card'); c.appendChild(mk('h2', '', NAMES[b]));
+    c.appendChild(mk('p', 'note', b === 'HAVEX_ZF' ? 'Výnos z HAVEX Mobility vs leasing těch aut' : 'Výsledek 09/2025 – 10/2026'));
+    c.appendChild(mark(mk('div', 'big'), 'vysledek', b));
+    [['Výnosy', 'vynos'], ['Náklady', 'naklady'], ['z toho leasing', 'leasing'], ['z toho pojištění', 'pojisteni'], ['z toho servis a opravy', 'servis'], ['Marže', 'marze']].forEach(([t, f]) => { const r = mk('div', 'row'); r.appendChild(mk('span', '', t)); r.appendChild(mark(mk('b'), f, b)); c.appendChild(r); });
+    tiles.appendChild(c);
+  });
+  const tabsB = document.getElementById('tabsB'), tabsA = document.getElementById('tabsA');
+  ['PRG', 'OSR', 'BTS', 'HAVEX_ZF'].forEach(b => { const x = mk('button', '', NAMES[b]); x.dataset.b = b; x.addEventListener('click', () => { br = b; redraw(); }); tabsB.appendChild(x); });
+  let brA = 'vše';
+  ['vše', 'PRG', 'OSR', 'BTS', 'HAVEX_ZF'].forEach(b => { const x = mk('button', '', b === 'vše' ? 'Vše' : NAMES[b]); x.dataset.a = b; x.addEventListener('click', () => { brA = b; drawCars(); }); tabsA.insertBefore(x, document.getElementById('q')); });
+  document.getElementById('q').addEventListener('input', e => { q = e.target.value.toLowerCase(); drawCars(); });
+  document.querySelectorAll('#tA th').forEach(th => th.addEventListener('click', () => { const k = th.dataset.field; if (sortK === k) sortDir *= -1; else { sortK = k; sortDir = 1; } drawCars(); }));
+
+  function fillTiles(s) {
+    root.querySelectorAll('[data-source="souhrn"]').forEach(el => {
+      if (s.status !== 'ok') { el.textContent = '—'; return; }
+      el.classList.remove('dash-skeleton');
+      const b = el.dataset.where.split('=')[1]; const r = s.data.find(x => x.pobocka === b); if (!r) { el.textContent = '—'; return; }
+      const f = el.dataset.field, v = r[f];
+      if (f === 'marze') el.textContent = nf1.format(v * 100) + ' %';
+      else el.textContent = nf.format(v) + ' Kč';
+      if (f === 'vysledek' || f === 'marze') el.style.color = v >= 0 ? 'var(--color-ok)' : 'var(--color-bad)';
+    });
+  }
+  const PARTS = [['leasing', 'Leasing (kalendáře)'], ['leasing_odhad', 'Leasing (odhad)'], ['carnetto_leasing', 'Carnetto – půjčovné EFS'], ['pojisteni', 'Pojištění'], ['carnetto_pojisteni', 'Carnetto – pojištění ČGP'], ['servis', 'Servis'], ['opravy', 'Opravy'], ['ostatni', 'Ostatní']];
+  const pc = i => i === 1 ? 'var(--cds-chart-muted)' : dash.colors[[0, 0, 1, 2, 3, 4][i]];
+  function axisStyle(g) { g.attr('font-size', null).attr('font-family', null); g.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)'); }
+  let pl = [];
+  function drawChart() {
+    const el = document.getElementById('chart'), lg = document.getElementById('lg');
+    el.classList.remove('dash-skeleton'); el.textContent = ''; lg.textContent = '';
+    PARTS.forEach(([k, t], i) => { const s = mk('span'); const sw = mk('i', 'sw'); sw.style.background = pc(i); if (i === 0) sw.style.opacity = 1; s.appendChild(sw); s.appendChild(document.createTextNode(t)); lg.appendChild(s); });
+    { const s = mk('span'); const i = mk('i', 'ln'); i.style.borderColor = 'var(--color-fg)'; s.appendChild(i); s.appendChild(document.createTextNode('Výnosy')); lg.appendChild(s); }
+    const data = pl.filter(r => r.pobocka === br).map(r => { const o = { m: r.mesic, v: Number(r.vynos_celkem), res: Number(r.vysledek) }; PARTS.forEach(([k]) => o[k] = Math.max(0, Number(r[k]))); o.n = Number(r.naklady_celkem); return o; });
+    const W = Math.max(300, el.clientWidth), H = 320, m = { t: 12, r: 12, b: 26, l: 56 };
+    const x = d3.scaleBand(data.map(d => d.m), [m.l, W - m.r]).padding(0.25);
+    const lo = Math.min(0, d3.min(data, d => d.res) || 0), hi = d3.max(data, d => Math.max(d.v, d3.sum(PARTS, ([k]) => d[k]))) || 1;
+    const y = d3.scaleLinear([lo, hi * 1.05], [H - m.b, m.t]).nice();
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    svg.append('g').selectAll('line').data(y.ticks(5)).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', v => y(v)).attr('y2', v => y(v)).attr('stroke', v => v === 0 ? 'var(--cds-chart-axis)' : 'var(--cds-chart-grid)');
+    const ax = svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(v => cmp.format(v)).tickSize(0)); ax.select('.domain').remove(); axisStyle(ax);
+    const axb = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickFormat(v => MES[Number(v.slice(5, 7)) - 1] + ' ' + v.slice(2, 4)).tickSize(0).tickPadding(8)); axb.select('.domain').remove(); axisStyle(axb);
+    if (W < 560) axb.selectAll('.tick').filter((d, i) => i % 2).select('text').remove();
+    const st = d3.stack().keys(PARTS.map(p => p[0]))(data);
+    svg.append('g').selectAll('g').data(st).join('g').attr('fill', (d, i) => pc(i)).attr('fill-opacity', (d, i) => i === 0 ? 1 : 0.85)
+      .selectAll('rect').data(d => d).join('rect').attr('x', d => x(d.data.m)).attr('width', Math.min(36, x.bandwidth())).attr('y', d => y(d[1])).attr('height', d => Math.max(0, y(d[0]) - y(d[1])));
+    const cx = d => x(d.m) + Math.min(36, x.bandwidth()) / 2;
+    svg.append('path').datum(data).attr('d', d3.line().x(cx).y(d => y(d.v))).attr('fill', 'none').attr('stroke', 'var(--color-fg)').attr('stroke-width', 2.5).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round');
+    svg.append('g').selectAll('circle').data(data).join('circle').attr('cx', cx).attr('cy', d => y(d.res)).attr('r', 4).attr('fill', d => d.res >= 0 ? 'var(--color-ok)' : 'var(--color-bad)');
+    const tip = mk('div', 'tip'); el.appendChild(tip);
+    svg.append('g').selectAll('rect').data(data).join('rect').attr('x', d => x(d.m) - x.step() * x.padding() / 2).attr('width', x.step()).attr('y', m.t).attr('height', H - m.t - m.b).attr('fill', 'transparent')
+      .on('mousemove', (ev, d) => { tip.textContent = ''; tip.appendChild(mk('div', 'h', `${NAMES[br]} – ${MES[Number(d.m.slice(5, 7)) - 1]} ${d.m.slice(0, 4)}`));
+        tip.appendChild(mk('div', '', `Výnosy: ${nf.format(d.v)} Kč`)); PARTS.forEach(([k, t]) => { if (d[k]) tip.appendChild(mk('div', '', `${t}: ${nf.format(d[k])} Kč`)); });
+        tip.appendChild(mk('div', '', `Náklady celkem: ${nf.format(d.n)} Kč`)); const r = mk('div', '', `Výsledek: ${nf.format(d.res)} Kč`); r.style.color = d.res >= 0 ? 'var(--color-ok)' : 'var(--color-bad)'; tip.appendChild(r);
+        tip.style.display = 'block'; const [mx] = d3.pointer(ev, el); tip.style.left = Math.max(0, Math.min(el.clientWidth - tip.offsetWidth, mx + 12)) + 'px'; tip.style.top = '8px'; })
+      .on('mouseleave', () => { tip.style.display = 'none'; });
+  }
+  function drawMonths() {
+    const tb = document.querySelector('#mesice tbody'); tb.textContent = '';
+    pl.filter(r => r.pobocka === br).forEach(r => { const tr = mk('tr'); tr.dataset.key = r.mesic + ',' + r.pobocka;
+      const res = Number(r.vysledek);
+      [[r.mesic, 'l'], [nf.format(r.vynos_celkem)], [nf.format(r.leasing), 'hide-n'], [nf.format(r.leasing_odhad), 'hide-n'], [nf.format(Number(r.carnetto_leasing) + Number(r.carnetto_pojisteni)), 'hide-n'], [nf.format(r.pojisteni), 'hide-n'], [nf.format(Number(r.servis) + Number(r.opravy) + Number(r.ostatni)), 'hide-n'], [nf.format(r.naklady_celkem)], [nf.format(res), res >= 0 ? 'pos' : 'neg']]
+        .forEach(([t, c]) => tr.appendChild(mk('td', c || '', t))); tb.appendChild(tr); });
+  }
+  function redraw() { tabsB.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.b === br)); if (pl.length) { drawChart(); drawMonths(); } }
+  let cars = [];
+  function drawCars() {
+    tabsA.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.a === brA));
+    const tb = document.querySelector('#tA tbody'); tb.textContent = '';
+    const num = k => !['spz', 'model', 'pobocka', 'poznamka'].includes(k);
+    cars.filter(r => (brA === 'vše' || r.pobocka === brA) && (!q || (r.spz + ' ' + r.model + ' ' + r.poznamka).toLowerCase().includes(q)))
+      .sort((a, b) => sortDir * (num(sortK) ? Number(a[sortK]) - Number(b[sortK]) : String(a[sortK]).localeCompare(String(b[sortK]))))
+      .forEach(r => { const tr = mk('tr'); const res = Number(r.vysledek);
+        [[r.spz, 'l'], [r.model, 'l hide-n'], [NAMES[r.pobocka] || r.pobocka, 'l'], [nf.format(r.vynos_celkem)], [nf.format(r.leasing), 'hide-n'], [nf.format(r.pojisteni), 'hide-n'], [nf.format(r.servis_opravy), 'hide-n'], [nf.format(r.naklady_celkem)], [nf.format(res), res >= 0 ? 'pos' : 'neg'], [r.poznamka, 'l hide-n']]
+          .forEach(([t, c]) => tr.appendChild(mk('td', c || '', t))); tb.appendChild(tr); });
+  }
+  dash.onData(() => {
+    const p = dash.data('pl'), a = dash.data('auta'), e = dash.data('efs');
+    fillTiles(dash.data('souhrn'));
+    if (p.status === 'ok') { pl = p.data; redraw(); }
+    if (a.status === 'ok') { cars = a.data; drawCars(); }
+    if (e.status === 'ok') { const tb = document.querySelector('#carnetto tbody'); tb.textContent = ''; e.data.forEach(r => { const tr = mk('tr'); tr.appendChild(mk('td', 'l', r.mesic)); [[r.pujcovne, ''], [r.pojisteni, 'hide-n'], [r.celkem, '']].forEach(([v, c]) => tr.appendChild(mk('td', c, nf.format(v) + ' Kč'))); tr.appendChild(mk('td', 'hide-n', r.vozu_pujcovne)); tb.appendChild(tr); }); }
+  });
+})();
+</script>
