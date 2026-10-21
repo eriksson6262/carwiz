@@ -34,3 +34,7 @@ v konzoli prohlížeče – `import_vozidel.js`. Bez hesel, používá session p
 
 ## Nádrž
 Renteon dělí nádrž na 8 dílků: 1/8 = `FuelTankSectionIn: 1`, litry = round(objem/8).
+
+## Interní poznámka
+Formát `vlastník | pojistka | další`, např. `ACJ | ČGP-CRNT | Zimní pneu` (Carnetto vozy = ČGP-CRNT, RX = ČGP-RX).
+Stav po otevření karty: CarStatusId 2, aktivita „Líný“ = Idle (v CZ UI zobrazeno jako „NEAKTIVNÍ“).

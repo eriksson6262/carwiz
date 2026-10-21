@@ -7,7 +7,7 @@
   const BUYBACK = '21.04.2027.';                 // DD.MM.YYYY.
   const OPEN = { P: [25, '21.10.2026. 18:38'],   // Praha: officeId, datum otevření
                  O: [26, '22.10.2026. 08:00'] }; // Ostrava
-  const REMARK = 'ACJ ČGP Zimní pneu';           // InternalRemark
+  const REMARK = 'ACJ | ČGP-CRNT | Zimní pneu';  // InternalRemark: vlastník | pojistka | další
   const SUPPLIER = 349779, OWNER = 349779;       // EURO FLEET SERVIS
   const COLOR = 12;                              // Vícebarevný
   const FLEET = 7, MILEAGE = 30, INV_FROM = 164, INV_PREFIX = '26/';
