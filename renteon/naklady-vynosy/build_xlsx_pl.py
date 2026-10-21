@@ -9,7 +9,7 @@ def num(v):
     except: return v
 def sheet(wb,name,rows,hdr):
     ws=wb.create_sheet(name); ws.append(hdr)
-    for r in rows: ws.append([num(r[k]) if k not in('mesic','spz','model','sipp','pobocka','poznamka','doklad','obdobi','vin','kategorie','zdroj_email_id') else r[k] for k in hdr])
+    for r in rows: ws.append([num(r[k]) if k not in('mesic','datum','misto','produkt','karta4','druh','mena','odberatel','dodavatel','pobocka','spz','model','sipp','pobocka','poznamka','doklad','obdobi','vin','kategorie','zdroj_email_id') else r[k] for k in hdr])
     for c in ws[1]: c.font=B; c.fill=H
     for row in ws.iter_rows(min_row=2):
         for c in row:
@@ -25,7 +25,7 @@ S['A1']='Náklady vs výnosy půjčovny 09/2025–10/2026 (Kč bez DPH)'; S['A1'
 br=['PRG','OSR','BTS','HAVEX_ZF']; names={'PRG':'Praha','OSR':'Ostrava','BTS':'Bratislava','HAVEX_ZF':'HAVEX zpětná fakt.'}
 S.append([]); S.append(['Položka']+[names[b] for b in br]+['Celkem'])
 for c in S[3]: c.font=B; c.fill=H
-items=[('Výnos Renteon','vynos_renteon'),('Výnos Vyfakturuj / HAVEX','vynos_vyfakturuj'),('Výnosy celkem','vynos_celkem'),('Leasing (kalendáře)','leasing'),('Leasing (odhad)','leasing_odhad'),('Carnetto – půjčovné EFS','carnetto_leasing'),('Pojištění','pojisteni'),('Carnetto – pojištění ČGP','carnetto_pojisteni'),('Servis','servis'),('Opravy','opravy'),('Ostatní','ostatni'),('Náklady celkem','naklady_celkem'),('Výsledek','vysledek')]
+items=[('Výnos Renteon','vynos_renteon'),('Výnos Vyfakturuj / HAVEX','vynos_vyfakturuj'),('Výnosy celkem','vynos_celkem'),('Leasing (kalendáře)','leasing'),('Leasing (odhad)','leasing_odhad'),('Carnetto – půjčovné EFS','carnetto_leasing'),('Pojištění','pojisteni'),('Carnetto – pojištění ČGP','carnetto_pojisteni'),('Servis','servis'),('Opravy','opravy'),('Ostatní (mytí, známky)','ostatni'),('Palivo CCS','palivo'),('Nájem pobočky','najem_pobocky'),('Náklady celkem','naklady_celkem'),('Výsledek','vysledek')]
 for t,k in items:
     r=S.max_row+1; S.cell(r,1,t).font=B if k in('vynos_celkem','naklady_celkem','vysledek') else F
     for j,b in enumerate(br,2):
@@ -39,6 +39,8 @@ for j in range(2,7): S.column_dimensions[L(j)].width=16
 au=list(csv.DictReader(open('pl_auta.csv'))); sheet(wb,'Auta',au,list(au[0].keys()))
 cm=list(csv.DictReader(open('carnetto_mesice.csv'))); sheet(wb,'Carnetto',cm,list(cm[0].keys()))
 cd=list(csv.DictReader(open('carnetto.csv'))); sheet(wb,'Carnetto detail',cd,list(cd[0].keys()))
+for nm,fn in [('Nájmy','najmy.csv'),('Palivo','palivo.csv'),('Servis Rejdík SIMO AP','servis2.csv')]:
+    rr=list(csv.DictReader(open(fn))); sheet(wb,nm,rr,list(rr[0].keys()))
 P=wb.create_sheet('Poznámky')
 for t in ['Zdroje: Renteon (výnosy po pobočkách a vozech), Vyfakturuj RX Auto + RX Auto SK, Spark (HAVEX kalendáře, EFS, Kooperativa, Generali, D.A.S., servisy).',
  'Carnetto RX: půjčovné EURO FLEET SERVIS (11/2025–09/2026, 11 faktur) a pojištění flotily ČGP 6287974108 (04–09/2026) – přefakturováno na RX Auto, rozpis po SPZ z faktur/vyúčtování.',
@@ -46,7 +48,9 @@ for t in ['Zdroje: Renteon (výnosy po pobočkách a vozech), Vyfakturuj RX Auto
  'Bratislava přepočtena kurzem 24,3 Kč/€ (předpoklad).',
  'Leasing starších smluv bez platebního kalendáře = odhad z HAVEX přehledu zápůjček (pro rata).',
  'HAVEX_ZF = vozy se zpětnou fakturací HAVEX Mobility: výnos z Vyfakturuj vs leasing těch vozů.',
- 'Chybí: palivo/DKV, mzdy, nájmy poboček, provize brokerů, franšíza, IT. Servisní faktury ve schránce až od 09/2025.',
+ 'Chybí: mzdy, provize brokerů, franšíza, IT. Servisní faktury ve schránce až od 09/2025.',
+ 'Nájmy: CTP (letiště Praha, část v EUR ×24,3), BTS aero (RX Auto SK, EUR), Letiště Ostrava. Nájem 09/2025 PRG a OSR = odhad (faktura Q3 2025 v poště chybí).',
+ 'Palivo: měsíční doklady CCS (5 karet, bez SPZ → pobočka podle místa čerpání); tankování v SK včetně slovenské DPH (neodpočitatelná). 10/2026 zatím chybí.',
  'Modrá = vstupní data, zelená = odkaz na list Data, černá = výpočet.']:
     P.append([t]); P.cell(P.max_row,1).font=F
 P.column_dimensions['A'].width=140

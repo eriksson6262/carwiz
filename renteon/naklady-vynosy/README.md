@@ -7,9 +7,11 @@ Měsíční P&L po pobočkách (PRG, OSR, BTS, HAVEX zpětná fakturace) a zisko
 - leasing: HAVEX platební kalendáře (`scripts/parse_pk.py`), odhad starších smluv z přehledu zápůjček, EFS na RX (`scripts/efs.py`)
 - Carnetto RX přefakturace na RX Auto: půjčovné EFS (`scripts/carnetto_efs.py`) a pojištění flotily ČGP 6287974108 (`scripts/gcpparse.py`) → `scripts/carnetto_build.py` → `data/carnetto.csv`
 - pojištění: Kooperativa (`koopload.py`), Generali RS (`gcpparse.py`), D.A.S.
-- servis/opravy/ostatní: `scripts/servis_build.py`
+- servis/opravy/ostatní: `scripts/servis_build.py` + faktury Auto Palace (mytí), Pavel Rejdík (servis PRG), SIMO CAR PLUS / Šimon Závěšický (servis OSR) → `data/servis2.csv`
+- palivo: měsíční daňové doklady CCS (ccs@ccs.cz, „CCS-Danovy doklad - YYYYMM“) → `scripts/parse_ccs.py` → `data/palivo.csv` (SK tankování vč. SK DPH)
+- nájmy poboček: CTP (letiště Praha), BTS aero (Bratislava, RX Auto SK), Letiště Ostrava → `data/najmy.csv`
 
 **Postup:** vstupní CSV do `data/` → `python build_pl.py` (pl_pobocky.csv, pl_auta.csv, carnetto_mesice.csv) → `python build_xlsx_pl.py` → Excel; `dashboard_index.html` = stránka dashboardu (Dashboard artifact „Náklady vs výnosy půjčovny“).
 
 Pobočka vozu = dominantní pobočka v Renteonu v daném měsíci; SK vozy BTS. Kurz €: 24,3. Data se nekomitují.
-Chybí: palivo/DKV, mzdy, nájmy poboček, provize brokerů, franšíza.
+Chybí: mzdy, provize brokerů, franšíza.

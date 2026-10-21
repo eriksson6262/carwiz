@@ -30,6 +30,7 @@ cost=collections.defaultdict(float); src_rows=[]
 def addc(m,s,cat,v,seg=None):
     if not inW(m): return
     s=norm(s); b=seg or (branch(s,m) if s and s!='FLOTILA' else 'PRG')
+    if not s: s='('+b+' – bez SPZ)'
     cost[(m,b,s,cat)]+=v
 for fn,est in [('leasing.csv',False),('leasing_odhad_bez_pk.csv',True)]:
     for r in csv.DictReader(open(fn)):
@@ -69,6 +70,26 @@ for r in csv.DictReader(open('vyfakturuj_auta.csv'),delimiter=';'):
 for r in csv.DictReader(open('havex_vynos_auta.csv'),delimiter=';'):
     m=r['mesic']
     if inW(m): rev[(m,'HAVEX_ZF',norm(r['spz']) or '(bez SPZ)','havex')]+=float(r['castka'])
+# --- nájmy poboček (CTP Praha, BTS aero, Letiště Ostrava), palivo CCS, další servisy/mytí
+if os.path.exists('najmy.csv'):
+    for r in csv.DictReader(open('najmy.csv')):
+        v=float(r['castka_bez_dph'] or 0)*(EUR if r['mena'].upper()=='EUR' else 1)
+        addc(r['mesic'],'','najem_pobocky',v,r['pobocka'] or 'PRG')
+    # chybějící faktury 09/2025 (Q3 2025) – odhad podle běžného měsíčního nájmu
+    addc('2025-09','','najem_pobocky',2997*EUR+1100,'PRG'); addc('2025-09','','najem_pobocky',24738,'OSR')
+if os.path.exists('palivo.csv'):
+    for r in csv.DictReader(open('palivo.csv')):
+        v=float(r['castka_bez_dph'] or 0); sp=norm(r['spz'])
+        mm=re.search(r'zaplaceno ([\d.]+) Kč vč\. SK DPH',r['poznamka'] or '')
+        if mm: v=float(mm.group(1))  # SK DPH není pro RX Auto s.r.o. odpočitatelná → náklad = zaplaceno
+        if sp and (sp in cz or sp in sk): addc(r['mesic'],sp,'palivo',v)
+        else: addc(r['mesic'],'','palivo',v,r['pobocka'] or 'PRG')
+if os.path.exists('servis2.csv'):
+    for r in csv.DictReader(open('servis2.csv')):
+        if 'už v servis.csv' in (r['poznamka'] or ''): continue
+        v=float(r['castka_bez_dph'] or 0); sp=norm(r['spz']); cat=catmap.get(r['kategorie'],'ostatni')
+        if sp: addc(r['mesic'],sp,cat,v)
+        else: addc(r['mesic'],'',cat,v,r['pobocka'] or 'PRG')
 # položky Carnetto bez SPZ: rozpočet rovným dílem na vozy s výnosem a bez leasingu v daném měsíci
 haslease={(m,s) for (m,b,s,c) in cost if c.startswith('leasing') or c=='carnetto_leasing'}
 for (m,cat),v in unalloc.items():
@@ -86,7 +107,7 @@ hv=collections.defaultdict(float)
 for (m,b,s,t),v in rev.items():
     if t=='havex': hv[m]+=v
 months=sorted({m for m,_ in brev})
-CATS=['leasing','leasing_odhad','carnetto_leasing','pojisteni','carnetto_pojisteni','servis','opravy','ostatni']
+CATS=['leasing','leasing_odhad','carnetto_leasing','pojisteni','carnetto_pojisteni','servis','opravy','ostatni','palivo','najem_pobocky']
 out=[]
 for m in months:
     for b in ['PRG','OSR','BTS','HAVEX_ZF']:
@@ -108,9 +129,9 @@ for s,d in cars.items():
     if not s: s2='(bez SPZ)'
     vyn=d['v_renteon']+d['v_vyfakturuj']+d['v_havex']; nak=sum(d[k] for k in CATS)
     info=cz.get(s,{})
-    rows.append(dict(spz=s or '(bez SPZ)',model=info.get('model','') ,sipp=info.get('sipp',''),pobocka=cb[s].most_common(1)[0][0],
+    rows.append(dict(spz=s or '(pobočka – bez SPZ)',model=info.get('model','') ,sipp=info.get('sipp',''),pobocka=cb[s].most_common(1)[0][0],
         vynos_renteon=round(d['v_renteon']),vynos_vyfakturuj=round(d['v_vyfakturuj']),vynos_havex=round(d['v_havex']),vynos_celkem=round(vyn),
-        leasing=round(d['leasing']+d['leasing_odhad']+d['carnetto_leasing']),leasing_odhad=round(d['leasing_odhad']),carnetto=round(d['carnetto_leasing']+d['carnetto_pojisteni']),pojisteni=round(d['pojisteni']+d['carnetto_pojisteni']),servis_opravy=round(d['servis']+d['opravy']+d['ostatni']),
+        leasing=round(d['leasing']+d['leasing_odhad']+d['carnetto_leasing']),leasing_odhad=round(d['leasing_odhad']),carnetto=round(d['carnetto_leasing']+d['carnetto_pojisteni']),pojisteni=round(d['pojisteni']+d['carnetto_pojisteni']),servis_opravy=round(d['servis']+d['opravy']+d['ostatni']),palivo=round(d['palivo']),
         naklady_celkem=round(nak),vysledek=round(vyn-nak),
         poznamka=('Carnetto RX (EFS půjčovné / ČGP)' if d['carnetto_leasing']+d['carnetto_pojisteni'] else ('bez leasingu v datech' if vyn>0 and not d['leasing']+d['leasing_odhad'] and s not in ('GLOBAL ASSISTANCE','') else ''))))
 rows.sort(key=lambda r:r['vysledek'])
