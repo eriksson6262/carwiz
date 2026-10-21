@@ -12,6 +12,8 @@ OSR = ['mošnov', 'ostrava', 'rychvald', 'hrabová', 'f.místek', 'frýdek', 'm�
        'šenov', 'paskov', 'brušperk', 'sedlnice', 'ostr', 'svinov', 'martinov', 'hlučín', 'frenštát', 'fulnek', 'klimkovice',
        'mar.hory', 'zábřeh,', 'plesná', 'krmelín', 'vratimov', 'kunčice', 'stará bělá', 'dobrá', 'český těšín', 'bruntál',
        'krnov', 'frýdlant n.ostr', 'odry', 'jablunkov', 'stonava', 'albrechtice', 'kozmice', 'ludgeřovice', 'baška']
+# CZ čerpací stanice na trase D2 u hranic SK (Rakvice, Velké Bílovice) – tankuje BTS karta 4007 -> BTS
+BTS_CZ = ['rakvice', 'wellness4car', 'v.bílo', 'velké bílovice']
 PRG = ['pha', 'praha', 'středokluky', 'benátky', 'letiště', 'ruzyně', 'hostivice', 'jesenice', 'čestlice', 'průhonice',
        'zdiby', 'úvaly', 'černošice', 'řevnice', 'beroun', 'kladno', 'mělník', 'brandýs', 'čelákovice', 'říčany', 'dobříš',
        'mnichovice', 'kralupy', 'roztoky', 'buštěhrad', 'jinočany', 'rudná', 'chýně', 'tuchoměřice', 'kněževes', 'horoměřice',
@@ -36,13 +38,15 @@ def product(name):
 def region(stat, misto):
     if stat in ('SR', 'Slov'): return 'BTS'
     m = misto.lower()
+    if any(k in m for k in BTS_CZ): return 'BTS'
     if any(k in m for k in OSR): return 'OSR'
     if any(k in m for k in PRG): return 'PRG'
     return None
 
 rows = []
 checks = []
-for f in sorted(glob.glob(os.path.join(D, '2*.txt'))):
+# D může být více adresářů oddělených čárkou (např. raw_ccs_old,raw_ccs)
+for f in sorted(sum((glob.glob(os.path.join(d, '2*.txt')) for d in D.split(',')), [])):
     base = os.path.basename(f)[:-4]
     per, mid = base.split('_')
     txt = open(f, encoding='utf-8').read().splitlines()
@@ -110,6 +114,8 @@ for r in rows:
         else:
             r['pobocka'] = c.most_common(1)[0][0]; extra = 'pobočka podle karty (místo mimo PRG/OSR)'
         r['poznamka'] = (r['poznamka'] + '; ' if r['poznamka'] else '') + extra
+    if any(k in r['misto'].lower() for k in BTS_CZ):
+        r['poznamka'] = (r['poznamka'] + '; ' if r['poznamka'] else '') + 'CZ stanice na trase do BTS (D2) -> BTS'
     if r['produkt'] == 'ostatní' or r['produkt'] in ('oleje', 'provozní náplně'):
         r['poznamka'] = (r['poznamka'] + '; ' if r['poznamka'] else '') + f'CCS položka: {r["produkt_orig"]}'
 
