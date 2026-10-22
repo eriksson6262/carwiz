@@ -203,6 +203,32 @@ sheet(wb.create_sheet('Nepotřebují'), H + ['Důvod'],
 sheet(wb.create_sheet('Jiný vlastník'), H, [row(r) for r in sorted(other, key=key)], W,
       'Vozidla bez štítku HVX/ACJ (vlastní / jiný vlastník) – rozhodnout ručně', BB_COL)
 
+# --- kontrola pojištění: štítky v Renteonu vs předpisy pojišťoven (data/pojisteni.json, data/havex_prehled.json) ---
+if (DATA / 'pojisteni.json').exists():
+    poj = load('pojisteni.json'); pins = poj['pojisteni']
+    hvp = set(load('havex_prehled.json')) if (DATA / 'havex_prehled.json').exists() else set()
+    chk = []
+    for inst, lst in (('CZ', cz), ('SK', sk)):
+        for c in lst:
+            p = norm(c['spz']); t = [x.strip() for x in (c['rem'] or '').split('|')]
+            doc = sorted(set(pins.get(p, []) + pins.get((c['vin'] or '').upper(), [])))
+            tag = [x for x in t if x in ('KOOP', 'ČGP-RX', 'ČGP-CRNT')]
+            own = 'HVX' if 'HVX' in t else 'ACJ' if 'ACJ' in t else ''
+            iss = []
+            if not tag and not doc: iss.append('není v žádném předpisu RX/Carnetta' + (' – v přehledu HAVEX → asi pojištění přes HAVEX' if p in hvp else ''))
+            elif not tag: iss.append('chybí štítek pojistitele, dle předpisu ' + '/'.join(doc))
+            for x in tag:
+                if x not in doc: iss.append(f'štítek {x}, ale v předpisu {x} není' + (' (nové auto, předpis ještě nemusí obsahovat)' if pd(c.get('first')) and pd(c['first']) >= dt.date(TODAY.year, TODAY.month, 1) else ''))
+            for x in doc:
+                if x not in tag and tag: iss.append(f'v předpisu {x}, štítek chybí')
+            if not own and p in hvp: iss.append('chybí štítek HVX (je v přehledu HAVEX)')
+            if iss:
+                chk.append([inst, c['spz'], c['model'], c['office'], pd(c['bb']), c['rem'] or '', '/'.join(doc) or '—', 'ANO' if p in hvp else '', '; '.join(iss)])
+    chk.sort(key=lambda r: (r[8], r[1]))
+    sheet(wb.create_sheet('Kontrola pojištění'),
+          ['Renteon', 'SPZ', 'Model', 'Pobočka', 'Buyback', 'Interní poznámka', 'V předpisu', 'Přehled HAVEX', 'Zjištění'],
+          chk, [8, 11, 34, 8, 11, 40, 14, 10, 70], 'Kontrola štítků pojistitele: ' + poj['zdroj'], 5)
+
 ws['A1'] = f'Zimní pneumatiky – přehled (stav k {TODAY:%d.%m.%Y})'; ws['A1'].font = Font(name=F, bold=True, size=14)
 ws.append([])
 ws.append(['', 'Krátkodobé (Renteon)', 'Dlouhodobé (Vyfakturuj)', 'Celkem', f'Končí v listopadu {YEAR}', f'Končí v prosinci {YEAR}', 'Zimní už má', 'Zbývá nasadit'])

@@ -22,3 +22,10 @@ Excel s auty, která potřebují zimní pneu (buyback po 1.11.), rozdělený na 
 - Nová auta bez štítku HVX/ACJ v interní poznámce padají do listu „Jiný vlastník“.
 - „Zimní pneu už má“ = interní poznámka v Renteonu obsahuje „zimn…“ (štítek „Zimní pneu“, „převzato na zimních“).
 - `data/` a `output/` jsou v `.gitignore` (jména klientů).
+
+## Kontrola pojištění (list „Kontrola pojištění“)
+Volitelné vstupy v `data/`:
+- `pojisteni.json` – {SPZ/VIN: [ČGP-RX|ČGP-CRNT|KOOP]} z předpisů: ČGP 4785635732 (RX) a 6287974108 (Carnetto) – „Vyúčtování plateb“ PDF / „Sestava report vyúčtování“ ve Sparku; Kooperativa inkasní skupina 6667100466 – `DETAIL_PREDPIS_…xlsx` (sloupec Registrační značka, VIN, stav Z = platné).
+- `havex_prehled.json` – SPZ z „Přehled zápůjček“ (HAVEX, Dvořáková, list Vozy, sloupec auto „rz: …“).
+Auta HAVEX, která nejsou v žádném předpisu RX/Carnetta, pojišťuje HAVEX sám – štítek pojistitele nedoplňovat bez potvrzení.
+Štítky v Renteonu se mění přes formulář auta (Upravit → Interní poznámka → Potvrďte), PUT `api/car/<id>`.
