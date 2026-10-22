@@ -91,6 +91,14 @@ T = {
 'Interiér - Podlaha+zavazadlový prostor - ROLETA - Chybí, dodat': 'Interior – Floor + boot – Luggage cover – Missing, to be supplied',
 'Interiér - Sedadla - LP čalounění - Poškozené, výměna, propálené od cigarety': 'Interior – Seats – Left front upholstery – Cigarette burn, replacement',
 'Interiér - Střecha - Stropnice - Znečištěné, čištění v rámci tepování': 'Interior – Roof – Headliner – Soiled, cleaned as part of deep cleaning',
+'Exteriér - Skla - Stěrače zadní - Poškozené, Výměna': 'Exterior – Glass – Rear wiper – Damaged, replacement',
+'Exteriér - Karoserie - PZ Dveře - Odření, Retuš': 'Exterior – Body – Right rear door – Scuffed, touch-up',
+'Exteriér - Karoserie - KRYT VNĚ DVEŘÍ P P - Odření, rozleštění': 'Exterior – Body – Right front outer door trim – Scuffed, polishing',
+'Interiér - Jiné - Komplet - Znečištěné, čištění interiéru': 'Interior – Other – Complete – Soiled, interior cleaning',
+'Interiér - Podlaha+zavazadlový prostor - Nakládací hrana zavazadlového prostoru - Odření, ošetření plastu': 'Interior – Floor + boot – Boot loading edge – Scuffed, plastic treatment',
+'Exteriér - Karoserie - - Polepy, sundat': 'Exterior – Body – Stickers/wrap, removal',
+'Exteriér - Karoserie - Kapota - Poškozené, Lakování povrchu': 'Exterior – Body – Bonnet – Damaged, surface repaint',
+'Exteriér - Karoserie - Z Nárazník - Odření, Lakování povrchu': 'Exterior – Body – Rear bumper – Scuffed, surface repaint',
 }
 VUZ = {
 "Kamiq Monte Carlo 1,5 TSI 110 kW 7-stup.aut.": "Škoda Kamiq Monte Carlo 1.5 TSI 110 kW 7-speed auto",
