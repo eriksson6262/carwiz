@@ -4,6 +4,7 @@ Zpracování protokolů o vrácení vozidel, které posílá HAVEX Mobility (pet
 
 ## Postup
 1. **Stažení** – Spark: `from:petr.beyr@havexmobility.cz after:<datum>`. Každé vozidlo má „Protokol o vrácení vozidla“ + „ProtokolKontroly“ (fotky), někdy „Kilometry“.
+   **Pozor:** sémantické hledání Sparku s filtrem `from:` vrací jen ~20 „nejrelevantnějších“ výsledků – nové maily přebijí starší FW/Re:. Vždy hledat i podle jednotlivých RZ (z avíz vrácení od Dvořákové) a obecně „protokol o vrácení“ s `after:` bez `from:` (protokoly posílá i Tesařová, ACJC aj.). Kontrolovat, že ProtokolKontroly patří ke stejné RZ (8H84670 přišel s kontrolou 9H06026).
    FW zprávy jsou jen upomínky se stejnými přílohami. Opravené protokoly chodí jako RE: (nahradit původní).
    Ukládat jako `RZ Protokol o vraceni vozidla.pdf`, `RZ ProtokolKontroly.pdf`, `RZ Kilometry.pdf`.
 2. **Roztřídění Fabian / RX Auto** – vozidlo patří Fabianovi, pokud ve Vyfakturuj existují faktury na Fábián Automotive Kft s danou RZ.
@@ -20,7 +21,8 @@ Zpracování protokolů o vrácení vozidel, které posílá HAVEX Mobility (pet
    Podmínky Fabian: spoluúčast za každou PU: oprava pod 10 000 Kč = orientační cena + 21 % (max. 10 000), jinak 10 000 Kč (počet PU dle HAVEX protokolu); škody v oddílu A (hradí nájemce) = cena dle HAVEX + 21 %; nadlimitní km 7 Kč bez DPH.
    Datum dokladu = datum HAVEX protokolu.
 5. **Faktury Fabianovi** – Vyfakturuj, přenesená daňová povinnost, CZK, popis CZ+EN „vyúčtování po vrácení vozidla“.
-6. **Ukončení pojistek** – Kooperativa (Gieselová) / Generali (Herrmann); pojišťovnu určit z výpisu Kooperativy (předpis pojistného, CSV) a vyúčtování flotily Generali.
+6. **Renteon** – RX vozy deaktivovat aktivitou „Deaktivace vozu“ (def. 121) s neaktivním stavem 31 = „Koupit zpět – pronájem“ (buyback lease), ne 32 (subrent). Fabian vozy v Renteonu nejsou.
+7. **Ukončení pojistek** – Kooperativa (Gieselová) / Generali (Herrmann); pojišťovnu určit z výpisu Kooperativy (předpis pojistného, CSV) a vyúčtování flotily Generali.
 
 ## Spuštění
 ```
