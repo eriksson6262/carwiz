@@ -24,9 +24,9 @@ def souhrn(df, si):
     e['mesice'] = e.index.map(mis).fillna('')
     jj = J.groupby('spz').apply(lambda g: '; '.join(f'{r.odberatel} {fmt(r.castka)} Kč ({r.od}–{r.do})' for r in g.itertuples()), include_groups=False)
     e['jine'] = e.index.map(jj).fillna('')
-    e['spol'] = (e.bez / e.vyf.where(e.vyf > 0, 1)).map(lambda x: 'nižší – faktury bez SPZ, párováno podle částky' if x > 0.3 else 'dobrá – SPZ na fakturách')
+    e['spol'] = (e.bez / e.vyf.where(e.vyf > 0, 1)).map(lambda x: 'nižší – část faktur bez SPZ, párováno podle šablony/částky' if x > 0.3 else 'dobrá – SPZ na fakturách')
     e.loc[e.vyf == 0, 'spol'] = 'žádná faktura na HAVEX'
-    e.loc[(e.vyf == 0) & (e.do < pd.Timestamp('2023-01-01')), 'spol'] = 'nejistá – v tom období faktury bez SPZ'
+    e.loc[(e.vyf == 0) & (e.do < pd.Timestamp('2021-09-15')), 'spol'] = 'nejistá – před 09/2021 se fakturovalo mimo Vyfakturuj'
     return e[e.chybi >= 1000].sort_values('chybi', ascending=False)
 
 def sheet(ws, e, title, note):
@@ -53,7 +53,7 @@ def sheet(ws, e, title, note):
     for j in (8, 9, 10):
         c = ws.cell(r, j, f'=SUM({get_column_letter(j)}5:{get_column_letter(j)}{r-1})'); c.font = BO; c.number_format = NUM
     ws.cell(r + 2, 1, 'Červeně = SPZ je na fakturách nebo na HAVEX nešla žádná faktura → rozdíl je spolehlivý. Žlutě = k autu existují faktury jiným odběratelům '
-            '(prodej, přímý pronájem klientovi) → smlouva mohla skončit dřív nebo se fakturovalo jinak. Bez barvy = rozdíl může být jen chybou párování faktur bez SPZ.').font = NOTE
+            '(prodej, přímý pronájem klientovi) → smlouva mohla skončit dřív nebo se fakturovalo jinak. Bez barvy = část faktur bez SPZ, rozdíl může být chybou párování.').font = NOTE
     ws.freeze_panes = 'B5'; ws.auto_filter.ref = f'A4:M{r-1}'
 
 A = souhrn(P[P.od >= OD], SI[SI.duzp >= '2021-09'])
@@ -62,7 +62,7 @@ wb = Workbook()
 sheet(wb.active, A, 'Vozidla ke zpětné fakturaci HAVEX – nevyfakturováno (od 09/2021)',
       'Mělo být = sloupec „K fakturaci zpět na CC“ v přehledu zápůjček HAVEX (k 30. 9. 2026), po měsících od začátku do konce smlouvy, období začínající do 31. 8. 2026. '
       'Konec smlouvy je podle přehledu – pokud auto vrátili nebo prodali dřív, je „Mělo být“ nadsazené. Vyfakturováno = položky dokladů Vyfakturuj RX Auto CZ na HAVEX Mobility '
-      '(bez pokut, jistin, škod a přefakturací): se SPZ přímo, bez SPZ (hlavně 2021–2022) spárované podle částky a začátku období. Rozdíly pod 1 000 Kč vynechány.')
+      '(bez pokut, jistin, škod a přefakturací): SPZ z textu položky, u starších faktur z hlavičky (text před položkami); zbylé položky bez SPZ přiřazené přes šablony pravidelných faktur (vč. ukončených) podle částky a dne začátku období. Rozdíly pod 1 000 Kč vynechány.')
 wb.active.title = 'Od 09-2021'
 sheet(wb.create_sheet('Před 09-2021'), Z, 'Zpětná fakturace HAVEX před 09/2021',
       'První faktura na HAVEX ve Vyfakturuj je z 15. 9. 2021. Do té doby se zpětná fakturace mohla vystavovat jinde (účetní, jiný systém) – ověřit v účetnictví, nemusí jít o nevyfakturované částky.')
