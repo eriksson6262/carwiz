@@ -23,6 +23,13 @@ d['dny'] = d.dny_kratkodobe + d.dny_dlouhodobe + d.dny_interni + d.dny_volne
 d['gfar'] = d.sipp == 'GFAR'
 d['leasing_vse'] = d.leasing  # pl_auta.leasing už obsahuje Carnetto půjčovné, pojisteni i Carnetto ČGP
 KURZ = 24.3
+# Renteon CZ – výnos po SPZ z Podrobného přehledu rezervace (všechny flotily); P&L po autech u některých aut výnos neměl
+rv = pd.read_csv(B / 'data' / 'renteon_spz.csv')[['spz', 'rok', 'vynos_czk']].rename(columns={'vynos_czk': 'v_rep'})
+d = d.merge(rv, on=['spz', 'rok'], how='left'); d['v_rep'] = d.v_rep.fillna(0)
+d['doplneno'] = d.vynos_renteon < 0.5 * d.v_rep
+d['v_dopl'] = (d.v_rep - d.vynos_renteon).where(d.doplneno, 0)
+d['vynos_renteon'] = d.vynos_renteon + d.v_dopl
+d['vysledek'] = d.vysledek + d.v_dopl
 sk = pd.read_csv(B / 'data' / 'vyfakturuj_sk_spz.csv'); sk = sk[sk.rok.isin([2025, 2026])]
 d = d.merge(sk.groupby(['spz', 'rok']).vynos_eur.sum().rename('v_sk_eur').reset_index(), on=['spz', 'rok'], how='left')
 d['v_sk_eur'] = d.v_sk_eur.fillna(0)
@@ -46,14 +53,15 @@ ren = d[d.sipp.notna() & ~d.spz.str.startswith('(') & (d.dny >= 30)]
 ren = ren[(ren.poznamka.fillna('') != 'bez leasingu v datech') | ren.gfar]
 a = ren.groupby('spz').agg(model=('model', 'first'), sipp=('sipp', 'first'), pobocka=('pobocka', 'last'), dny=('dny', 'sum'),
                            kr=('dny_kratkodobe', 'sum'), dl=('dny_dlouhodobe', 'sum'), iv=('dny_interni', 'sum'), vo=('dny_volne', 'sum'), v_kr=('vynos_renteon', 'sum'),
-                           v_dl=('vynos_vyfakturuj', 'sum'), v_hx=('vynos_havex', 'sum'), v_sk=('v_sk_eur', 'sum'), leas=('leasing_vse', 'sum'), poj=('pojisteni', 'sum'),
+                           v_dl=('vynos_vyfakturuj', 'sum'), v_hx=('vynos_havex', 'sum'), v_sk=('v_sk_eur', 'sum'), v_dopl=('v_dopl', 'sum'), leas=('leasing_vse', 'sum'), poj=('pojisteni', 'sum'),
                            serv=('servis_opravy', 'sum'), vys=('vysledek', 'sum'), gfar=('gfar', 'max')).reset_index()
 # GFAR: náklady podle zadání
 g = a.gfar
 a.loc[g, 'leas'] = (a.loc[g, 'dny'] * 40000 * 12 / 365).round(0); a.loc[g, 'poj'] = 0; a.loc[g, 'serv'] = (a.loc[g, 'dny'] * 30000 / 365).round(0)
 a['v_dl'] = a.v_dl + (a.v_sk * KURZ).round(0)   # + Vyfakturuj RX Auto SK (v P&L po autech chyběl)
 a['vys'] = a.v_kr + a.v_dl + a.v_hx - a.leas - a.poj - a.serv
-a['pozn'] = [poznamka(x.spz, x.dl) for x in a.itertuples()]
+a['pozn'] = [(f'Výnos z Renteonu doplněn o {fmt(x.v_dopl)} Kč (v P&L po autech chyběl) | ' if x.v_dopl else '') + poznamka(x.spz, x.dl) for x in a.itertuples()]
+a['pozn'] = a.pozn.str.rstrip(' |')
 a['prodano'] = a.spz.isin(prodeje.index)
 a = a[a.vys < 0].copy()
 a['vys_mes'] = a.vys / a.dny * 30.4
