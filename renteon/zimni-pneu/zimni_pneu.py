@@ -31,6 +31,7 @@ CUT = dt.date(YEAR, 11, 1)
 NOV, DEC = (dt.date(YEAR, 11, 1), dt.date(YEAR, 12, 1)), (dt.date(YEAR, 12, 1), dt.date(YEAR + 1, 1, 1))
 FILL_NOV = PatternFill('solid', fgColor='F8CBAD')   # oranžová – konec v listopadu
 FILL_DEC = PatternFill('solid', fgColor='FFE699')   # žlutá – konec v prosinci
+FILL_HAS = PatternFill('solid', fgColor='C6EFCE')   # zelená – zimní pneu už má
 F = 'Arial'
 
 def pd(s):
@@ -118,7 +119,8 @@ for p, d in cars.items():
         typ='Dlouhodobý (Vyfakturuj)' if vfr else 'Krátkodobý (Renteon)',
         cust='; '.join(sorted({x['cust'].strip() for x in vfr})), vfname='; '.join(x['name'].strip() for x in vfr),
         vfend='; '.join(fmt(x['last']) for x in vfr), rem=rem, vin=main['vin'],
-        allseason=bool(re.search(r'peugeot 3008', model, re.I)), tire='; '.join(tire), flags='; '.join(flags)))
+        allseason=bool(re.search(r'peugeot 3008', model, re.I)), tire='; '.join(tire), flags='; '.join(flags),
+        haswinter='ANO' if 'zimn' in low else ''))
 
 need, allseas, early, other = [], [], [], []
 for r in rows:
@@ -168,6 +170,8 @@ def sheet(ws, headers, data, widths, title, end_col):
             c.font = Font(name=F, size=10)
             if isinstance(c.value, dt.date): c.number_format = 'DD.MM.YYYY'
             if fill: c.fill = fill
+        if len(row) >= HAS_COL and ws.cell(3, HAS_COL).value == 'Zimní pneu už má' and row[HAS_COL - 1].value == 'ANO':
+            row[HAS_COL - 1].fill = FILL_HAS; row[HAS_COL - 1].font = Font(name=F, size=10, bold=True)
     for i, w in enumerate(widths, 1): ws.column_dimensions[get_column_letter(i)].width = w
     ws.freeze_panes = 'A4'
     if data:
@@ -177,11 +181,12 @@ def sheet(ws, headers, data, widths, title, end_col):
 
 H = ['SPZ', 'Model', 'SIPP', 'Pobočka', 'Renteon', 'Vlastník', 'Start (opening card)', 'Buyback', 'Typ pronájmu',
      'Odběratel (Vyfakturuj)', 'Pravidelná faktura', 'Poslední pravidelná fakt.', 'Stav v Renteonu', 'Poslední činnost',
-     'Poznámka k pneu', 'Interní poznámka Renteon', 'Ke kontrole', 'VIN']
-W = [11, 34, 7, 8, 8, 9, 12, 11, 22, 28, 30, 16, 12, 22, 26, 40, 40, 20]
+     'Poznámka k pneu', 'Interní poznámka Renteon', 'Ke kontrole', 'VIN', 'Zimní pneu už má']
+W = [11, 34, 7, 8, 8, 9, 12, 11, 22, 28, 30, 16, 12, 22, 26, 40, 40, 20, 12]
+HAS_COL = 19
 BB_COL = 8
 row = lambda r: [r['spz'], r['model'], r['sipp'], r['office'], r['inst'], r['own'], r['first'], r['bb'], r['typ'],
-                 r['cust'], r['vfname'], r['vfend'], r['status'], r['act'], r['tire'], r['rem'], r['flags'], r['vin']]
+                 r['cust'], r['vfname'], r['vfend'], r['status'], r['act'], r['tire'], r['rem'], r['flags'], r['vin'], r['haswinter']]
 
 ws = wb.active; ws.title = 'Přehled'
 sheet(wb.create_sheet('HAVEX'), H, [row(r) for r in hvx], W, f'Zimní pneu – vozidla HAVEX (buyback po {CUT:%d.%m.%Y})', BB_COL)
@@ -200,20 +205,20 @@ sheet(wb.create_sheet('Jiný vlastník'), H, [row(r) for r in sorted(other, key=
 
 ws['A1'] = f'Zimní pneumatiky – přehled (stav k {TODAY:%d.%m.%Y})'; ws['A1'].font = Font(name=F, bold=True, size=14)
 ws.append([])
-ws.append(['', 'Krátkodobé (Renteon)', 'Dlouhodobé (Vyfakturuj)', 'Celkem', f'Končí v listopadu {YEAR}', f'Končí v prosinci {YEAR}'])
+ws.append(['', 'Krátkodobé (Renteon)', 'Dlouhodobé (Vyfakturuj)', 'Celkem', f'Končí v listopadu {YEAR}', f'Končí v prosinci {YEAR}', 'Zimní už má', 'Zbývá nasadit'])
 for c in ws[3]: c.font = Font(name=F, bold=True, color='FFFFFF'); c.fill = HDR
 rng = lambda sh, col, a, b: f'COUNTIFS({sh}!{col}:{col},">="&DATE({a.year},{a.month},1),{sh}!{col}:{col},"<"&DATE({b.year},{b.month},1))'
 for i, name in enumerate(['HAVEX', 'ACJ'], start=4):
     ws.append([name, f'=COUNTIF({name}!I:I,"Krátkodobý*")', f'=COUNTIF({name}!I:I,"Dlouhodobý*")', f'=B{i}+C{i}',
-               '=' + rng(name, 'H', *NOV), '=' + rng(name, 'H', *DEC)])
-ws.append(['Celkem v Renteonu', '=B4+B5', '=C4+C5', '=D4+D5', '=E4+E5', '=F4+F5'])
+               '=' + rng(name, 'H', *NOV), '=' + rng(name, 'H', *DEC), f'=COUNTIF({name}!S:S,"ANO")', f'=D{i}-G{i}'])
+ws.append(['Celkem v Renteonu', '=B4+B5', '=C4+C5', '=D4+D5', '=E4+E5', '=F4+F5', '=G4+G5', '=H4+H5'])
 MR = "'Mimo Renteon (Vyfakturuj)'"
-ws.append(['Mimo Renteon – potřebují', '', f'=COUNTIF({MR}!H:H,"ANO")', '=C7', '=' + rng(MR, 'G', *NOV), '=' + rng(MR, 'G', *DEC)])
-ws.append(['Celkem zimní pneu', '=B6', '=C6+C7', '=B8+C8', '=E6+E7', '=F6+F7'])
+ws.append(['Mimo Renteon – potřebují', '', f'=COUNTIF({MR}!H:H,"ANO")', '=C7', '=' + rng(MR, 'G', *NOV), '=' + rng(MR, 'G', *DEC), 0, '=D7-G7'])
+ws.append(['Celkem zimní pneu', '=B6', '=C6+C7', '=B8+C8', '=E6+E7', '=F6+F7', '=G6+G7', '=H6+H7'])
 for r in ws.iter_rows(min_row=4, max_row=8):
     for c in r: c.font = Font(name=F, bold=(c.row == 8))
-ws['E3'].fill = FILL_NOV; ws['F3'].fill = FILL_DEC
-for c in (ws['E3'], ws['F3']): c.font = Font(name=F, bold=True)
+ws['E3'].fill = FILL_NOV; ws['F3'].fill = FILL_DEC; ws['G3'].fill = FILL_HAS
+for c in (ws['E3'], ws['F3'], ws['G3']): c.font = Font(name=F, bold=True)
 notes = [
     'Pravidla:',
     '• Zdroj: aktivní vozidla v CZ Renteonu (rxauto.s3) a SK Renteonu (cwslovakia.s6), aktivní pravidelné faktury ve Vyfakturuj (firma RX Auto, s.r.o.).',
@@ -224,13 +229,14 @@ notes = [
     '• Start (opening card) = datum první činnosti vozu v Renteonu; u aut v CZ i SK Renteonu je použito dřívější.',
     '• Barvy: oranžová = buyback (u aut mimo Renteon poslední pravidelná faktura) v listopadu, žlutá = v prosinci.',
     '• Vozidla v obou Renteonech jsou uvedena jednou; při rozdílném buybacku je použit pozdější a auto je označeno „Ke kontrole“.',
+    '• „Zimní pneu už má“ (zeleně) = interní poznámka v Renteonu zmiňuje zimní pneu (např. nová ACJ auta ze 21.–22.10. se štítkem „Zimní pneu“).',
     '• Vynechána vozidla fakturovaná na HAVEX Mobility s.r.o. a FAM (Fábián).',
     '• Poslední pravidelná faktura: u ukončení „podle počtu dokladů“ = příští faktura + (zbývající počet − 1) měsíců.',
 ]
 for i, n in enumerate(notes, start=10):
     ws.cell(i, 1, n).font = Font(name=F, bold=(i == 10), size=10)
 ws.column_dimensions['A'].width = 28
-for col in 'BCDEF': ws.column_dimensions[col].width = 22
+for col in 'BCDEFGH': ws.column_dimensions[col].width = 22
 
 OUT.mkdir(exist_ok=True)
 out = OUT / f'{TODAY:%Y-%m-%d}_Zimni_pneu_prehled.xlsx'
@@ -240,4 +246,5 @@ print('HAVEX', len(hvx), 'ACJ', len(acj), 'mimo Renteon', len(vfonly), sum(r['ne
       'nepotřebují', len(allseas) + len(early), 'jiný vlastník', len(other))
 for nm, lst, f in (('HAVEX', hvx, 'bb'), ('ACJ', acj, 'bb'), ('mimo', vfonly, 'last')):
     print(nm, 'listopad', sum(1 for r in lst if end_fill(r[f]) is FILL_NOV), 'prosinec', sum(1 for r in lst if end_fill(r[f]) is FILL_DEC))
+print('už mají zimní:', [r['spz'] for r in hvx + acj if r['haswinter']])
 print('bez opening card:', [r['spz'] for r in hvx + acj if not r['first']])

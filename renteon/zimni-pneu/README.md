@@ -20,4 +20,5 @@ Excel s auty, která potřebují zimní pneu (buyback po 1.11.), rozdělený na 
 - Vynechává auta fakturovaná na HAVEX Mobility a FAM (Fábián).
 - Peugeot 3008 = celoroční pneu.
 - Nová auta bez štítku HVX/ACJ v interní poznámce padají do listu „Jiný vlastník“.
+- „Zimní pneu už má“ = interní poznámka v Renteonu obsahuje „zimn…“ (štítek „Zimní pneu“, „převzato na zimních“).
 - `data/` a `output/` jsou v `.gitignore` (jména klientů).
