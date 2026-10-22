@@ -28,7 +28,7 @@ def agg(g):
     return pd.Series({
         'aut': g.spz.nunique(), 'aut_roky': round(dny / 365, 1),
         'vynos': g.vynos_celkem.sum(), 'z_toho_kratkodobe': g.vynos_renteon.sum(),
-        'leasing': g.leasing.sum() + g.carnetto.sum(), 'pojisteni': g.pojisteni.sum(), 'servis': g.servis_opravy.sum(), 'palivo': g.palivo.sum(),
+        'leasing': g.leasing.sum(), 'pojisteni': g.pojisteni.sum(), 'servis': g.servis_opravy.sum(), 'palivo': g.palivo.sum(),
         'naklady': g.naklady_celkem.sum(), 'vysledek': g.vysledek.sum(),
         'marze_pct': round(100 * g.vysledek.sum() / max(1, g.vynos_celkem.sum()), 1),
         'vysledek_auto_mesic': round(g.vysledek.sum() / dny * 30.4) if dny else None,

@@ -21,7 +21,7 @@ for c in ['dny_kratkodobe', 'dny_dlouhodobe', 'dny_interni', 'dny_volne']:
     d[c] = d[c].fillna(0)
 d['dny'] = d.dny_kratkodobe + d.dny_dlouhodobe + d.dny_interni + d.dny_volne
 d['gfar'] = d.sipp == 'GFAR'
-d['leasing_vse'] = d.leasing + d.carnetto
+d['leasing_vse'] = d.leasing  # pl_auta.leasing už obsahuje Carnetto půjčovné, pojisteni i Carnetto ČGP
 ren = d[d.sipp.notna() & ~d.spz.str.startswith('(') & (d.dny >= 30)]
 ren = ren[(ren.poznamka.fillna('') != 'bez leasingu v datech') | ren.gfar]
 a = ren.groupby('spz').agg(model=('model', 'first'), sipp=('sipp', 'first'), pobocka=('pobocka', 'last'), dny=('dny', 'sum'),
