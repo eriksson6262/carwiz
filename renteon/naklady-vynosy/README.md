@@ -23,3 +23,10 @@ neměl (porovnání se smlouvami po SPZ z Podrobného přehledu rezervace, `data
 fakturované z Vyfakturuj RX Auto SK (`data/doplneni_vyfakturuj_sk.csv`, € × 24,3; např. 8H02853). Celkem +1,04 mil. Kč za 2025–2026
 (PRG +571 tis., OSR +152 tis., BTS +316 tis.). Do budoucna: v `build_pl.py` brát výnosy Renteonu po SPZ smlouvy bez ohledu na flotilu
 a exportovat i Vyfakturuj RX Auto SK.
+
+**Historie 05/2020–12/2023 (23. 10. 2026):** `python scripts/leasing_historie.py` (leasing po SPZ a měsících z HAVEX přehledu zápůjček,
+list „Vozy“, poslední příloha od M. Dvořákové → `data/leasing_historie.csv`; ověřeno proti 2024–2025: shoda do 2 %),
+výnosy Renteon po SPZ (`data/renteon_historie.csv`, Podrobný přehled rezervace) a Vyfakturuj RX Auto CZ (`data/vyfakturuj_historie.csv`,
+druh vyf / ga = GLOBAL ASSISTANCE → OSR / havex = zpětná fakturace), pak `python historie_pl.py --merge` (po `oprava_vynosu.py`).
+Pojištění (Kooperativa až od X/2023, Generali od IX/2023), servisy, palivo a nájmy poboček pro 2020–2023 v poště nejsou → odhad podle sazeb 2024.
+Bez prodejů aut (výslovně jen pronájem).
