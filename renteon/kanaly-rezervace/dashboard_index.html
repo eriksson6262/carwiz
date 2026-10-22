@@ -1,0 +1,381 @@
+<style>
+#dash-root { --dash-gutter: var(--cds-pad-lg); }
+.kr { font-family: var(--font-anthropic-sans); color: var(--color-fg); max-width: 1200px; margin-inline: auto; }
+.kr h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0 0 var(--cds-gap-xs); }
+.kr .lead { color: var(--color-fg-muted); font-size: var(--cds-font-size-body); margin: 0 0 var(--cds-gap-md); max-width: 60rem; }
+.kr .bar { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; margin-bottom: var(--cds-gap-lg); }
+.kr .seg { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; }
+.kr .seg button { font: inherit; font-size: var(--cds-font-size-body); background: transparent; color: var(--color-fg); border: 0; padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
+.kr .seg button[aria-pressed=true] { background: var(--color-panel); font-weight: var(--cds-font-weight-medium); box-shadow: inset 0 -2px 0 var(--color-fg); }
+.kr .note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.kr .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-lg); }
+.kr .tile, .kr .card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; }
+.kr .tile .lbl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.kr .tile .val { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; margin: var(--cds-gap-xs) 0; min-height: 1.3em; }
+.kr .tile .sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+.kr h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-xl) 0 var(--cds-gap-sm); }
+.kr h3 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
+.kr .card > .note { margin: 0 0 var(--cds-gap-md); }
+.kr .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+.kr .chart { position: relative; min-height: 240px; }
+.kr .tw { overflow: auto; max-height: 34rem; }
+.kr table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-body); font-variant-numeric: tabular-nums; }
+.kr th { position: sticky; top: 0; background: var(--color-panel); text-align: right; font-weight: var(--cds-font-weight-medium); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.kr th button { all: unset; cursor: pointer; }
+.kr td { text-align: right; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.kr th:first-child, .kr td:first-child { text-align: left; }
+.kr td.inbar { position: relative; min-width: 7rem; }
+.kr td.inbar span.b { position: absolute; left: var(--cds-pad-sm); top: 50%; height: 8px; transform: translateY(-50%); border-radius: 4px; background: var(--cds-chart-muted); opacity: .55; }
+.kr td.inbar span.t { position: relative; }
+.kr tr.prime td:first-child { font-weight: var(--cds-font-weight-medium); }
+.kr tr.prime td.inbar span.b { background: var(--cds-chart-status-critical); opacity: .35; }
+.kr .tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; display: none; z-index: 2; }
+.kr .tip .h { color: var(--cds-text-secondary); }
+.kr .lg { display: flex; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-bottom: var(--cds-gap-xs); }
+.kr .lg i { display: inline-block; width: .7rem; height: .7rem; border-radius: 2px; margin-right: .3rem; vertical-align: -1px; }
+.kr .fail { display: flex; align-items: center; justify-content: center; gap: .4rem; min-height: 200px; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.kr .fail::before { content: ''; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+.kr [data-dash-source-state=empty] { color: transparent; }
+.kr [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+.kr ol.opp { margin: 0; padding-left: 1.2rem; }
+.kr ol.opp li { margin-bottom: var(--cds-gap-sm); }
+.kr ol.opp b.v { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-heading); }
+</style>
+
+<div class="kr">
+  <h1 id="top">Kanály rezervací</h1>
+  <p class="lead" id="takeaway"><span class="dash-skeleton">—</span></p>
+
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Pobočka" id="seg">
+      <button data-p="PRG" aria-pressed="true">Praha</button>
+      <button data-p="OSR" aria-pressed="false">Ostrava</button>
+      <button data-p="BTS" aria-pressed="false">Bratislava</button>
+    </div>
+    <span class="note">Smlouvy s výdejem X/2025 – IX/2026, bez DPH, bez škod a pokut. Praha a Ostrava v Kč, Bratislava v €.</span>
+  </div>
+
+  <div class="tiles" id="tiles">
+    <div class="tile"><div class="lbl">Smluv za 12 měsíců</div><div class="val dash-skeleton" data-k="smluv">—</div><div class="sub">zrušeno <span data-k="zruseno">—</span></div></div>
+    <div class="tile"><div class="lbl">Výnos</div><div class="val dash-skeleton" data-k="vynos">—</div><div class="sub"><span data-k="dni">—</span> dní pronájmu</div></div>
+    <div class="tile"><div class="lbl">Přímé rezervace (web + pobočka)</div><div class="val dash-skeleton" data-k="prime_smluv_pct">—</div><div class="sub">smluv · <span data-k="prime_vynos_pct">—</span> výnosu</div></div>
+    <div class="tile"><div class="lbl">Výnos / den – přímý web</div><div class="val dash-skeleton" data-k="web_den">—</div><div class="sub">brokeři Ø <span data-k="broker_den">—</span></div></div>
+    <div class="tile"><div class="lbl">Doplňkové pojištění</div><div class="val dash-skeleton" data-k="poj_pct">—</div><div class="sub">smluv · <span data-k="poj_na_smlouvu">—</span> / smlouvu</div></div>
+  </div>
+
+  <h2 id="prilezitosti">Kde jsou peníze navíc</h2>
+  <div class="card">
+    <p class="note">Odhad za rok při stejném objemu smluv. Předpoklady jsou u každého bodu.</p>
+    <ol class="opp" id="opp" data-source="prilezitosti"><li class="dash-skeleton">—</li></ol>
+  </div>
+
+  <h2 id="kanaly">Kanály</h2>
+  <div class="card">
+    <h3>Smlouvy a výnos podle kanálu</h3>
+    <p class="note">Výnos / den = vše, co je na smlouvě v Renteonu (nájem, pojištění, doplňky, poplatky) děleno dny. U brokerů s netto ceníkem je to už po provizi. Storno = zrušené z (zrušené + uskutečněné).</p>
+    <div class="tw">
+      <table id="tbl" data-source="kanaly" data-row-key="pobocka,kanal">
+        <thead><tr>
+          <th data-field="kanal"><button data-s="kanal">Kanál</button></th>
+          <th data-field="smluv"><button data-s="smluv">Smluv</button></th>
+          <th data-field="podil_smluv_pct"><button data-s="podil_smluv_pct">Podíl</button></th>
+          <th data-field="vynos"><button data-s="vynos">Výnos</button></th>
+          <th data-field="vynos_den"><button data-s="vynos_den">Výnos / den</button></th>
+          <th data-field="prum_delka"><button data-s="prum_delka">Ø dní</button></th>
+          <th data-field="predstih_median"><button data-s="predstih_median">Předstih (medián dní)</button></th>
+          <th data-field="storno_pct"><button data-s="storno_pct">Storno</button></th>
+          <th data-field="upsell_smlouva"><button data-s="upsell_smlouva">Doplňky / smlouvu</button></th>
+          <th data-field="poj_upsell_pct"><button data-s="poj_upsell_pct">Doplň. pojištění</button></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2 id="sezona">Sezóna a flotila</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Smlouvy po měsících</h3>
+      <p class="note">Podle měsíce výdeje auta.</p>
+      <div class="lg"><span><i style="background:var(--cds-chart-status-critical)"></i>přímé</span><span><i style="background:var(--cds-chart-muted)"></i>brokeři</span></div>
+      <div class="chart" id="ch-mes" data-source="mesice"></div>
+    </div>
+    <div class="card">
+      <h3>Vytížení flotily</h3>
+      <p class="note">Dny krátkodobých smluv v Renteonu / (Ø aut ve flotile pronájmu × dny v měsíci). Auta pronajatá dlouhodobě mimo Renteon číslo snižují.</p>
+      <div class="chart" id="ch-vyt" data-source="mesice"></div>
+    </div>
+  </div>
+
+  <h2 id="doplnky">Doplňky a poplatky</h2>
+  <div class="card">
+    <h3>Podíl smluv s položkou – pobočky vedle sebe</h3>
+    <p class="note">„Přidáno na přepážce“ = cokoli, co přibylo až při výdeji (pojištění, sedačky, řidič, výjezd…).</p>
+    <div class="tw">
+      <table id="tbl-dop" data-source="doplnky_srovnani" data-row-key="polozka">
+        <thead><tr>
+          <th data-field="polozka">Položka</th>
+          <th data-field="PRG">Praha</th>
+          <th data-field="OSR">Ostrava</th>
+          <th data-field="BTS">Bratislava</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2 id="cena">Kdy a na jak dlouho</h2>
+  <div class="grid">
+    <div class="card"><h3>Výnos / den podle délky pronájmu</h3><p class="note">Sloupec = výnos na den, popisek = počet smluv.</p><div class="chart" id="ch-delka" data-source="delka"></div></div>
+    <div class="card"><h3>Výnos / den podle předstihu rezervace</h3><p class="note">Dny mezi vytvořením rezervace a výdejem.</p><div class="chart" id="ch-pred" data-source="predstih"></div></div>
+    <div class="card"><h3>Výnos / den podle kategorie</h3><p class="note">Kategorie s aspoň 15 smlouvami.</p><div class="chart" id="ch-sipp" data-source="sipp"></div></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const NAZ = { PRG: 'Praha', OSR: 'Ostrava', BTS: 'Bratislava' };
+  const POL = { poj_upsell: 'Doplňkové pojištění', zahranici: 'Výjezd do zahraničí', znamka: 'Dálniční známka', ridic: 'Další řidič',
+    vybaveni: 'Vybavení (sedačky, GPS…)', vek_ridice: 'Věk řidiče', mimo_hodiny: 'Mimo otevírací dobu', oneway: 'One-way', km: 'Nadlimitní km',
+    palivo: 'Palivo', ostatni: 'Ostatní', skody: 'Škody', pokuty: 'Pokuty', pult: 'Přidáno na přepážce' };
+  const n = v => (v == null || v === '' ? NaN : Number(v));
+  const fInt = d3.format(',.0f'), fPct = v => d3.format('.1f')(v).replace('.', ',') + ' %';
+  const cur = p => (p === 'BTS' ? '€' : 'Kč');
+  const money = (v, p) => {
+    if (!isFinite(v)) return '—';
+    const s = Math.abs(v) >= 100000 ? new Intl.NumberFormat('cs', { notation: 'compact', maximumFractionDigits: 1 }).format(v) : fInt(v).replace(/,/g, ' ');
+    return s + ' ' + cur(p);
+  };
+  const num = v => (isFinite(v) ? fInt(v).replace(/,/g, ' ') : '—');
+  const dec = v => (isFinite(v) ? d3.format('.1f')(v).replace('.', ',') : '—');
+  window.__kr = window.__kr || { p: 'PRG', sort: 'vynos', dir: -1 };
+  const S = window.__kr;
+
+  // Souhrn za pobočku
+  dash.calc('souhrn', {
+    inputs: ['kanaly', 'doplnky'], title: 'Souhrn za pobočku',
+    description: 'Součty smluv, výnosu a dní za pobočku; přímé = web + pobočka; výnos/den přímého webu vs vážený průměr brokerů; doplňkové pojištění.',
+    fn: (kanaly, doplnky) => ['PRG', 'OSR', 'BTS'].map(p => {
+      const k = kanaly.filter(r => r.pobocka === p), sum = (a, f) => a.reduce((s, r) => s + Number(r[f] || 0), 0);
+      const pr = k.filter(r => r.prime === 'True'), br = k.filter(r => r.prime !== 'True'), web = k.filter(r => r.kanal === 'Přímo – web');
+      const poj = doplnky.find(r => r.pobocka === p && r.polozka === 'poj_upsell') || {};
+      return { pobocka: p, smluv: sum(k, 'smluv'), zruseno: sum(k, 'zruseno'), vynos: sum(k, 'vynos'), dni: sum(k, 'dni'),
+        prime_smluv_pct: 100 * sum(pr, 'smluv') / sum(k, 'smluv'), prime_vynos_pct: 100 * sum(pr, 'vynos') / sum(k, 'vynos'),
+        web_den: sum(web, 'vynos') / sum(web, 'dni'), broker_den: sum(br, 'vynos') / sum(br, 'dni'),
+        poj_pct: Number(poj.pct_smluv), poj_na_smlouvu: Number(poj.na_smlouvu) };
+    })
+  });
+
+  // Doplňky – pobočky vedle sebe
+  dash.calc('doplnky_srovnani', {
+    inputs: ['doplnky'], title: 'Doplňky – srovnání poboček', description: 'Podíl smluv s danou položkou (%) pro Prahu, Ostravu a Bratislavu.',
+    fn: (doplnky) => {
+      const m = {};
+      for (const r of doplnky) { (m[r.polozka] = m[r.polozka] || { polozka: r.polozka })[r.pobocka] = Number(r.pct_smluv); }
+      return Object.values(m);
+    }
+  });
+
+  // Příležitosti
+  dash.calc('prilezitosti', {
+    inputs: ['kanaly', 'doplnky'], title: 'Odhad příležitostí',
+    description: 'Roční odhad: (1) doplňkové pojištění v OSR a BTS na úroveň Prahy, (2) +5 p. b. přímých rezervací v Praze místo brokerů, (3) storna přímého webu na úroveň brokerů.',
+    fn: (kanaly, doplnky) => {
+      const sum = (a, f) => a.reduce((s, r) => s + Number(r[f] || 0), 0), out = [];
+      const pj = p => doplnky.find(r => r.pobocka === p && r.polozka === 'poj_upsell');
+      const N = p => sum(kanaly.filter(r => r.pobocka === p), 'smluv');
+      const prg = pj('PRG');
+      for (const p of ['OSR', 'BTS']) {
+        const x = pj(p), pct = Number(x.pct_smluv), naPoj = Number(x.celkem) / (pct / 100 * N(p));
+        out.push({ id: 'poj_' + p, pobocka: p, odhad: (Number(prg.pct_smluv) - pct) / 100 * N(p) * naPoj, z: pct, na: Number(prg.pct_smluv), kus: naPoj });
+      }
+      const k = kanaly.filter(r => r.pobocka === 'PRG'), br = k.filter(r => r.prime !== 'True'), web = k.filter(r => r.kanal === 'Přímo – web');
+      const dWeb = sum(web, 'vynos') / sum(web, 'dni'), dBr = sum(br, 'vynos') / sum(br, 'dni'), delka = sum(br, 'dni') / sum(br, 'smluv');
+      out.push({ id: 'prime_PRG', pobocka: 'PRG', odhad: 0.05 * N('PRG') * delka * (dWeb - dBr), z: dBr, na: dWeb, kus: delka });
+      const wz = web.reduce((s, r) => s + Number(r.zruseno), 0), ws = sum(web, 'smluv'), bz = sum(br, 'zruseno'), bs = sum(br, 'smluv');
+      const stWeb = wz / (wz + ws), stBr = bz / (bz + bs), navic = (wz + ws) * (stWeb - stBr);
+      out.push({ id: 'storno_PRG', pobocka: 'PRG', odhad: navic * sum(web, 'vynos') / ws, z: 100 * stWeb, na: 100 * stBr, kus: navic });
+      return out;
+    }
+  });
+
+  function setP(p) {
+    S.p = p;
+    document.querySelectorAll('#seg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.p === p)));
+    draw();
+  }
+  document.querySelectorAll('#seg button').forEach(b => b.addEventListener('click', () => setP(b.dataset.p)));
+  document.querySelectorAll('#tbl th button').forEach(b => b.addEventListener('click', () => {
+    const s = b.dataset.s; S.dir = S.sort === s ? -S.dir : (s === 'kanal' ? 1 : -1); S.sort = s; draw();
+  }));
+
+  const tip = (box) => { let t = box.querySelector('.tip'); if (!t) { t = document.createElement('div'); t.className = 'tip'; box.appendChild(t); } return t; };
+  const showTip = (box, ev, head, line) => {
+    const t = tip(box); t.replaceChildren();
+    const h = document.createElement('div'); h.className = 'h'; h.textContent = head; t.appendChild(h);
+    const l = document.createElement('div'); l.textContent = line; t.appendChild(l);
+    t.style.display = 'block';
+    const r = box.getBoundingClientRect(); let x = ev.clientX - r.left + 12, y = ev.clientY - r.top + 12;
+    x = Math.min(x, box.clientWidth - t.offsetWidth - 4); t.style.left = Math.max(0, x) + 'px'; t.style.top = y + 'px';
+  };
+  const hideTip = box => { const t = box.querySelector('.tip'); if (t) t.style.display = 'none'; };
+  const fail = (el) => { el.replaceChildren(); const d = document.createElement('div'); d.className = 'fail'; d.textContent = 'Failed to load'; el.appendChild(d); };
+  const cleanAxis = g => g.attr('font-size', null).attr('font-family', null).call(s => s.select('.domain').attr('stroke', 'var(--cds-chart-axis)'))
+    .call(s => s.selectAll('.tick line').attr('stroke', 'var(--cds-chart-grid)')).call(s => s.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)'));
+
+  // Svislé sloupce (kategorie → hodnota) s popiskem počtu smluv
+  function bars(el, rows, xKey, yKey, labKey, p, accent) {
+    el.replaceChildren(); el.classList.remove('dash-skeleton');
+    const W = el.clientWidth || 400, H = 240, m = { t: 22, r: 8, b: 26, l: 8 };
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    const y = d3.scaleLinear([0, d3.max(rows, r => n(r[yKey])) * 1.1], [H - m.b, m.t]);
+    const yAx = svg.append('g').call(d3.axisLeft(y).ticks(4).tickSize(0).tickFormat(v => num(v))).call(cleanAxis);
+    yAx.select('.domain').remove();
+    const lw = d3.max(yAx.selectAll('text').nodes(), t => t.getComputedTextLength()) || 20; m.l = lw + 10; yAx.attr('transform', `translate(${m.l - 4},0)`);
+    const x = d3.scaleBand(rows.map(r => r[xKey]), [m.l, W - m.r]).padding(0.25);
+    svg.append('g').selectAll('line').data(y.ticks(4)).join('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', d => y(d)).attr('y2', d => y(d)).attr('stroke', 'var(--cds-chart-grid)');
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', r => x(r[xKey]) + Math.max(0, (x.bandwidth() - 32) / 2)).attr('width', Math.min(32, x.bandwidth()))
+      .attr('y', r => y(n(r[yKey]))).attr('height', r => y(0) - y(n(r[yKey]))).attr('rx', 4)
+      .attr('fill', r => accent && accent(r) ? 'var(--cds-chart-status-critical)' : dash.colors[0])
+      .on('mousemove', (ev, r) => showTip(el, ev, r[xKey], `${dec(n(r[yKey]))} ${cur(p)} / den · ${num(n(r[labKey]))} smluv`))
+      .on('mouseleave', () => hideTip(el));
+    if (labKey) svg.append('g').selectAll('text').data(rows).join('text').attr('x', r => x(r[xKey]) + x.bandwidth() / 2).attr('y', r => y(n(r[yKey])) - 5)
+      .attr('text-anchor', 'middle').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text(r => num(n(r[labKey])));
+    const xa = svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickSize(0).tickPadding(8)).call(cleanAxis);
+    if (x.bandwidth() < 34) xa.selectAll('text').filter((d, i) => i % 2).remove();
+  }
+
+  function draw() {
+    const p = S.p;
+    // souhrn a takeaway
+    const su = dash.data('souhrn'), suRow = su.status === 'ok' ? su.data.find(r => r.pobocka === p) : null;
+    document.querySelectorAll('#tiles [data-k]').forEach(el => {
+      const k = el.dataset.k;
+      el.setAttribute('data-source', 'souhrn'); el.setAttribute('data-field', k); el.setAttribute('data-where', 'pobocka=' + p);
+      if (!suRow) { el.textContent = '—'; return; }
+      el.classList.remove('dash-skeleton');
+      const v = suRow[k];
+      el.textContent = /pct/.test(k) ? fPct(v) : /vynos$|_den|na_smlouvu/.test(k) ? money(v, p) : num(v);
+    });
+    const tk = document.getElementById('takeaway');
+    if (su.status === 'ok') {
+      const P = su.data.find(r => r.pobocka === 'PRG');
+      tk.replaceChildren();
+      const parts = ['V Praze jde přímo jen ', fPct(P.prime_smluv_pct), ' smluv, přitom přímý web vynáší ', money(P.web_den, 'PRG'), ' na den proti ',
+        money(P.broker_den, 'PRG'), ' u brokerů. Největší rezervy: přímé rezervace, doplňkové pojištění v Ostravě a Bratislavě a storna z vlastního webu.'];
+      const marks = [null, 'prime_smluv_pct', null, 'web_den', null, 'broker_den', null];
+      parts.forEach((t, i) => { if (marks[i]) { const s = document.createElement('span'); s.textContent = t; s.setAttribute('data-source', 'souhrn'); s.setAttribute('data-field', marks[i]); s.setAttribute('data-where', 'pobocka=PRG'); tk.appendChild(s); } else tk.appendChild(document.createTextNode(t)); });
+    }
+
+    // příležitosti
+    const op = document.getElementById('opp'), od = dash.data('prilezitosti');
+    if (od.status === 'error') fail(op);
+    else if (od.status === 'ok') {
+      op.replaceChildren();
+      const txt = {
+        poj_OSR: r => [`Doplňkové pojištění v Ostravě z ${fPct(r.z)} na pražských ${fPct(r.na)} smluv`, `Ø ${money(r.kus, 'OSR')} za prodané pojištění. Školení přepážky, provize z doplňkového prodeje jako v Praze, nabídka hned v potvrzení rezervace.`],
+        poj_BTS: r => [`Doplňkové pojištění v Bratislavě z ${fPct(r.z)} na pražských ${fPct(r.na)} smluv`, `Ø ${money(r.kus, 'BTS')} za prodané pojištění. Stejný postup jako Ostrava.`],
+        prime_PRG: r => [`Praha: o 5 p. b. víc přímých smluv místo brokerů`, `Přímý web ${money(r.na, 'PRG')}/den vs. brokeři ${money(r.z, 'PRG')}/den, Ø ${dec(r.kus)} dne. Cesta: Google profil a recenze letiště, sleva/QR pro vracející se, brand kampaň „Carwiz Prague Airport“.`],
+        storno_PRG: r => [`Praha: storna z vlastního webu z ${fPct(r.z)} na úroveň brokerů ${fPct(r.na)}`, `≈ ${num(r.kus)} smluv navíc. Záloha nebo platba předem při rezervaci na webu, bezplatné storno jen do 48 h před výdejem.`],
+      };
+      for (const r of od.data) {
+        const li = document.createElement('li'); li.setAttribute('data-source', 'prilezitosti'); li.setAttribute('data-where', 'id=' + r.id);
+        const [h, d] = txt[r.id](r);
+        const b = document.createElement('b'); b.className = 'v'; b.textContent = '+' + money(r.odhad, r.pobocka); b.setAttribute('data-source', 'prilezitosti'); b.setAttribute('data-field', 'odhad'); b.setAttribute('data-where', 'id=' + r.id);
+        li.append(b, document.createTextNode(' / rok — ' + h + '. '));
+        const s = document.createElement('span'); s.className = 'note'; s.textContent = d; li.appendChild(s);
+        op.appendChild(li);
+      }
+    }
+
+    // tabulka kanálů
+    const kd = dash.data('kanaly'), tb = document.querySelector('#tbl tbody');
+    document.querySelectorAll('#tbl th').forEach(th => th.setAttribute('aria-sort', th.dataset.field === S.sort ? (S.dir > 0 ? 'ascending' : 'descending') : 'none'));
+    if (kd.status === 'ok') {
+      let rows = kd.data.filter(r => r.pobocka === p && (n(r.smluv) >= 5 || r.prime === 'True'));
+      rows.sort((a, b) => S.sort === 'kanal' ? S.dir * a.kanal.localeCompare(b.kanal, 'cs') : S.dir * ((n(a[S.sort]) || 0) - (n(b[S.sort]) || 0)));
+      const mx = d3.max(rows, r => n(r.vynos_den)) || 1;
+      tb.replaceChildren();
+      for (const r of rows) {
+        const tr = document.createElement('tr'); if (r.prime === 'True') tr.className = 'prime';
+        const cells = [r.kanal, num(n(r.smluv)), fPct(n(r.podil_smluv_pct)), money(n(r.vynos), p), null, dec(n(r.prum_delka)), num(n(r.predstih_median)), fPct(n(r.storno_pct)), money(n(r.upsell_smlouva), p), fPct(n(r.poj_upsell_pct))];
+        cells.forEach((c, i) => {
+          const td = document.createElement('td');
+          if (i === 4) { td.className = 'inbar'; const b = document.createElement('span'); b.className = 'b'; b.style.width = `calc((100% - 2 * var(--cds-pad-sm)) * ${n(r.vynos_den) / mx})`; const t = document.createElement('span'); t.className = 't'; t.textContent = money(n(r.vynos_den), p); td.append(b, t); }
+          else td.textContent = c;
+          tr.appendChild(td);
+        });
+        tb.appendChild(tr);
+      }
+    } else if (kd.status === 'error') { tb.replaceChildren(); }
+
+    // měsíce
+    const md = dash.data('mesice'), em = document.getElementById('ch-mes'), ev = document.getElementById('ch-vyt');
+    if (md.status === 'error') { fail(em); fail(ev); }
+    else if (md.status === 'ok') {
+      const rows = md.data.filter(r => r.pob_out === p).sort((a, b) => a.mesic.localeCompare(b.mesic));
+      const lab = m => ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'][+m.slice(5) - 1] + (m.slice(5) === '01' || m === rows[0].mesic ? ' ' + m.slice(2, 4) : '');
+      // stacked bars
+      em.replaceChildren();
+      const W = em.clientWidth || 400, H = 240, mg = { t: 10, r: 8, b: 26, l: 34 };
+      const svg = d3.select(em).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+      const y = d3.scaleLinear([0, d3.max(rows, r => n(r.smluv)) * 1.08], [H - mg.b, mg.t]);
+      const yA = svg.append('g').call(d3.axisLeft(y).ticks(4).tickSize(0)).call(cleanAxis); yA.select('.domain').remove();
+      mg.l = (d3.max(yA.selectAll('text').nodes(), t => t.getComputedTextLength()) || 20) + 10; yA.attr('transform', `translate(${mg.l - 4},0)`);
+      const x = d3.scaleBand(rows.map(r => r.mesic), [mg.l, W - mg.r]).padding(0.25), bw = Math.min(32, x.bandwidth()), off = (x.bandwidth() - bw) / 2;
+      svg.append('g').selectAll('line').data(y.ticks(4)).join('line').attr('x1', mg.l).attr('x2', W - mg.r).attr('y1', d => y(d)).attr('y2', d => y(d)).attr('stroke', 'var(--cds-chart-grid)');
+      const g = svg.append('g').selectAll('g').data(rows).join('g');
+      g.append('rect').attr('x', r => x(r.mesic) + off).attr('width', bw).attr('y', r => y(n(r.smluv))).attr('height', r => y(n(r.prime_smluv)) - y(n(r.smluv))).attr('fill', 'var(--cds-chart-muted)').attr('rx', 3);
+      g.append('rect').attr('x', r => x(r.mesic) + off).attr('width', bw).attr('y', r => y(n(r.prime_smluv))).attr('height', r => y(0) - y(n(r.prime_smluv))).attr('fill', 'var(--cds-chart-status-critical)').attr('rx', 3);
+      g.append('rect').attr('x', r => x(r.mesic)).attr('width', x.bandwidth()).attr('y', mg.t).attr('height', H - mg.b - mg.t).attr('fill', 'transparent')
+        .on('mousemove', (e, r) => showTip(em, e, r.mesic, `${num(n(r.smluv))} smluv · přímé ${num(n(r.prime_smluv))} (${fPct(n(r.prime_podil_pct))})`)).on('mouseleave', () => hideTip(em));
+      const xa = svg.append('g').attr('transform', `translate(0,${H - mg.b})`).call(d3.axisBottom(x).tickSize(0).tickPadding(8).tickFormat(lab)).call(cleanAxis);
+      if (x.bandwidth() < 30) xa.selectAll('text').filter((d, i) => i % 2).remove();
+      // vytížení line
+      ev.replaceChildren();
+      const W2 = ev.clientWidth || 400, mg2 = { t: 14, r: 40, b: 26, l: 34 };
+      const s2 = d3.select(ev).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W2} ${H}`);
+      const y2 = d3.scaleLinear([0, 100], [H - mg2.b, mg2.t]);
+      const yA2 = s2.append('g').call(d3.axisLeft(y2).ticks(5).tickSize(0).tickFormat(v => v + ' %')).call(cleanAxis); yA2.select('.domain').remove();
+      mg2.l = (d3.max(yA2.selectAll('text').nodes(), t => t.getComputedTextLength()) || 20) + 10; yA2.attr('transform', `translate(${mg2.l - 4},0)`);
+      const x2 = d3.scalePoint(rows.map(r => r.mesic), [mg2.l + 8, W2 - mg2.r]);
+      s2.append('g').selectAll('line').data(y2.ticks(5)).join('line').attr('x1', mg2.l).attr('x2', W2 - mg2.r).attr('y1', d => y2(d)).attr('y2', d => y2(d)).attr('stroke', 'var(--cds-chart-grid)');
+      s2.append('path').datum(rows).attr('fill', 'none').attr('stroke', dash.colors[0]).attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
+        .attr('d', d3.line().x(r => x2(r.mesic)).y(r => y2(n(r.vytizeni_pct))));
+      s2.append('g').selectAll('circle').data(rows).join('circle').attr('cx', r => x2(r.mesic)).attr('cy', r => y2(n(r.vytizeni_pct))).attr('r', 3.5).attr('fill', dash.colors[0])
+        .on('mousemove', (e, r) => showTip(ev, e, r.mesic, `${fPct(n(r.vytizeni_pct))} · Ø ${dec(n(r.aut))} aut · ${num(n(r.dni))} dní`)).on('mouseleave', () => hideTip(ev));
+      const last = rows[rows.length - 1];
+      s2.append('text').attr('x', x2(last.mesic) + 6).attr('y', y2(n(last.vytizeni_pct)) + 4).attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text(fPct(n(last.vytizeni_pct)));
+      const xb = s2.append('g').attr('transform', `translate(0,${H - mg2.b})`).call(d3.axisBottom(x2).tickSize(0).tickPadding(8).tickFormat(lab)).call(cleanAxis);
+      xb.select('.domain').remove();
+      if (W2 < 520) xb.selectAll('text').filter((d, i) => i % 2).remove();
+    }
+
+    // doplňky
+    const dd = dash.data('doplnky_srovnani'), db = document.querySelector('#tbl-dop tbody');
+    if (dd.status === 'ok') {
+      db.replaceChildren();
+      const order = ['pult', 'poj_upsell', 'zahranici', 'znamka', 'ridic', 'vybaveni', 'mimo_hodiny', 'oneway', 'vek_ridice', 'km', 'palivo', 'ostatni', 'skody', 'pokuty'];
+      const rows = order.map(k => dd.data.find(r => r.polozka === k)).filter(Boolean);
+      for (const r of rows) {
+        const tr = document.createElement('tr'); tr.setAttribute('data-key', r.polozka);
+        const c0 = document.createElement('td'); c0.textContent = POL[r.polozka] || r.polozka; tr.appendChild(c0);
+        for (const pp of ['PRG', 'OSR', 'BTS']) { const td = document.createElement('td'); td.textContent = fPct(r[pp]); if (pp === p) td.style.fontWeight = 'var(--cds-font-weight-medium)'; tr.appendChild(td); }
+        db.appendChild(tr);
+      }
+    }
+
+    // délka, předstih, kategorie
+    for (const [id, el, filt] of [['delka', 'ch-delka'], ['predstih', 'ch-pred'], ['sipp', 'ch-sipp', r => n(r.smluv) >= 15]]) {
+      const d = dash.data(id), box = document.getElementById(el);
+      if (d.status === 'error') { fail(box); continue; }
+      if (d.status !== 'ok') continue;
+      let rows = d.data.filter(r => r.pob_out === p && (!filt || filt(r)));
+      if (id === 'sipp') rows.sort((a, b) => n(a.vynos_den) - n(b.vynos_den));
+      bars(box, rows, 'skupina', 'vynos_den', 'smluv', p);
+    }
+  }
+
+  dash.onData(draw);
+})();
+</script>

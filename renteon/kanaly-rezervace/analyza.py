@@ -110,5 +110,8 @@ if __name__ == '__main__':
            'predstih': profil(d, 'predstih_k'), 'sipp': profil(d, 'sipp'), 'doplnky': doplnky(d)}
     for k, v in res.items():
         if isinstance(v, pd.DataFrame):
+            pc = 'pobocka' if 'pobocka' in v.columns else 'pob_out'
+            if 'mena' not in v.columns:
+                v.insert(1, 'mena', v[pc].map(lambda x: '€' if x == 'BTS' else 'Kč'))
             v.to_csv(O / f'{k}.csv', index=False)
     print('OK', {k: len(v) for k, v in res.items() if isinstance(v, pd.DataFrame)})

@@ -20,5 +20,5 @@ předstihu rezervace a kategorie auta. Výnos/den, doplňkový prodej, storna, v
 - Vytíženost = dny krátkodobých smluv v Renteonu / (Ø aut × dny v měsíci). Auta pronajatá dlouhodobě mimo Renteon (Vyfakturuj) ji snižují.
 
 ## Zjištění (22. 10. 2026, X/2025–IX/2026)
-Viz dashboard „Kanály rezervací“. PRG: Rentalcars 43 % smluv / 35 % výnosu za 909 Kč/den, přímý web 16 % / 21 % za 1 210 Kč/den.
+Viz dashboard „Kanály rezervací“ (typ Dashboard, datasety = CSV z `output/`, stránka `dashboard_index.html`). PRG: Rentalcars 43 % smluv / 35 % výnosu za 909 Kč/den, přímý web 16 % / 21 % za 1 210 Kč/den.
 Doplňkové pojištění: PRG 29 % smluv, OSR 24 %, BTS 16 %.
