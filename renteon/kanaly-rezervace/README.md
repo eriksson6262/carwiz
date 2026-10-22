@@ -31,3 +31,11 @@ Doplňkové pojištění: PRG 29 % smluv, OSR 24 %, BTS 16 %.
   Mimo sezónu (I–III) krátkodobé jen 17–21 %, dlouhodobé 33–36 %, interní 20–23 %.
 - Interní („Vnitřní“) trvale ~20 aut flotily pronájmu + ~6 HG v PRG – nutno ověřit, co to je.
 - Vyfakturuj dlouhodobí B2B (bez HAVEX a Fábiána) ~1,2–1,4 mil. Kč měsíčně; typicky 12–17 tis. Kč/auto/měsíc (≈ 400–550 Kč/den) vs krátkodobé ~900 Kč/den.
+
+## Ziskovost podle třídy (23. 10. 2026)
+`python3 tridy.py 2025 2026` – P&L po SPZ z dashboardu „Náklady vs výnosy“ (`data/pl_auta.csv`, asset `pl_auta.csv`) + dny po činnostech
+na SPZ a rok z Renteonu (`data/dny_auta.csv`, stejná klasifikace jako `activities()`). Jen auta s SIPP, ≥ 30 dní v provozu, bez řádků „bez leasingu v datech“.
+Výsledek/auto/měsíc = výsledek / dny provozu × 30,4. V nákladech chybí mzdy, provize brokerů, franšíza a palivo po autech.
+- Auta převážně v dlouhodobém pronájmu (< 20 % dní krátkodobě): ≈ 0 Kč/měsíc; převážně krátkodobá (50–80 %): ≈ +9 tis., > 80 %: ≈ +11,7 tis. Kč/měsíc.
+- Velké třídy: Economy EDAR +6,1 tis., Compact CFAR +5,9 tis., Economy IGAR +5,1 tis., SUV FFAR +5,0 tis., IWAR +3,8 tis., FWAR +2,7 tis. Kč/auto/měsíc.
+- Minibus SVAR +16,8 tis., ale 3 auta a chybí pojištění; GFAR a mini bez leasingu v datech – nespolehlivé.
