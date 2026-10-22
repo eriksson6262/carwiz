@@ -101,8 +101,9 @@
       <div class="chart" id="ch-mes" data-source="mesice"></div>
     </div>
     <div class="card">
-      <h3>Vytížení flotily</h3>
-      <p class="note">Dny krátkodobých smluv v Renteonu / (Ø aut ve flotile pronájmu × dny v měsíci). Auta pronajatá dlouhodobě mimo Renteon číslo snižují.</p>
+      <h3>Na co jsou auta využitá</h3>
+      <p class="note">Podíl dní aut ve flotile pronájmu podle činnosti v Renteonu (prodaná/vrácená auta se nepočítají). Popisek = obsazeno celkem. Bratislava zatím bez dat.</p>
+      <div class="lg" id="lg-vyt"></div>
       <div class="chart" id="ch-vyt" data-source="mesice"></div>
     </div>
   </div>
@@ -331,24 +332,33 @@
         .on('mousemove', (e, r) => showTip(em, e, r.mesic, `${num(n(r.smluv))} smluv · přímé ${num(n(r.prime_smluv))} (${fPct(n(r.prime_podil_pct))})`)).on('mouseleave', () => hideTip(em));
       const xa = svg.append('g').attr('transform', `translate(0,${H - mg.b})`).call(d3.axisBottom(x).tickSize(0).tickPadding(8).tickFormat(lab)).call(cleanAxis);
       if (x.bandwidth() < 30) xa.selectAll('text').filter((d, i) => i % 2).remove();
-      // vytížení line
+      // využití flotily – skládané sloupce podle činnosti
       ev.replaceChildren();
-      const W2 = ev.clientWidth || 400, mg2 = { t: 14, r: 40, b: 26, l: 34 };
-      const s2 = d3.select(ev).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W2} ${H}`);
-      const y2 = d3.scaleLinear([0, 100], [H - mg2.b, mg2.t]);
-      const yA2 = s2.append('g').call(d3.axisLeft(y2).ticks(5).tickSize(0).tickFormat(v => v + ' %')).call(cleanAxis); yA2.select('.domain').remove();
-      mg2.l = (d3.max(yA2.selectAll('text').nodes(), t => t.getComputedTextLength()) || 20) + 10; yA2.attr('transform', `translate(${mg2.l - 4},0)`);
-      const x2 = d3.scalePoint(rows.map(r => r.mesic), [mg2.l + 8, W2 - mg2.r]);
-      s2.append('g').selectAll('line').data(y2.ticks(5)).join('line').attr('x1', mg2.l).attr('x2', W2 - mg2.r).attr('y1', d => y2(d)).attr('y2', d => y2(d)).attr('stroke', 'var(--cds-chart-grid)');
-      s2.append('path').datum(rows).attr('fill', 'none').attr('stroke', dash.colors[0]).attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
-        .attr('d', d3.line().x(r => x2(r.mesic)).y(r => y2(n(r.vytizeni_pct))));
-      s2.append('g').selectAll('circle').data(rows).join('circle').attr('cx', r => x2(r.mesic)).attr('cy', r => y2(n(r.vytizeni_pct))).attr('r', 3.5).attr('fill', dash.colors[0])
-        .on('mousemove', (e, r) => showTip(ev, e, r.mesic, `${fPct(n(r.vytizeni_pct))} · Ø ${dec(n(r.aut))} aut · ${num(n(r.dni))} dní`)).on('mouseleave', () => hideTip(ev));
-      const last = rows[rows.length - 1];
-      s2.append('text').attr('x', x2(last.mesic) + 6).attr('y', y2(n(last.vytizeni_pct)) + 4).attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text(fPct(n(last.vytizeni_pct)));
-      const xb = s2.append('g').attr('transform', `translate(0,${H - mg2.b})`).call(d3.axisBottom(x2).tickSize(0).tickPadding(8).tickFormat(lab)).call(cleanAxis);
-      xb.select('.domain').remove();
-      if (W2 < 520) xb.selectAll('text').filter((d, i) => i % 2).remove();
+      const CIN = [['kratkodobe_pct', 'krátkodobé', dash.colors[0]], ['dlouhodobe_pct', 'dlouhodobé', dash.colors[1]], ['interni_pct', 'interní', dash.colors[2]],
+        ['asistence_pct', 'asistence', dash.colors[3]], ['hoppygo_pct', 'HoppyGo', dash.colors[4]], ['servis_presun_pct', 'servis/přesun', 'var(--cds-chart-reference)'], ['volne_pct', 'volné', 'var(--cds-chart-muted)']];
+      const lgv = document.getElementById('lg-vyt'); lgv.replaceChildren();
+      for (const [, nm, col] of CIN) { const sp = document.createElement('span'); const i = document.createElement('i'); i.style.background = col; sp.append(i, document.createTextNode(nm)); lgv.appendChild(sp); }
+      const vr = rows.filter(r => isFinite(n(r.obsazeno_pct)));
+      if (!vr.length) { const d = document.createElement('div'); d.className = 'note'; d.textContent = 'Pro tuto pobočku zatím nejsou data o činnostech aut.'; ev.appendChild(d); }
+      else {
+        const W2 = ev.clientWidth || 400, mg2 = { t: 18, r: 8, b: 26, l: 34 };
+        const s2 = d3.select(ev).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W2} ${H}`);
+        const y2 = d3.scaleLinear([0, 100], [H - mg2.b, mg2.t]);
+        const yA2 = s2.append('g').call(d3.axisLeft(y2).ticks(5).tickSize(0).tickFormat(v => v + ' %')).call(cleanAxis); yA2.select('.domain').remove();
+        mg2.l = (d3.max(yA2.selectAll('text').nodes(), t => t.getComputedTextLength()) || 20) + 10; yA2.attr('transform', `translate(${mg2.l - 4},0)`);
+        const x2 = d3.scaleBand(vr.map(r => r.mesic), [mg2.l, W2 - mg2.r]).padding(0.25), bw2 = Math.min(32, x2.bandwidth()), of2 = (x2.bandwidth() - bw2) / 2;
+        for (const r of vr) {
+          let acc = 0;
+          for (const [k, nm, col] of CIN) { const v = n(r[k]) || 0; s2.append('rect').attr('x', x2(r.mesic) + of2).attr('width', bw2).attr('y', y2(acc + v)).attr('height', Math.max(0, y2(acc) - y2(acc + v))).attr('fill', col); acc += v; }
+          s2.append('text').attr('x', x2(r.mesic) + x2.bandwidth() / 2).attr('y', y2(n(r.obsazeno_pct)) - 4).attr('text-anchor', 'middle').attr('fill', 'var(--color-fg)').style('font-size', 'var(--cds-font-size-caption)').text(Math.round(n(r.obsazeno_pct)));
+          s2.append('rect').attr('x', x2(r.mesic)).attr('width', x2.bandwidth()).attr('y', mg2.t).attr('height', H - mg2.b - mg2.t).attr('fill', 'transparent')
+            .on('mousemove', e => showTip(ev, e, r.mesic + ' · Ø ' + dec(n(r.aut)) + ' aut', CIN.map(([k, nm]) => nm + ' ' + fPct(n(r[k]) || 0)).join(' · ')))
+            .on('mouseleave', () => hideTip(ev));
+        }
+        const xb = s2.append('g').attr('transform', `translate(0,${H - mg2.b})`).call(d3.axisBottom(x2).tickSize(0).tickPadding(8).tickFormat(lab)).call(cleanAxis);
+        xb.select('.domain').remove();
+        if (x2.bandwidth() < 30) xb.selectAll('text').filter((d, i) => i % 2).remove();
+      }
     }
 
     // doplňky

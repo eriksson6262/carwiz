@@ -76,11 +76,20 @@ def mesice(d):
         'smluv': len(g), 'prime_smluv': int(g.prime.sum()), 'vynos': round(g.vynos.sum()),
         'prime_vynos': round(g[g.prime].vynos.sum()), 'dni': int(g.dni.sum())}), include_groups=False).reset_index()
     m['prime_podil_pct'] = (100 * m.prime_smluv / m.smluv).round(1)
-    f = D / 'flotila.csv'  # Ø aut ve flotile pronájmu (getFleetStateByOfficeInPeriod), volitelné
+    f = D / 'aktivity_CZ.csv'  # skutečné využití flotily z činností aut (collect_renteon.js → activities())
     if f.exists():
-        m = m.merge(pd.read_csv(f), on=['pob_out', 'mesic'], how='left')
-        dnu = pd.to_datetime(m.mesic + '-01').dt.days_in_month
-        m['vytizeni_pct'] = (100 * m.dni / (m.aut * dnu)).round(1)   # dny pronájmu podle měsíce výdeje / kapacita
+        a = pd.read_csv(f); a = a[a.flotila == 'pronajem']
+        p = a.pivot_table(index=['pob', 'mesic'], columns='cinnost', values='dny', aggfunc='sum', fill_value=0)
+        p['kapacita'] = p.sum(axis=1)
+        p = p.reset_index().rename(columns={'pob': 'pob_out'})
+        p['aut'] = (p.kapacita / pd.to_datetime(p.mesic + '-01').dt.days_in_month).round(1)
+        for c in ['kratkodobe', 'dlouhodobe', 'interni', 'servis_presun', 'volne', 'asistence', 'hoppygo']:
+            if c not in p:
+                p[c] = 0
+            p[c + '_pct'] = (100 * p[c] / p.kapacita).round(1)
+        p['obsazeno_pct'] = (p.kratkodobe_pct + p.dlouhodobe_pct + p.interni_pct + p.asistence_pct + p.hoppygo_pct).round(1)
+        keep = ['pob_out', 'mesic', 'aut', 'obsazeno_pct'] + [c for c in p.columns if c.endswith('_pct') and c != 'obsazeno_pct']
+        m = m.merge(p[keep], on=['pob_out', 'mesic'], how='left')
         m['vynos_auto'] = (m.vynos / m.aut).round(0)
     return m
 

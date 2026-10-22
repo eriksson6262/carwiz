@@ -128,3 +128,29 @@ window.RXCH = (() => {
   return { load, month, run, csv, cat };
 })();
 'RXCH ready';
+
+// ---- Skutečné využití flotily (23. 10. 2026) ----
+// Činnosti aut (api/carActivity/getSimpleListForCar, IncludeIdle) pro všechna auta z api/car/getSimpleList,
+// rozpočítané na dny po měsících a pobočkách (OfficeOutCode činnosti). Deaktivace (prodaná/vrácená auta) se nepočítá.
+// Třídy: kratkodobe (STR, VRV), dlouhodobe (LTR, „Dlouhodobka“), interni (Vnitřní), hoppygo, asistence (Global Assistance),
+// servis_presun (Služba, Převod, Přechod…), volne (Líný/Neaktivní, Pozastaveno). ~850 aut ≈ 1 min při 8 paralelních.
+// Výstup jen součty dnů: 'pob,mesic,flotila,cinnost,dny' → data/aktivity_CZ.csv.
+async function activities(from = [2025, 9], to = [2026, 9]) {   // měsíce 0-based: [2025,9] = říjen 2025
+  const $http = angular.element(document.body).injector().get('$http');
+  const c = (await $http.get('api/car/getSimpleList', { params: { pageSize: 5000 } })).data; const cars = c.Items || c;
+  const pd = s => { const m = s && s.match(/(\d+)\.(\d+)\.(\d+)\.(?:\s+(\d+):(\d+))?/); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1], +(m[4] || 0), +(m[5] || 0)) : null; };
+  const A = Date.UTC(from[0], from[1], 1), Z = Date.UTC(to[0], to[1] + 1, 1), DAY = 864e5;
+  const cls = (typ, def) => /Deaktivace/.test(typ) ? null : (typ === 'Pronajmout si' && /STR/.test(def)) || /VRV/.test(typ) ? 'kratkodobe'
+    : (typ === 'Pronajmout si' || /Dlouhodob/.test(def)) ? 'dlouhodobe' : /HoppyGO/.test(def) ? 'hoppygo' : /Global Assist/.test(def) ? 'asistence'
+    : typ === 'Vnitřní' ? 'interni' : /Neaktiv|Pozastav/.test(typ) ? 'volne' : 'servis_presun';
+  const agg = {}; let i = 0;
+  const W = async () => { while (i < cars.length) { const car = cars[i++];
+    const r = (await $http.get('api/carActivity/getSimpleListForCar', { params: { CarId: car.Id, IncludeIdle: true, pageSize: 5000 } })).data;
+    for (const x of (r.Items || r)) { if (x.IsCancelled) continue; const k = cls(x.CarActivityDefinitionTypeName, x.CarActivityDefinitionName); if (!k) continue;
+      let s = pd(x.DateOut), e = pd(x.DateIn) || pd(x.DateEstimatedIn) || Date.now(); if (!s) continue; s = Math.max(s, A); e = Math.min(e, Z);
+      for (let t = s; t < e;) { const d = new Date(t), nm = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1);
+        const key = [x.OfficeOutCode || car.OfficeCode, d.toISOString().slice(0, 7), car.CarFleetName === 'Pronájem vozového parku' ? 'pronajem' : car.CarFleetName, k].join(',');
+        agg[key] = (agg[key] || 0) + (Math.min(e, nm) - t) / DAY; t = nm; } } } };
+  await Promise.all([1, 2, 3, 4, 5, 6, 7, 8].map(W));
+  return 'pob,mesic,flotila,cinnost,dny\n' + Object.entries(agg).sort().map(([k, v]) => k + ',' + v.toFixed(1)).join('\n');
+}
