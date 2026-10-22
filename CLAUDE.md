@@ -9,6 +9,7 @@ Každý projekt má vlastní složku. Do ní patří skripty, šablony, konfigur
 | Složka | Obsah |
 |---|---|
 | `renteon/` | Renteon – ceníky (`renteon/ceniky/`), výnosy a flotila (`renteon/vynosy-flotila/`), hromadné faktury, reklamace plateb, škody, flotila, e-maily Carwiz |
+| `renteon/zimni-pneu/` | Přehled vozidel na zimní pneu (Renteon CZ+SK + pravidelné faktury Vyfakturuj) |
 | `renteon/naklady-vynosy/` | Náklady vs výnosy půjčovny – leasing, Carnetto přefakturace, pojištění, servisy po pobočkách a SPZ |
 | `rxauto-ig/` | Instagram/Facebook RX Auto (Metricool, Canva) |
 | `osek/` | OSEK – úroky z prodlení, měsíční faktura za provizi |
