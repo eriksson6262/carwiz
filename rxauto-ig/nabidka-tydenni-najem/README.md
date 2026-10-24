@@ -18,3 +18,7 @@ Design artifact „RX Auto – Týdenní pronájem BMW, Alfa, Mercedes“ (typ D
 - CLE: `~/Downloads/skody/mb_cle.tar` → `cle_BE040.png`, ořez na bbox, webp 1000 px
 - BMW X3 / X4 (bílé): fotky od Erika (X3 webp, X4 `bmw-x4-my20-index-1.jxl`), pozadí odstraněno `rembg` (isnet-general-use)
 - CLE: ořez na skutečný obrys auta (alfa ≥ 10 – původní PNG mělo neviditelný okraj přes celé plátno), plná šířka karty
+
+## Odeslání (24. 10. 2026)
+PDF vyrenderováno ze statického HTML (stejný layout) přes Playwright → `~/Downloads/RX_Auto_nabidka_tydenni_pronajem.pdf`, odesláno ze Sparku (erik@rxauto.cz).
+V mailu navíc: kalkulace s nájezdem cca 3 500 km/měsíc, svolávací akce BMW 2. a 4. 11. (vždy 1 den), alternativa Mercedes GLE 6válec cca 14 900 Kč/týden.
