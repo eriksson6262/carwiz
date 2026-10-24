@@ -2,7 +2,7 @@
 
 Design artifact „RX Auto – Týdenní pronájem BMW, Alfa, Mercedes“ (typ Design, design systém RX Auto), 1× A4, stejný vizuál jako nabídka měsíčního nájmu (`../nabidka-mesicni-najem`).
 
-## Ceny (Kč / týden, bez DPH – ověřit)
+## Ceny (Kč / týden, včetně DPH)
 | Vůz | Kč/týden |
 |---|---|
 | 2021 BMW X3 | 7 990 |
