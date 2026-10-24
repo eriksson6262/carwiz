@@ -5,10 +5,10 @@ Design artifact „RX Auto – Týdenní pronájem BMW, Alfa, Mercedes“ (typ D
 ## Ceny (Kč / týden, včetně DPH)
 | Vůz | Kč/týden |
 |---|---|
-| 2021 BMW X3 | 7 990 |
-| 2021 BMW X4 | 8 990 |
-| 2024 Alfa Romeo Tonale PHEV Q4 | 6 490 (nabíjení po dobu pronájmu zdarma) |
-| 2024 Mercedes-Benz CLE 300 4MATIC | 9 990 |
+| 2021 BMW X3 20i xDrive | 7 990 |
+| 2021 BMW X4 20i xDrive M-paket | 8 990 |
+| 2024 Alfa Romeo Tonale Veloce Q4 | 6 490 (nabíjení po dobu pronájmu zdarma) |
+| 2024 MB CLE 300 4matic | 9 990 |
 
 ## V ceně
 800 km/týden, POV + HAV se spoluúčastí 10 %, asistence 24/7, pojištění skel, sezónní pneu.
