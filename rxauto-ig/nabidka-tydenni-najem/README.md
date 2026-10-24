@@ -17,4 +17,4 @@ Design artifact „RX Auto – Týdenní pronájem BMW, Alfa, Mercedes“ (typ D
 - Tonale: stejná jako v měsíční nabídce (`~/Downloads/skody/ar-home-trim-tonale-phev-veloce-1png-removed-bg-1.webp`)
 - CLE: `~/Downloads/skody/mb_cle.tar` → `cle_BE040.png`, ořez na bbox, webp 1000 px
 - BMW X3 / X4 (bílé): fotky od Erika (X3 webp, X4 `bmw-x4-my20-index-1.jxl`), pozadí odstraněno `rembg` (isnet-general-use)
-- CLE zobrazen větší (116 % šířky karty)
+- CLE: ořez na skutečný obrys auta (alfa ≥ 10 – původní PNG mělo neviditelný okraj přes celé plátno), plná šířka karty
