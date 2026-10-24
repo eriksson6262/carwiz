@@ -16,4 +16,6 @@ Design artifact „RX Auto – Týdenní pronájem BMW, Alfa, Mercedes“ (typ D
 ## Fotky
 - Tonale: stejná jako v měsíční nabídce (`~/Downloads/skody/ar-home-trim-tonale-phev-veloce-1png-removed-bg-1.webp`)
 - CLE: `~/Downloads/skody/mb_cle.tar` → `cle_BE040.png`, ořez na bbox, webp 1000 px
-- BMW X3 / X4: v Downloads nenalezeny → placeholder, doplnit
+- BMW X3 / X4 (bílé): Wikimedia Commons, staženo přes prohlížeč, pozadí odstraněno `rembg` (isnet-general-use), u X4 začištěný stín a zakrytá SPZ
+  - X3: File:BMW X3 xDrive 20d M Sport, Alpine White Ⅲ (cropped).jpg
+  - X4: File:2024 BMW X4 xDrive30i M-Sport front.jpg
