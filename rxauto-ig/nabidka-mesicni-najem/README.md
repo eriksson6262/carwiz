@@ -33,6 +33,6 @@ Kodiaq Sportline používá stejnou fotku jako Kodiaq RS (jiná není k dispozic
 
 ## Doplnění 27. 10. 2026
 - Kodiaq Sportline: vlastní fotka – Wikimedia Commons „Moscow, Škoda Kodiaq (2nd gen) Aug 2025 02 (cropped)“, ořez pozadí rembg (isnet-general-use).
-- Peugeot 3008 (model 2022, neomezený nájezd) přidán do CZ verze; fotka Wikimedia Commons „2021 Peugeot 3008 Active Pack“, SPZ rozmazaná, pozadí ořezané. Cena 14 900 Kč/měsíc bez DPH (Erik, 27. 10.).
+- Peugeot 3008 (model 2022, neomezený nájezd) přidán do CZ verze; fotka Wikimedia Commons „2021 Peugeot 3008 Active Pack“, SPZ rozmazaná, pozadí ořezané. Cena „Na dotaz“ (Erik, 27. 10.), na kartě zlatý štítek „NEOMEZENÉ KM“.
 - Stahování fotek: cloud ani VM na Macu weby nepustí → obrázek otevřít ve vestavěném prohlížeči, zoom screenshot (uloží se do tool-results) → rembg.
 - Fotky Kodiaq Sportline a Peugeot 3008 nahrazeny Erikovými (konfigurátor); odstraněno logo HAVEX auto a značka instacar na SPZ.
