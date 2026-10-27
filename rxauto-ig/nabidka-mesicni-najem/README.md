@@ -30,3 +30,8 @@ Ořezané modelové fotky z `~/Downloads/skody/` (rx_*.png, Tonale webp), nahran
 Ceny zadal Erik, Kč/měsíc bez DPH, jen pro firmy:
 Fabia MC 9 900 · Kamiq MC 11 900 · Karoq Sportline 12 900 · Octavia 12 900 · Octavia Combi Sportline 13 900 · Superb Sportline / Superb Combi Sportline 14 900 · Superb Combi L&K 16 900 · Kodiaq Sportline 16 900 · Kodiaq RS 4×4 18 900 · Alfa Romeo Tonale PHEV 19 900 (nabíjení zdarma).
 Kodiaq Sportline používá stejnou fotku jako Kodiaq RS (jiná není k dispozici).
+
+## Doplnění 27. 10. 2026
+- Kodiaq Sportline: vlastní fotka – Wikimedia Commons „Moscow, Škoda Kodiaq (2nd gen) Aug 2025 02 (cropped)“, ořez pozadí rembg (isnet-general-use).
+- Peugeot 3008 (model 2022, neomezený nájezd) přidán do CZ verze; fotka Wikimedia Commons „2021 Peugeot 3008 Active Pack“, SPZ rozmazaná, pozadí ořezané. Cena zatím „Na dotaz“.
+- Stahování fotek: cloud ani VM na Macu weby nepustí → obrázek otevřít ve vestavěném prohlížeči, zoom screenshot (uloží se do tool-results) → rembg.
