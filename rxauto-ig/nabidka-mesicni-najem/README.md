@@ -36,3 +36,4 @@ Kodiaq Sportline používá stejnou fotku jako Kodiaq RS (jiná není k dispozic
 - Peugeot 3008 (model 2022, neomezený nájezd) přidán do CZ verze; fotka Wikimedia Commons „2021 Peugeot 3008 Active Pack“, SPZ rozmazaná, pozadí ořezané. Cena „Na dotaz“ (Erik, 27. 10.), na kartě zlatý štítek „NEOMEZENÉ KM“.
 - Stahování fotek: cloud ani VM na Macu weby nepustí → obrázek otevřít ve vestavěném prohlížeči, zoom screenshot (uloží se do tool-results) → rembg.
 - Fotky Kodiaq Sportline a Peugeot 3008 nahrazeny Erikovými (konfigurátor); odstraněno logo HAVEX auto a značka instacar na SPZ.
+- Kamiq Selection 10 900 Kč přidán jako 2. vůz (fotka od Erika); CZ verze má 12 vozů v mřížce 4×3.
