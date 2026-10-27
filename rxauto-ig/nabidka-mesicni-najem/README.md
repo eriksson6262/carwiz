@@ -25,3 +25,8 @@ Měsíc = denní × 23,46 → € kurzem 24,3 Kč → +150 € marže → zaokro
 
 ## Fotky
 Ořezané modelové fotky z `~/Downloads/skody/` (rx_*.png, Tonale webp), nahrané jako assety artefaktu.
+
+## CZ verze v Kč (27. 10. 2026)
+Ceny zadal Erik, Kč/měsíc bez DPH, jen pro firmy:
+Fabia MC 9 900 · Kamiq MC 11 900 · Karoq Sportline 12 900 · Octavia 12 900 · Octavia Combi Sportline 13 900 · Superb Sportline / Superb Combi Sportline 14 900 · Superb Combi L&K 16 900 · Kodiaq Sportline 16 900 · Kodiaq RS 4×4 18 900 · Alfa Romeo Tonale PHEV 19 900 (nabíjení zdarma).
+Kodiaq Sportline používá stejnou fotku jako Kodiaq RS (jiná není k dispozici).
