@@ -93,6 +93,7 @@ def save_to_history(osobni_data, smlouva_data, filename, firma_data=None, typ_vo
         "palivo": smlouva_data.get('palivo', '') or '',
         "poskozeni_predani": smlouva_data.get('poskozeni_predani', '') or '',
         "cislo_smlouvy": smlouva_data.get('cislo_smlouvy', '') or '',
+        "cislo_zakazky": smlouva_data.get('cislo_zakazky', '') or '',
         "cas_predani": smlouva_data.get('cas_predani', '') or '',
         "typ_vozidla": typ_vozidla or 'osobni',
         "firma": firma_data or None,
@@ -214,7 +215,7 @@ _POLE_SCHEMA = ('{"spz":null,"znacka_model":null,"typ_vozidla":null,"cena":null,
     '"interval_ceny":null,"jistina":null,"sjednany_najezd":null,"interval_najezdu":null,"datum_zacatku":null,'
     '"datum_konce":null,"delka_mesicu":null,"delka_dnu":null,"email":null,"telefon":null,"misto_predani":null,'
     '"misto_vraceni":null,"flexi":false,"nahradni_vozidlo":false,"ico":null,"firma_nazev":null,"ridic":null,'
-    '"neomezeny_najezd":false,"bez_kauce":false}')
+    '"neomezeny_najezd":false,"bez_kauce":false,"cislo_zakazky":null}')
 
 _POLE_PRAVIDLA = """Pravidla:
 - spz: poznávací značka velkými písmeny bez mezer (např. "1ALB766"). znacka_model: zbytek popisu vozidla pěkně zapsaný (např. "BMW 2" z "bmw 2", "Škoda Octavia").
@@ -223,7 +224,7 @@ _POLE_PRAVIDLA = """Pravidla:
 - jistina = kauce / záloha / depozit, číslo (15tis = 15000).
 - sjednany_najezd: číslo km (2500). interval_najezdu: "měsíc", "rok", "den" nebo "pronájem" (za celou dobu pronájmu).
 - datum_zacatku / datum_konce: ISO rrrr-mm-dd, relativní výrazy (dneska, zítra, od pondělí, 1. listopadu) přepočítej podle dnešního data. Pokud je konec vyjádřen délkou ("na půl roku", "za 3 měsíce", "na 14 dní"), dej datum_konce null a vyplň delka_mesicu (půl roku = 6) nebo delka_dnu.
-- flexi: true pokud je řečeno "flexi" / bez pevného konce / vrácení není známo (pak datum_konce i délka null). nahradni_vozidlo: true pokud jde o náhradní vozidlo. ico: 8místné IČO firmy (nájemce), pokud je uvedeno (jen číslice) — NE IČO RX Auto / pronajímatele. firma_nazev: název firmy-nájemce. ridic: jméno řidiče, pokud je uvedeno. neomezeny_najezd: true při "neomezené km". bez_kauce: true při "bez kauce".
+- flexi: true pokud je řečeno "flexi" / bez pevného konce / vrácení není známo (pak datum_konce i délka null). nahradni_vozidlo: true pokud jde o náhradní vozidlo. ico: 8místné IČO firmy (nájemce), pokud je uvedeno (jen číslice) — NE IČO RX Auto / pronajímatele. firma_nazev: název firmy-nájemce. ridic: jméno řidiče, pokud je uvedeno. neomezeny_najezd: true při "neomezené km". bez_kauce: true při "bez kauce". cislo_zakazky: číslo zakázky / objednávky (typicky u Global Assistance), pokud je uvedeno.
 - email, telefon, místa předání/vrácení jen pokud jsou výslovně uvedena."""
 
 
@@ -301,6 +302,7 @@ def _normalizuj_pole(d):
         "telefon": (d.get("telefon") or None),
         "misto_predani": (d.get("misto_predani") or None),
         "misto_vraceni": (d.get("misto_vraceni") or None),
+        "cislo_zakazky": (str(d.get("cislo_zakazky")).strip() if d.get("cislo_zakazky") else None),
     }
 
 
@@ -375,6 +377,20 @@ def cislo_smlouvy_z_data(datum_zacatku):
     if mc2:
         return mc2.group(1).zfill(2) + mc2.group(2).zfill(2) + mc2.group(3)
     return ''
+
+
+def je_global_assistance(firma_data):
+    """Nájemce je Global Assistance (podle názvu firmy, bez ohledu na diakritiku/velikost)."""
+    import unicodedata
+    n = (firma_data or {}).get("nazev") or ""
+    n = unicodedata.normalize("NFKD", n).encode("ascii", "ignore").decode("ascii").lower()
+    return "global assistance" in " ".join(n.split())
+
+
+def cislo_smlouvy_zakazka(smlouva_data, firma_data):
+    """U Global Assistance je číslem smlouvy číslo zakázky (nečerpá se z číselné řady)."""
+    zak = ((smlouva_data or {}).get("cislo_zakazky") or "").strip()
+    return zak if (zak and je_global_assistance(firma_data)) else ""
 
 
 CISELNA_RADA_FILE = os.path.join(SCRIPT_DIR, "ciselna_rada.json")
@@ -1535,7 +1551,10 @@ class AppHandler(BaseHTTPRequestHandler):
             # Při opravě z výsledkové stránky už klient číslo smlouvy posílá —
             # znovu se nepřiděluje, ať oprava překlepu nespálí číslo z řady.
             cislo_smlouvy = (smlouva_data.get("cislo_smlouvy") or "").strip()
-            if not cislo_smlouvy or demo:
+            zakazka = cislo_smlouvy_zakazka(smlouva_data, firma_data)
+            if zakazka:
+                cislo_smlouvy = zakazka          # Global Assistance → číslo zakázky
+            elif not cislo_smlouvy or demo or cislo_smlouvy == (smlouva_data.get("cislo_zakazky") or "").strip():
                 cislo_smlouvy = dalsi_cislo_smlouvy(smlouva_data.get('datum_zacatku',''), demo=demo)
             smlouva_data = dict(smlouva_data)
             smlouva_data["cislo_smlouvy"] = cislo_smlouvy

@@ -358,7 +358,7 @@
         </div>
         <div class="form-field full" id="ff_firma_nazev">
           <label class="form-label required">Název společnosti</label>
-          <input class="form-input" id="fi_firma_nazev" placeholder="doplní se z ARES" />
+          <input class="form-input" id="fi_firma_nazev" placeholder="doplní se z ARES" oninput="updateZakazka()" />
           <span class="form-error-msg">Povinné pole</span>
         </div>
         <div class="form-field full" id="ff_firma_sidlo">
@@ -411,6 +411,11 @@
           <input type="checkbox" id="fi_nahradni_vozidlo" style="margin:0" onchange="updateZmocneni()">
           Náhradní vozidlo <span style="opacity:.5">(u firmy se nevyžaduje zmocnění řidiče)</span>
         </label>
+      </div>
+      <div class="form-field full" id="ff_cislo_zakazky" style="display:none">
+        <label class="form-label required">Číslo zakázky <span style="opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(Global Assistance — použije se jako číslo smlouvy)</span></label>
+        <input class="form-input" id="fi_cislo_zakazky" placeholder="číslo zakázky od Global Assistance" />
+        <span class="form-error-msg">Povinné pole</span>
       </div>
       <div class="form-field full" id="ff_mena">
         <label class="form-label required">Měna smlouvy</label>
@@ -1000,6 +1005,7 @@ function submitForm(){
   if(isFirma){
     fields.push('firma_ico','firma_nazev','firma_sidlo','firma_zastupce');
     if(!ridicJeZastupce && !nahradni) fields.push('zmocneni');
+    if(jeGlobalAssistance()) fields.push('cislo_zakazky');
   }
   let valid=true;
   if(state.adminMode){
@@ -1046,6 +1052,7 @@ function submitForm(){
     cas_predani: document.getElementById('fi_cas_predani').value,
     flexi: flexi,
     nahradni_vozidlo: nahradni,
+    cislo_zakazky: jeGlobalAssistance() ? document.getElementById('fi_cislo_zakazky').value.trim() : '',
   };
   state.docOverride={};
   DOC_FIELDS.forEach(([t,f])=>{ const v=document.getElementById('fi_doc_'+f).value.trim(); if(v) state.docOverride[f]=v; });
@@ -1358,6 +1365,7 @@ function reset(){
   setCenaDph('bez_dph');
   setFlexi(false);
   document.getElementById('fi_nahradni_vozidlo').checked=false; updateZmocneni();
+  document.getElementById('fi_cislo_zakazky').value=''; updateZakazka();
   state.typManual=false; setTypVozidla('osobni',false);
   state.formData=null; state.lastSmlouvaFilename=null; state.lastOsobniData=null;
   document.getElementById('fi_stav_nadrze').value='';
@@ -1381,6 +1389,7 @@ function setTypNajemce(val){
   document.getElementById('tnaj_fyzicka').classList.toggle('active', val==='fyzicka');
   document.getElementById('tnaj_firma').classList.toggle('active', val==='firma');
   document.getElementById('firmaFields').style.display = (val==='firma') ? 'contents' : 'none';
+  updateZakazka();
 }
 
 function setTypVozidla(val, manual){
@@ -1413,6 +1422,17 @@ function autoTypVozidla(){
 document.addEventListener('DOMContentLoaded',()=>{
   const el=document.getElementById('fi_vozidlo'); if(el) el.addEventListener('input',autoTypVozidla);
 });
+
+function jeGlobalAssistance(){
+  if(document.getElementById('fi_typ_najemce').value!=='firma') return false;
+  const n=(document.getElementById('fi_firma_nazev').value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
+  return n.includes('global assistance');
+}
+function updateZakazka(){
+  const show=jeGlobalAssistance();
+  document.getElementById('ff_cislo_zakazky').style.display = show ? '' : 'none';
+  if(!show){ document.getElementById('ff_cislo_zakazky').classList.remove('has-error'); document.getElementById('fi_cislo_zakazky').classList.remove('error'); }
+}
 
 function updateZmocneni(){
   const ridicJe = document.getElementById('fi_ridic_je_zastupce').value === '1';
@@ -1458,6 +1478,7 @@ function onIcoInput(){
       document.getElementById('fi_firma_nazev').value = data.nazev || '';
       document.getElementById('fi_firma_sidlo').value = data.sidlo || '';
       document.getElementById('fi_firma_dic').value = data.dic || '';
+      updateZakazka();
       statusEl.textContent='✓ Nalezeno v ARES'; statusEl.style.color='var(--gold-light)';
       ['ff_firma_nazev','ff_firma_sidlo'].forEach(id=>{
         document.getElementById(id).classList.remove('has-error');
@@ -1488,6 +1509,8 @@ function applyPrefill(p){
   if(p.ico){ setTypNajemce('firma'); document.getElementById('fi_firma_ico').value=p.ico; vyplneno.push('IČO'); onIcoInput(); }
   else if(p.firma_nazev){ setTypNajemce('firma'); put('firma_nazev',p.firma_nazev,'firma'); }
   if(p.nahradni_vozidlo){ document.getElementById('fi_nahradni_vozidlo').checked=true; updateZmocneni(); vyplneno.push('náhradní vozidlo'); }
+  if(p.cislo_zakazky){ document.getElementById('fi_cislo_zakazky').value=p.cislo_zakazky; vyplneno.push('číslo zakázky'); }
+  updateZakazka();
   if(p.flexi){ setFlexi(true); vyplneno.push('flexi'); }
   if(p.mena) setMena(p.mena);
   if(p.interval_ceny){ setInterval('ceny',p.interval_ceny); }
@@ -1780,6 +1803,7 @@ function loadFromHistory(id) {
       misto_predani: e.misto_predani, misto_vraceni: e.misto_vraceni,
       stav_tachometru_predani: e.stav_tachometru_predani,
       korespondencni_adresa: e.korespondencni_adresa,
+      cislo_zakazky: e.cislo_zakazky,
     };
     Object.entries(fields).forEach(([k,v]) => {
       const el = document.getElementById('fi_' + k);
@@ -1803,6 +1827,7 @@ function loadFromHistory(id) {
       const set=(id,v)=>{ const el=document.getElementById(id); if(el&&v) el.value=v; };
       set('fi_firma_ico',F.ico); set('fi_firma_nazev',F.nazev); set('fi_firma_sidlo',F.sidlo);
       set('fi_firma_dic',F.dic); set('fi_firma_zastupce',F.zastupce); set('fi_zmocneni',F.zmocneni);
+      updateZakazka();
       setRidicJeZastupce(F.ridic_je_zastupce !== false);
     }
     fillDocFields();
