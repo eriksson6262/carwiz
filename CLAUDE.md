@@ -22,6 +22,7 @@ Každý projekt má vlastní složku. Do ní patří skripty, šablony, konfigur
 | `fleet-dokumenty/` | SOSBK, vinkulace, plné moci, nájemní smlouvy – šablony a generátory |
 | `pokuty/` | Zpracování a přefakturace pokut |
 | `rxauto-sk/` | Landing page rxauto.sk |
+| `rxauto-web/` | Web rxauto.cz (Wix) – CMS kolekce Auta/Karavany/Motorky, konsolidace nabídky vozidel |
 | `common/` | Sdílené – přihlašovací údaje pro skripty (`rxauto_config.py`, Keychain / `~/.rxauto.env`) |
 | `mzdy/` | Měsíční bonusy zaměstnanců (provize Renteon, noční výpůjčky, pickupy) |
 
