@@ -44,7 +44,7 @@ def table(rows, widths, total_row=True):
         st += [('LINEABOVE',(0,-1),(-1,-1),0.5,colors.grey),('BACKGROUND',(0,-1),(-1,-1),colors.HexColor('#f6f6f6'))]
     t.setStyle(TableStyle(st)); return t
 
-def build(d, out, stamp):
+def build(d, out, stamp, bbox=(220, 611, 345, 651)):
     DATUM = d['dat_protokolu']
     doc = SimpleDocTemplate(out, pagesize=A4, leftMargin=18*mm, rightMargin=18*mm, topMargin=15*mm, bottomMargin=15*mm,
                             title=f"Damage statement {d['rz']}", author="RX Auto, s.r.o.")
@@ -122,7 +122,7 @@ def build(d, out, stamp):
     r = pypdf.PdfReader(out); w = pypdf.PdfWriter(); w.append(r)
     pg = w.pages[-1]; Hh = float(pg.mediabox.height)
     sp = pypdf.PdfReader(stamp).pages[0]
-    sx0, sy0, sx1, sy1 = 220, 611, 345, 651
+    sx0, sy0, sx1, sy1 = bbox
     sp.mediabox = pypdf.generic.RectangleObject([sx0, sy0, sx1, sy1]); sp.cropbox = sp.mediabox
     tx = A4[0] - 18*mm - (sx1 - sx0) - sx0 - 5
     ty = (Hh - y0) + 6 - sy0
@@ -132,7 +132,9 @@ def build(d, out, stamp):
 
 if __name__ == '__main__':
     D = json.load(open(sys.argv[1])); outdir = sys.argv[2]; stamp = sys.argv[3]
-    res = [build(d, f"{outdir}/Damage statement {d['rz']} - Fabian.pdf", stamp) for d in D]
+    # volitelně 4. argument "x0,y0,x1,y1" = oblast razítka ve zdrojovém PDF (např. dříve odeslaný Damage statement)
+    bbox = tuple(float(v) for v in sys.argv[4].split(',')) if len(sys.argv) > 4 else (220, 611, 345, 651)
+    res = [build(d, f"{outdir}/Damage statement {d['rz']} - Fabian.pdf", stamp, bbox) for d in D]
     json.dump(res, open(f"{outdir}/summary.json", 'w'), indent=1)
     for x in res: print(x)
     print('TOTAL', sum(x['total'] for x in res), 'HAVEX', sum(x['havex'] for x in res))
