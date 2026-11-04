@@ -13,6 +13,7 @@ Každý projekt má vlastní složku. Do ní patří skripty, šablony, konfigur
 | `renteon/kanaly-rezervace/` | Kanály rezervací – mix brokerů vs přímé, výnos/den, doplňky, storna, vytíženost (CZ+SK) |
 | `renteon/havex-zpetna/` | Zpětná fakturace HAVEX – přehled zápůjček vs. faktury Vyfakturuj, nevyfakturovaná auta |
 | `renteon/naklady-vynosy/` | Náklady vs výnosy půjčovny – leasing, Carnetto přefakturace, pojištění, servisy po pobočkách a SPZ |
+| `renteon/kontakty-bez-skod/` | Export kontaktů klientů bez účtované škody a pokuty (Renteon CZ+SK) |
 | `rxauto-ig/` | Instagram/Facebook RX Auto (Metricool, Canva) |
 | `osek/` | OSEK – úroky z prodlení, měsíční faktura za provizi |
 | `havex/` | HAVEX Mobility – fakturace ve Vyfakturuj, pravidelné faktury |
