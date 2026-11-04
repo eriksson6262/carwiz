@@ -19,7 +19,9 @@ Zpracování protokolů o vrácení vozidel, které posílá HAVEX Mobility (pet
 3. **Razítko RX Auto** (Fabian) – `stamp.py` vloží razítko do pole „předávajícího“.
 4. **Vyúčtování pro Fabiana** – `parse.py` → `data.json`, pak `vyuctovani_cz.py` / `vyuctovani_en.py`.
    Podmínky Fabian: spoluúčast za každou PU: oprava pod 10 000 Kč = orientační cena + 21 % (max. 10 000), jinak 10 000 Kč (počet PU dle HAVEX protokolu); škody v oddílu A (hradí nájemce) = cena dle HAVEX + 21 %; nadlimitní km 7 Kč bez DPH.
-   Datum dokladu = datum HAVEX protokolu.
+   Datum dokladu = datum HAVEX protokolu. Při zpětném datu nastavit splatnost min. 10 dní od dneška (jinak hned odejdou automatické upomínky).
+   Pozor: parse.py nenačte položku PU, jejíž částka je na řádku nad popisem (9H06057) – vždy porovnat počet PU s „Spoluúčast hrazená klientem“.
+   Razítko (`data/razitko_rx.pdf`) lze v nouzi vyříznout z dříve odeslaného „Damage statement“ (oblast razítka, mediabox 220,611,345,651).
 5. **Faktury Fabianovi** – Vyfakturuj, přenesená daňová povinnost, CZK, popis CZ+EN „vyúčtování po vrácení vozidla“.
 6. **Renteon** – RX vozy deaktivovat aktivitou „Deaktivace vozu“ (def. 121) s neaktivním stavem 31 = „Koupit zpět – pronájem“ (buyback lease), ne 32 (subrent). Fabian vozy v Renteonu nejsou.
 7. **Ukončení pojistek** – Kooperativa (Gieselová) / Generali (Herrmann); pojišťovnu určit z výpisu Kooperativy (předpis pojistného, CSV) a vyúčtování flotily Generali.
@@ -35,4 +37,4 @@ Protokoly, razítko a výstupy patří do `data/` a `output/` (necommitují se).
 ## Náklady vs. výnosy po vrácení
 `naklady_vs_vynosy.py output/vysledek.xlsx data/` – vstupy v `data/`: `all.json` (parse.py ze všech protokolů), `vyf.json` (Fabian: nájem CZK, škody, pokuty z Vyfakturuj), `renteon.json` (RX: RentIncome/TotalIncome bez DPH z `/cs/api/report/getIncomeAndExpenseComparison`, Type car, IncomeType 2), `contracts.json` (RZ → smlouva HAVEX), `insurance.json` (RZ → měsíční pojistné HAV, počátek, smlouva; Kooperativa = DETAIL_PREDPIS xlsx z e-mailu „Předpis pojistného“, Generali = report vyúčtování RS 4785635732).
 Nájem HAVEX = splátka × měsíce smlouvy (+ splátka/30 × dny prodloužení); sazby z e-mailů „Přehled zápůjček“ / platebních kalendářů. Předčasné vrácení nájem nesnižuje. Pojištění HAV platí RX (POV je ve splátce HAVEX) – počítá se předpis × 12/365 × dny do vrácení.
-Fabian se fakturuje měsíčně 25.–24.; když vůz vrátí po konci posledního fakturovaného období, dofakturovat dny do vrácení (sazba/30 × dny).
+Fabian se fakturuje měsíčně (25.–24., 31.–30., 17.–16. nebo 30.–29. podle vozu, EUR); když vůz vrátí po konci posledního fakturovaného období, dofakturovat dny do vrácení (sazba/30 × dny).
