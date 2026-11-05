@@ -4,7 +4,7 @@ Zpracování protokolů o vrácení vozidel, které posílá HAVEX Mobility (pet
 
 ## Postup
 1. **Stažení** – Spark: `from:petr.beyr@havexmobility.cz after:<datum>`. Každé vozidlo má „Protokol o vrácení vozidla“ + „ProtokolKontroly“ (fotky), někdy „Kilometry“.
-   **Pozor:** sémantické hledání Sparku s filtrem `from:` vrací jen ~20 „nejrelevantnějších“ výsledků – nové maily přebijí starší FW/Re:. Vždy hledat i podle jednotlivých RZ (z avíz vrácení od Dvořákové) a obecně „protokol o vrácení“ s `after:` bez `from:` (protokoly posílá i Tesařová, ACJC aj.). Kontrolovat, že ProtokolKontroly patří ke stejné RZ (8H84670 přišel s kontrolou 9H06026).
+   **Pozor:** sémantické hledání Sparku s filtrem `from:` vrací jen ~20 „nejrelevantnějších“ výsledků – nové maily přebijí starší FW/Re:. Vždy hledat i podle jednotlivých RZ (z avíz vrácení od Dvořákové) a obecně „protokol o vrácení“ s `after:` bez `from:` (protokoly posílá i Tesařová – jana.tesarova@havex.cz, HAVEX-auto/CAR CLUB s.r.o., předmět „PP <RZ>“, ručně psaný sken bez součtů; ACJC aj.). Kontrolovat, že ProtokolKontroly patří ke stejné RZ (8H84670 přišel s kontrolou 9H06026).
    FW zprávy jsou jen upomínky se stejnými přílohami. Opravené protokoly chodí jako RE: (nahradit původní).
    Ukládat jako `RZ Protokol o vraceni vozidla.pdf`, `RZ ProtokolKontroly.pdf`, `RZ Kilometry.pdf`.
 2. **Roztřídění Fabian / RX Auto** – vozidlo patří Fabianovi, pokud ve Vyfakturuj existují faktury na Fábián Automotive Kft s danou RZ.
