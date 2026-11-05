@@ -35,3 +35,18 @@ Alfa Tonale PHEV od 19 900. Ostatní modely zůstávají v kolekci, jen skryté.
 Pozor: výpis /vypis-auta zobrazí max. 12 položek (limit datasetu v editoru) – nutno zvýšit v editoru / tlačítko „Načíst další“.
 Karty ve výpisu se po kliknutí neotevřou – opakovač nemá odkaz na dynamickou stránku (link-auta-1-title), oprava jen v editoru.
 Wix cache: změny se projeví hned s ?nocache=…, bez parametru až po vypršení cache.
+
+### Úprava 2026-11-05 (3) – landing page = Škodovky z letáků
+- landingPage = ano jen u 11 Škod z letáků (Fabia MC, Kamiq Selection, Kamiq MC, Karoq SL, Octavia,
+  Octavia Combi SL, Superb SL, Superb Combi SL, Superb Combi L&K, Kodiaq SL, Kodiaq RS 4×4); CLE a Tonale odebrány.
+- Opakovač na /dlouhodoby-pronajem má kartu 601×349 → 420px dlaždice byly rozmazané. Nové dlaždice 640×372
+  (průhledné, auto max. 88 % viditelné šířky ořezu 278×231 a 60 % výšky, střed v 58 % výšky, webp q50/alpha 40,
+  7–9 kB). Stejný soubor slouží i výpisu /vypis-auta (celé auto viditelné). Wix je servíruje v nativních 601 px.
+- Upload: UploadImageToWixSite (base64) a **vždy ověřit hash** v prohlížeči na rxauto.cz:
+  `fetch(static.wixstatic.com/media/4d8ed0_<id>~mv2.webp)` → SHA-256 + velikost musí sedět s lokálním souborem
+  (přepis base64 občas tiše poškodí bajty). Záložní cesta: base64 po 2,5k kouscích do localStorage prohlížeče,
+  kontrola hashe, `site-media/v1/files/generate-upload-url` → PUT z prohlížeče.
+- Opakovač na landing page zobrazí max. 9 položek (limit datasetu) → Kamiq MC a Fabia MC se teď nezobrazí,
+  dokud se v editoru nezvýší počet položek na 12. Tlačítko „Více“ na landing page vede na detail /auta-1/<slug>.
+- Detail /auta-1/<slug> nemá v šabloně žádný obrázek (týká se všech aut) – doplnit v editoru prvek obrázku
+  navázaný na pole image. Škodovky nemají vyplněné palivo/objem/výkon/pohon (prázdný štítek paliva v kartě).
