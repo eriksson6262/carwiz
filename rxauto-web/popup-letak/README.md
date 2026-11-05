@@ -12,3 +12,11 @@
 ## Stránka Galerie
 - Nová stránka „Galerie“ v menu před Kontaktem, Wix Pro Gallery (mřížka, 5 fotek na řádek, 4:3, přes celou šířku, bez „Load More“).
 - 69 vlastních fotek ze složky Media Manageru „real květen fotky“ (karavan Hobby, Audi, BMW 3 Touring…).
+
+## Úprava 2026-11-05 večer
+- Popup: leták Škoda → leták s Alfou (Alfa_CZ.dc.html, render `shot_alfa.js`, soubor ~/rxauto/web/rxauto-letak-alfa.webp).
+- Galerie: místo 69 fotek několika aut je 15 fotek, každé auto jednou. Fotky jsou zkopírované (Media API bulk import z URL static.wixstatic.com)
+  do složky Media Manageru „Galerie web“, řazené podle názvu souboru 01–15 (střídání značek). Mix vlastních fotek (karavan Hobby,
+  Audi Q2/Q3 SB/A1, BMW 3 Touring) a fotek ze složek „úvodní fotky“/„Staré“ (BMW X4, Kodiaq RS, Octavia RS, Boxer, Multivan, přívěs).
+- Tučná jedna položka menu: klasické Horizontal Menu ve Wixu styl jednotlivé položky neumí (jen celé menu / vybraná stránka).
+- Publikaci z editoru blokuje automatické schvalování – zveřejňuje Erik tlačítkem Publish.
