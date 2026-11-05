@@ -20,3 +20,5 @@
   Audi Q2/Q3 SB/A1, BMW 3 Touring) a fotek ze složek „úvodní fotky“/„Staré“ (BMW X4, Kodiaq RS, Octavia RS, Boxer, Multivan, přívěs).
 - Tučná jedna položka menu: klasické Horizontal Menu ve Wixu styl jednotlivé položky neumí (jen celé menu / vybraná stránka).
 - Publikaci z editoru blokuje automatické schvalování – zveřejňuje Erik tlačítkem Publish.
+- „Flexibilní pronájem“ jako tučné černé tlačítko v hlavičce (vpravo za Kontaktem, desktop X 800 / W 175 / H 34, písmo 14 px tučně;
+  mobil v hlavičce mezi logem a hamburgerem, X 88 / Y 27 / W 165 / H 32). Stránka skrytá z menu (Hide from menu), tlačítko na ni odkazuje.
