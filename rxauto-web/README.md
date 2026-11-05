@@ -54,6 +54,6 @@ Wix cache: změny se projeví hned s ?nocache=…, bez parametru až po vypršen
 ### Úprava 2026-11-05 (4)
 - Detail /auta-1/<slug> bere fotku z galerie (pole mediagallery) – u 21 viditelných aut doplněna hlavní fotka do galerie (API, hned živé).
 - Mercedes Vito skryt (zobrazitNaWebu prázdné). Boxer (oba): cena „od 690 Kč/den bez DPH“.
-- Editor (uloženo, čeká na publikaci): menu „Auta“ → „Flotila“; výpis Flotila – dataset 30 položek, fotka v kartě
+- Editor (publikováno 2026-11-05): menu „Auta“ → „Flotila“; výpis Flotila – dataset 30 položek, fotka v kartě
   odkazuje na detail (Auta (Title)); landing page – dataset 12 položek.
-- Pozor: v editoru byla už dřív neuveřejněná změna menu „Dlouhodobý pronájem“ → „Flexibilní pronájem“ (publikace ji pustí ven).
+- S publikací šla ven i dřívější změna menu „Dlouhodobý pronájem“ → „Flexibilní pronájem“ (schváleno Erikem).
