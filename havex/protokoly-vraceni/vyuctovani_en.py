@@ -20,8 +20,10 @@ DMG_MARKUP = 1.21  # škody (oddíl A) = cena opravy dle HAVEX + 21 %
 SPU_FLAT = 10000  # PU Fabian: skutečná cena opravy, max. 10 000 Kč za každou pojistnou událost
 
 def fmt(x): return f"{x:,.2f}"
+import unicodedata
 from en_map import T, VUZ
-def nice(s): return T[s]
+T = {unicodedata.normalize('NFC', k): v for k, v in T.items()}
+def nice(s): return T[unicodedata.normalize('NFC', s)]
 def esc(s): return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 def spu_for(cost):
