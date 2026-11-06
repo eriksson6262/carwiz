@@ -65,10 +65,15 @@ function spocitej(cfg, s) {
   if (vuz.cenaMesic === null) return { vuz, dni, mes, chyby, polozky, naDotaz: true };
   let celkem = 0, upresnime = false;
   const add = (label, castka, info) => { polozky.push({ label, castka, info }); if (castka === null) upresnime = true; else celkem += castka; };
-  const kratko = dni < n.dniVMesici;
+  let celeMes = 0; while (celeMes < 600 && addMonths(od, celeMes + 1) <= dO) celeMes++;
+  const kratko = celeMes < 1 && dni < n.dniVMesici;
   const denni = vuz.cenaMesic * (n.kratkodobyKoef || 1) / n.dniVMesici;
   if (kratko) add(`Nájem ${vuz.title} (${fmtN(denni)} Kč/den)`, denni * dni);
-  else add(`Nájem ${vuz.title} (${fmtN(vuz.cenaMesic)} Kč/měs.)`, vuz.cenaMesic * mes);
+  else {
+    add(`Nájem ${vuz.title} (${fmtN(vuz.cenaMesic)} Kč/měs.)`, vuz.cenaMesic * mes);
+    const pct = n.zakladMesice && n.priplatekZaMesic ? Math.max(0, n.zakladMesice - Math.max(1, celeMes)) * n.priplatekZaMesic : 0;
+    if (pct > 0) add(`Kratší pronájem (${Math.max(1, celeMes)} měs.) +${Math.round(pct * 100)} %`, vuz.cenaMesic * pct * mes);
+  }
   if (s.najezd === 'neomezeny' && vuz.neomezenyPriplatek !== null) {
     add('Neomezený nájezd', vuz.neomezenyPriplatek * mes);
   } else if (vuz.kmVCene !== null) {

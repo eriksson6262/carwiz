@@ -5,6 +5,8 @@ dostupnost se ověří v Renteonu a klient pošle nezávaznou poptávku (bez pla
 
 ## Pravidla (Erik, 6. 11. 2026)
 - Od 30 dní: cena = měsíční cena × dní / 30, zvýrazněná cena za měsíc, bez celkového součtu.
+  Ceníková měsíční cena platí pro pronájem od 6 měsíců; každý celý kalendářní měsíc kratší = +10 %
+  (5 měs. +10 %, 3 měs. +30 %, 1 měs. +50 %). Výchozí termín v konfigurátoru = 6 měsíců. Nastavení zakladMesice, priplatekZaMesic.
 - Pod 30 dní (min. 1 den): denní cena = (měsíční cena + 100 %) / 30 = měsíc × 2 / 30, zvýrazněná cena za den + celkový součet.
   Příplatky (nájezd, spoluúčast) se poměrně přepočítávají × dní / 30. Škody max. 6 měsíců.
 - Nájezd: v ceně 2 500 km/měs., každých dalších 1 000 km = 6 000 Kč/měs. bez DPH.

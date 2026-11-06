@@ -54,13 +54,15 @@ params = [
     ("Druhý řidič zdarma od (dní pronájmu)", 31, "Zadal Erik: u pronájmu nad 30 dní zdarma."),
     ("DPH", 0.21, "Pro zobrazení ceny s DPH."),
     ("Krátkodobý pronájem (pod 30 dní) – násobek měsíční ceny", 2, "Zadal Erik 6. 11. 2026: denní cena = (měsíční cena + 100 %) / 30, tj. × 2 / 30."),
+    ("Ceník platí pro pronájem od (měsíců)", 6, "Zadal Erik 6. 11. 2026: uvedená měsíční cena platí pro pronájem na 6 měsíců a déle."),
+    ("Příplatek za každý měsíc kratší", 0.10, "Zadal Erik: každý měsíc kratší než 6 = +10 % (1 měsíc +50 %, 3 měsíce +30 %)."),
 ]
 for i, (a, b, c) in enumerate(params, 4):
     wp.cell(i, 1, a).font = N; x = wp.cell(i, 2, b); x.font = INP; wp.cell(i, 3, c).font = NOTE
     x.number_format = PCT if isinstance(b, float) else ("#,##0" if b >= 1000 else "0")
     for cc in range(1, 4): wp.cell(i, cc).border = THIN
 P = {k: f"Parametry!$B${i}" for i, (k, _, _) in enumerate(params, 4)}
-P_DNI, P_MIN, P_KM, P_KROK, P_CENAKROK, P_RIDIC, P_RIDIC_ZDARMA, P_DPH, P_KRAT = (P[k] for k, _, _ in params)
+P_DNI, P_MIN, P_KM, P_KROK, P_CENAKROK, P_RIDIC, P_RIDIC_ZDARMA, P_DPH, P_KRAT, P_ZAKLAD, P_PCT = (P[k] for k, _, _ in params)
 
 # ---------- Spoluúčast ----------
 wsp = wb.create_sheet("Spoluúčast")
@@ -141,7 +143,7 @@ dva = DataValidation(type="list", formula1='"ano,ne"'); wk.add_data_validation(d
 calc = [
     ("Měsíční cena vozu", f"=INDEX(Vozy!$C${r0}:$C${LAST},MATCH(B4,Vozy!$A${r0}:$A${LAST},0))", "z listu Vozy"),
     ("Počet měsíců (přepočet)", f"=B5/{P_DNI}", "dny / dní v měsíci"),
-    ("Pronájem vozu", f"=IF(B5<{P_DNI},B10*{P_KRAT}/{P_DNI}*B5,B10*B11)", "pod 30 dní: denní cena = měsíc × 2 / 30"),
+    ("Pronájem vozu", f"=IF(B5<{P_DNI},B10*{P_KRAT}/{P_DNI}*B5,B10*(1+MAX(0,{P_ZAKLAD}-MAX(1,INT(B5/{P_DNI})))*{P_PCT})*B11)", "pod 30 dní: měsíc × 2 / 30 za den; od 30 dní: +10 % za každý měsíc kratší než 6 (web počítá celé kalendářní měsíce)"),
     ("Příplatek za nájezd / měsíc", f'=IF(B6="neomezeně",IFERROR(INDEX(Vozy!$R${r0}:$R${LAST},MATCH(B4,Vozy!$A${r0}:$A${LAST},0))*1,0),MAX(0,(B6-{P_KM})/{P_KROK})*{P_CENAKROK})', "každých 1 000 km nad nájezd v ceně = 6 000 Kč; „neomezeně“ = pevný příplatek z listu Vozy (3008: 6 000 Kč)"),
     ("Příplatek za nájezd celkem", "=B13*B11", ""),
     ("Druhý řidič", f'=IF(B7="ano",IF(B5>={P_RIDIC_ZDARMA},0,B5*{P_RIDIC}),0)', "nad 30 dní zdarma, jinak 120 Kč/den"),

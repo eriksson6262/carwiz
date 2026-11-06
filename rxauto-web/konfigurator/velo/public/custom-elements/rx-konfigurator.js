@@ -89,6 +89,8 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&a
 const parseD = s => { const [y, m, d] = String(s).split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); };
 const minD = n => (n.minDniPronajmu != null ? n.minDniPronajmu : n.minDni);
 const dnyTxt = n => n + ' ' + (n === 1 ? 'den' : n >= 2 && n <= 4 ? 'dny' : 'dní');
+const mesTxt = n => n + ' ' + (n === 1 ? 'měsíc' : n >= 2 && n <= 4 ? 'měsíce' : 'měsíců');
+const kratsiPct = (n, m) => (n.zakladMesice && n.priplatekZaMesic ? Math.max(0, n.zakladMesice - Math.max(1, m)) * n.priplatekZaMesic : 0);
 const addMonths = (d, m) => { const x = new Date(d.getTime()); x.setUTCMonth(x.getUTCMonth() + m); return x; };
 const iso = d => d.toISOString().slice(0, 10);
 const cz = s => { const [y, m, d] = s.split('-'); return `${+d}. ${+m}. ${y}`; };
@@ -107,10 +109,15 @@ function spocitej(cfg, s) {
   if (vuz.cenaMesic === null) return { vuz, dni, mes, chyby, polozky, naDotaz: true };
   let celkem = 0, upresnime = false;
   const add = (label, castka, info) => { polozky.push({ label, castka, info }); if (castka === null) upresnime = true; else celkem += castka; };
-  const kratko = dni < n.dniVMesici;
+  let celeMes = 0; while (celeMes < 600 && addMonths(od, celeMes + 1) <= dO) celeMes++;
+  const kratko = celeMes < 1 && dni < n.dniVMesici;
   const denni = vuz.cenaMesic * (n.kratkodobyKoef || 1) / n.dniVMesici;
   if (kratko) add(`Nájem ${vuz.title}`, denni * dni, `${fmt(denni)} / den`);
-  else add(`Nájem ${vuz.title}`, vuz.cenaMesic * mes, `${fmt(vuz.cenaMesic)} / měsíc`);
+  else {
+    add(`Nájem ${vuz.title}`, vuz.cenaMesic * mes, n.zakladMesice ? `ceník při pronájmu od ${mesTxt(n.zakladMesice)}` : `${fmt(vuz.cenaMesic)} / měsíc`);
+    const pct = kratsiPct(n, celeMes);
+    if (pct > 0) add(`Kratší pronájem (${mesTxt(Math.max(1, celeMes))}) +${Math.round(pct * 100)} %`, vuz.cenaMesic * pct * mes, `+${fmt(vuz.cenaMesic * pct)} / měsíc`);
+  }
   if (s.najezd === 'neomezeny' && vuz.neomezenyPriplatek != null) {
     add('Neomezený nájezd', vuz.neomezenyPriplatek * mes, `+${fmt(vuz.neomezenyPriplatek)} / měsíc`);
   } else if (vuz.kmVCene !== null) {
@@ -128,7 +135,7 @@ function spocitej(cfg, s) {
     const has = p !== null && p !== undefined;
     add(s.spoluucast === '5' ? 'Spoluúčast 5 %' : 'Spoluúčast 0 %', has ? p * mes : null, has ? `+${fmt(p)} / měsíc` : 'příplatek upřesníme v nabídce');
   }
-  return { vuz, dni, mes, chyby, polozky, celkem: Math.round(celkem), celkemSDph: Math.round(celkem * (1 + n.dph)), upresnime };
+  return { vuz, dni, mes, kratko, chyby, polozky, celkem: Math.round(celkem), celkemSDph: Math.round(celkem * (1 + n.dph)), upresnime };
 }
 
 class RxKonfigurator extends HTMLElement {
@@ -139,7 +146,7 @@ class RxKonfigurator extends HTMLElement {
     this.cfg = null;
     const zitra = new Date(); zitra.setDate(zitra.getDate() + 1);
     const od = iso(new Date(Date.UTC(zitra.getFullYear(), zitra.getMonth(), zitra.getDate())));
-    this.s = { vuzId: null, pobocka: 'PRG', od, do: iso(addMonths(parseD(od), 1)), najezd: null, druhyRidic: false, spoluucast: '10' };
+    this.s = { vuzId: null, pobocka: 'PRG', od, do: iso(addMonths(parseD(od), 6)), najezd: null, druhyRidic: false, spoluucast: '10' };
     this.k = { jmeno: '', firma: '', email: '', telefon: '', poznamka: '', souhlas: false, web: '' };
     this.dost = null; this.reqId = 0; this.odesilam = false; this.hotovo = null; this.chybaOdeslani = '';
     this.timer = null;
@@ -237,7 +244,7 @@ class RxKonfigurator extends HTMLElement {
         <label class="f">Převzetí<input type="date" id="od" min="${minOd}" value="${this.s.od}"></label>
         <label class="f">Vrácení<input type="date" id="do" min="${iso(new Date(parseD(this.s.od).getTime() + minD(n) * 86400000))}" value="${this.s.do}"></label>
       </div>
-      <div class="row" style="margin-top:10px"><button class="pill" data-dny="7">1 týden</button>${[1, 2, 3, 6, 12].filter(m => v ? (!v.maxMesice || m <= v.maxMesice) : m <= 6).map(m => `<button class="pill" data-mes="${m}">${m} ${m === 1 ? 'měsíc' : m < 5 ? 'měsíce' : 'měsíců'}</button>`).join('')}</div>
+      <div class="row" style="margin-top:10px"><button class="pill" data-dny="7">1 týden</button>${[1, 2, 3, 6, 12].filter(m => v ? (!v.maxMesice || m <= v.maxMesice) : m <= 6).map(m => { const pc = Math.round(kratsiPct(n, m) * 100); return `<button class="pill" data-mes="${m}">${mesTxt(m)}${pc ? `<small>+${pc} %</small>` : ''}</button>`; }).join('')}</div>
       <p class="hint">Minimální doba pronájmu ${dnyTxt(minD(n))}${v && v.maxMesice ? `, u vozu ${esc(v.title)} maximálně ${v.maxMesice} měsíců` : (v ? ', bez omezení maximální doby' : '')}.</p>
       <h2><span class="n">3</span>Nájezd</h2>${najezd}
       <h2><span class="n">4</span>Služby</h2>
@@ -272,7 +279,7 @@ class RxKonfigurator extends HTMLElement {
       if (r.chyby.length) h += r.chyby.map(c => `<p class="err">${esc(c)}</p>`).join('');
       else if (r.naDotaz) h += `<div class="li"><span>Cena</span><span>na dotaz</span></div><p class="hint">Cenu vám pošleme v nabídce.</p>`;
       else {
-        const mesicne = r.dni >= this.cfg.nastaveni.dniVMesici;
+        const mesicne = !r.kratko;
         const del = mesicne ? r.mes : 1;
         h += `<p class="meta" style="margin:0 0 4px">${mesicne ? 'Měsíčně' : `Za ${dnyTxt(r.dni)}`}</p>`;
         h += r.polozky.map(p => { const info = mesicne && /\/ měsíc$/.test(p.info || '') ? '' : p.info; return `<div class="li"><span>${esc(p.label)}${info ? `<small>${esc(info)}</small>` : ''}</span><span>${p.castka === null ? '—' : fmt(p.castka / del)}</span></div>`; }).join('');
@@ -317,7 +324,7 @@ class RxKonfigurator extends HTMLElement {
     let t;
     if (r.chyby.length) t = `<div class="bp"><b style="font-size:15px">${esc(r.vuz.title)}</b><small>${esc(r.chyby[0])}</small></div>`;
     else if (r.naDotaz) t = `<div class="bp"><b>Cena na dotaz</b><small>${esc(r.vuz.title)} · ${dnyTxt(r.dni)}</small></div>`;
-    else if (r.dni >= this.cfg.nastaveni.dniVMesici) t = `<div class="bp"><b>${fmt(r.celkem / r.mes)} <span style="font-size:13px;font-weight:400">/ měsíc bez DPH</span></b><small><span class="nm">${esc(r.vuz.title)} · </span>${dnyTxt(r.dni)}</small></div>`;
+    else if (!r.kratko) t = `<div class="bp"><b>${fmt(r.celkem / r.mes)} <span style="font-size:13px;font-weight:400">/ měsíc bez DPH</span></b><small><span class="nm">${esc(r.vuz.title)} · </span>${dnyTxt(r.dni)}</small></div>`;
     else t = `<div class="bp"><b>${fmt(r.celkem / r.dni)} <span style="font-size:13px;font-weight:400">/ den bez DPH</span></b><small><span class="nm">${esc(r.vuz.title)} · </span>celkem ${fmt(r.celkem)} za ${dnyTxt(r.dni)}</small></div>`;
     bar.innerHTML = t + '<button type="button" id="kSouhrnu">Souhrn<span class="dl"> a poptávka</span></button>';
     bar.classList.add('on');
