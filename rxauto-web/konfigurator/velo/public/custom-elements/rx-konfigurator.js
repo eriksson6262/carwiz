@@ -238,13 +238,13 @@ class RxKonfigurator extends HTMLElement {
       const base = v ? v.kmVCene : n.kmVCene;
       najezd = `<div class="row">${this.najezdy().map(km => {
         const k = Math.max(0, Math.ceil((km - base) / n.krokKm));
-        return `<button class="pill" data-km="${km}" aria-pressed="${(this.s.najezd || base) === km}">${new Intl.NumberFormat('cs-CZ').format(km)} km${k ? `<small>+${fmt(k * n.cenaKrok)}</small>` : '<small>v ceně</small>'}</button>`;
-      }).join('')}${v && v.neomezenyPriplatek != null ? `<button class="pill" data-km="neomezeny" aria-pressed="${this.s.najezd === 'neomezeny'}">Neomezeně<small>+${fmt(v.neomezenyPriplatek)}</small></button>` : ''}</div><p class="hint">Měsíčně v ceně ${new Intl.NumberFormat('cs-CZ').format(base)} km, každých dalších ${new Intl.NumberFormat('cs-CZ').format(n.krokKm)} km za ${fmt(n.cenaKrok)} / měsíc bez DPH.</p>`;
+        return `<button class="pill" data-km="${km}" aria-pressed="${(this.s.najezd || base) === km}">${new Intl.NumberFormat('cs-CZ').format(km)} km${k ? '' : '<small>v ceně</small>'}</button>`;
+      }).join('')}${v && v.neomezenyPriplatek != null ? `<button class="pill" data-km="neomezeny" aria-pressed="${this.s.najezd === 'neomezeny'}">Neomezeně</button>` : ''}</div><p class="hint">Měsíčně v ceně ${new Intl.NumberFormat('cs-CZ').format(base)} km.</p>`;
     }
     const sp = v ? (this.cfg.spoluucast[v.kategorie] || {}) : {};
     const spOpt = [['10', 'Spoluúčast 10 %, min. 10 000 Kč', 'standard', 'v ceně'], ['5', 'Spoluúčast 5 %, min. 5 000 Kč', 'snížená', !kr ? '+' + Math.round((n.spol5MesicPct != null ? n.spol5MesicPct : 0.1) * 100) + ' % z ceny' : (sp.priplatek5 != null ? '+' + fmt(sp.priplatek5) + ' / den' : 'příplatek dle vozu')], ['0', 'Spoluúčast 0 %', !kr ? 'jen u pronájmu kratšího než 30 dní' : 'bez spoluúčasti', !kr ? '' : (sp.priplatek0 != null ? '+' + fmt(sp.priplatek0) + ' / den' : 'příplatek dle vozu')]]
-      .map(([k, t, s2, p]) => `<div class="opt" role="radio" tabindex="0" data-sp="${k}" aria-checked="${this.s.spoluucast === k}" aria-disabled="${k === '0' && !kr}"><span class="dot"></span><span class="t">${t}<small>${s2}</small></span><span class="p">${p}</span></div>`).join('');
-    const ridicInfo = (() => { const r = spocitej(this.cfg, this.s); return r.dni >= n.ridicZdarmaOd ? 'zdarma (pronájem nad 30 dní)' : `${n.ridicDen} Kč / den, u pronájmu nad 30 dní zdarma`; })();
+      .map(([k, t, s2, p]) => `<div class="opt" role="radio" tabindex="0" data-sp="${k}" aria-checked="${this.s.spoluucast === k}" aria-disabled="${k === '0' && !kr}"><span class="dot"></span><span class="t">${t}<small>${s2}</small></span></div>`).join('');
+    const ridicInfo = (() => { const r = spocitej(this.cfg, this.s); return r.dni >= n.ridicZdarmaOd ? 'zdarma (pronájem nad 30 dní)' : 'u pronájmu nad 30 dní zdarma'; })();
 
     this.root.innerHTML = `<style>${CSS}</style><div class="hero"><h1>Konfigurátor pronájmu</h1><p>Vyberte vůz, pobočku, termín a nájezd. Cenu spočítáme hned a dostupnost ověříme v našem rezervačním systému. Pošlete nezávaznou poptávku, po ověření klienta vám potvrdíme rezervaci.</p></div><div class="wrap"><div>
       <h2><span class="n">1</span>Vůz</h2>${cars}
@@ -255,7 +255,7 @@ class RxKonfigurator extends HTMLElement {
         <label class="f">Převzetí<input type="date" id="od" min="${minOd}" value="${this.s.od}"></label>
         <label class="f">Vrácení<input type="date" id="do" min="${iso(new Date(parseD(this.s.od).getTime() + minD(n) * 86400000))}" value="${this.s.do}"></label>
       </div>
-      <div class="row" style="margin-top:10px"><button class="pill" data-dny="7">1 týden</button>${[1, 2, 3, 6, 12].filter(m => v ? (!v.maxMesice || m <= v.maxMesice) : m <= 6).map(m => { const pc = Math.round(kratsiPct(n, m) * 100); return `<button class="pill" data-mes="${m}">${mesTxt(m)}${pc ? `<small>+${pc} %</small>` : ''}</button>`; }).join('')}</div>
+      <div class="row" style="margin-top:10px"><button class="pill" data-dny="7">1 týden</button>${[1, 2, 3, 6, 12].filter(m => v ? (!v.maxMesice || m <= v.maxMesice) : m <= 6).map(m => { const pc = Math.round(kratsiPct(n, m) * 100); return `<button class="pill" data-mes="${m}">${mesTxt(m)}</button>`; }).join('')}</div>
       <p class="hint">Minimální doba pronájmu ${dnyTxt(minD(n))}${v && v.maxMesice ? `, u vozu ${esc(v.title)} maximálně ${v.maxMesice} měsíců` : (v ? ', bez omezení maximální doby' : '')}.</p>
       <h2><span class="n">3</span>Nájezd</h2>${najezd}
       <h2><span class="n">4</span>Služby</h2>
@@ -291,9 +291,12 @@ class RxKonfigurator extends HTMLElement {
       else if (r.naDotaz) h += `<div class="li"><span>Cena</span><span>na dotaz</span></div><p class="hint">Cenu vám pošleme v nabídce.</p>`;
       else {
         const mesicne = !r.kratko;
-        const del = mesicne ? r.mes : 1;
-        h += `<p class="meta" style="margin:0 0 4px">${mesicne ? 'Měsíčně' : `Za ${dnyTxt(r.dni)}`}</p>`;
-        h += r.polozky.map(p => { const info = mesicne && /\/ měsíc$/.test(p.info || '') ? '' : p.info; return `<div class="li"><span>${esc(p.label)}${info ? `<small>${esc(info)}</small>` : ''}</span><span>${p.castka === null ? '—' : fmt(p.castka / del)}</span></div>`; }).join('');
+        const vyb = [];
+        if (v.kmVCene === null || this.s.najezd === 'neomezeny') vyb.push(['Nájezd', 'neomezený']);
+        else vyb.push(['Nájezd', new Intl.NumberFormat('cs-CZ').format(Number(this.s.najezd) || v.kmVCene) + ' km / měsíc']);
+        vyb.push(['Spoluúčast', { '10': '10 %, min. 10 000 Kč', '5': '5 %, min. 5 000 Kč', '0': '0 %' }[this.s.spoluucast] || '10 %']);
+        if (this.s.druhyRidic) vyb.push(['Druhý řidič', 'ano']);
+        h += vyb.map(([a, b]) => `<div class="li"><span>${esc(a)}</span><span>${esc(b)}</span></div>`).join('');
         if (mesicne) h += `<div class="tot"><span>Cena za měsíc<small>bez DPH</small></span><b>${fmt(r.celkem / r.mes)}</b></div>
           <div class="vat">${fmt(r.celkemSDph / r.mes)} / měsíc s DPH</div>`;
         else h += `<div class="tot"><span>Cena za den<small>bez DPH</small></span><b>${fmt(r.celkem / r.dni)}</b></div>
