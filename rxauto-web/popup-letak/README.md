@@ -22,3 +22,4 @@
 - Publikaci z editoru blokuje automatické schvalování – zveřejňuje Erik tlačítkem Publish.
 - „Flexibilní pronájem“ jako tučné černé tlačítko v hlavičce (vpravo za Kontaktem, desktop X 800 / W 175 / H 34, písmo 14 px tučně;
   mobil v hlavičce mezi logem a hamburgerem, X 88 / Y 27 / W 165 / H 32). Stránka skrytá z menu (Hide from menu), tlačítko na ni odkazuje.
+- Zveřejněno Erikem 2026-11-06, ověřeno na živém webu (popup Alfa, galerie 15 aut, tlačítko → /dlouhodoby-pronajem).
