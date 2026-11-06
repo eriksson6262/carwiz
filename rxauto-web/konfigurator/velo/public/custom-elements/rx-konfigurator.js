@@ -255,7 +255,7 @@ class RxKonfigurator extends HTMLElement {
         <label class="f">Převzetí<input type="date" id="od" min="${minOd}" value="${this.s.od}"></label>
         <label class="f">Vrácení<input type="date" id="do" min="${iso(new Date(parseD(this.s.od).getTime() + minD(n) * 86400000))}" value="${this.s.do}"></label>
       </div>
-      <div class="row" style="margin-top:10px"><button class="pill" data-dny="7">1 týden</button>${[1, 2, 3, 6, 12].filter(m => v ? (!v.maxMesice || m <= v.maxMesice) : m <= 6).map(m => { const pc = Math.round(kratsiPct(n, m) * 100); return `<button class="pill" data-mes="${m}">${mesTxt(m)}</button>`; }).join('')}</div>
+      <div class="row" style="margin-top:10px"><button class="pill" data-dny="7" aria-pressed="${this.s.do === iso(new Date(parseD(this.s.od).getTime() + 7 * 86400000))}">1 týden</button>${[1, 2, 3, 6, 12].filter(m => v ? (!v.maxMesice || m <= v.maxMesice) : m <= 6).map(m => `<button class="pill" data-mes="${m}" aria-pressed="${this.s.do === iso(addMonths(parseD(this.s.od), m))}">${mesTxt(m)}</button>`).join('')}</div>
       <p class="hint">Minimální doba pronájmu ${dnyTxt(minD(n))}${v && v.maxMesice ? `, u vozu ${esc(v.title)} maximálně ${v.maxMesice} měsíců` : (v ? ', bez omezení maximální doby' : '')}.</p>
       <h2><span class="n">3</span>Nájezd</h2>${najezd}
       <h2><span class="n">4</span>Služby</h2>

@@ -71,3 +71,9 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
   - Dlaždice GLE / CLE / Tonale sjednoceny se Škodami: 1280×744, bílé pozadí, auto 57 % šířky (max. 48 % výšky),
     spodek kol v 80 % výšky – `obrazky/normalizuj_dlazdici.py`. GLE je AI fotka (bílé pozadí, SPZ „GLE 2025“).
     Peugeot 3008 má zdroj jen 420×349 a v kartě je větší než ostatní – chce to lepší fotku.
+  - Flotila (/vypis-auta): všech 22 karet sjednoceno stejnou normou (1280×744, bílé pozadí, auto 57 % šířky / max 48 % výšky,
+    spodek 80 %) – Škody, 3008, BMW X1/X3/X4/218i, Multivan (+ Transporter, stejná fotka), Boxery. Zdroje mají jen 420–1200 px,
+    takže zvětšení je převzorkování (postupně po 1,5×) + doostření (unsharp mask), ne AI upscale. Zpracováno v prohlížeči
+    stejným algoritmem jako `obrazky/normalizuj_dlazdici.py`; nové soubory car-<vůz>-1280.webp v Media Manageru,
+    přepsáno v CMS Auta (image + mediagallery) i KonfiguratorVozy (obrazek).
+  - Konfigurátor: tlačítka doby pronájmu ukazují aktivní volbu (výchozí 6 měsíců zvýrazněné jako 2 500 km).
