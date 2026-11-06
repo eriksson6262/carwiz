@@ -30,6 +30,13 @@ Zpracování protokolů o vrácení vozidel, které posílá HAVEX Mobility (pet
    E-mail Fabianovi: z faktury@ na penzugy@fabianautomotive.hu, cc daniel.pszota@fabianautomotive.hu; přílohy faktura + Damage statement + „RZ Vehicle inspection protocol with photos.pdf“ (= ProtokolKontroly).
    Beyrovi: odpověď do jeho vlákna z erik@ s `RZ Protokol o vraceni vozidla - podepsano.pdf`.
    Kooperativa (Gieselová): tabulka `Ukonceni_PS_Kooperativa_<datum>.xlsx` + protokoly `RZ.pdf`; čísla PS z DETAIL_PREDPIS xlsx (e-mail „Předpis pojistného … 6667100466“).
+   Razítko bez přístupu k ~/Downloads: vyrenderovat oblast razítka z posledního odeslaného „Damage statement“ (příloha v Spark, `faktury@` → penzugy@)
+   `pdftoppm -r 400` (cca x 410–540, y 404–448 pt od shora u jednostránkového DS), bílou zprůhlednit a vložit PNG do A4 PDF na 218,611 (šířka 125 pt) →
+   `data/razitko_rx.pdf`. Nepoužívat celou stránku DS jako zdroj – v PDF zůstane skrytý text předchozích vyúčtování.
+5b. **Český nájemce (ne Fabian, např. DC-tec, Pro Construction)** – fakturuje se 1:1 dle HAVEX protokolu + 21 % DPH (ne přirážka):
+   kopie poslední nájemní faktury odběratele, položky „Vyúčtování po vrácení vozidla RZ … – neakceptovatelné poškození vozidla dle protokolu č. <č. HAVEX>“
+   (oddíl A), „… – spoluúčast z pojistné události (n×)“ (spoluúčast dle HAVEX), nadlimitní km dle smlouvy; text nad položkami s odkazem na protokol,
+   splatnost 22 dní, datum = datum HAVEX protokolu. Vzor FA 20261996 (Pro Construction), FA 20262104 (DC-tec, 9H01004).
 6. **Renteon** – RX vozy deaktivovat aktivitou „Deaktivace vozu“ (def. 121) s neaktivním stavem 31 = „Koupit zpět – pronájem“ (buyback lease), ne 32 (subrent). Fabian vozy v Renteonu nejsou.
 7. **Ukončení pojistek** – Kooperativa (Gieselová) / Generali (Herrmann); pojišťovnu určit z výpisu Kooperativy (předpis pojistného, CSV) a vyúčtování flotily Generali.
 

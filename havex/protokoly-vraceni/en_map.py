@@ -149,6 +149,8 @@ T = {
 "Exteriér - Karoserie - Z Nárazník - Odření, retuš": "Exterior – Body – Rear bumper – Scuffed, touch-up",
 "Exteriér - Kola - PP Disk - Odření, oprava": "Exterior – Wheels – Right front rim – Scuffed, repair",
 "Interiér - Dveře (zevnitř) - PZ - Odření, výměna": "Interior – Doors (inside) – Right rear – Scuffed, replacement",
+"Interiér - Dveře (zevnitř) - Zadní (víko kufru) - Odření, ošetření plastu": "Interior – Doors (inside) – Tailgate – Scuffed, plastic treatment",
+"Exteriér - - Polepy - Odstranění": "Exterior – Stickers/wrap, removal",
 "Interiér - Dveře (zevnitř) - Zadní (víko kufru) - Znečištěné, ošetření plastu": "Interior – Doors (inside) – Tailgate – Soiled, plastic treatment",
 "Interiér - Jiné - Komplet - Znečištěné, tepování interiéru": "Interior – Other – Complete – Soiled, interior shampooing",
 "Interiér - Jiné - Komplet - Znečištěné, vysátí": "Interior – Other – Complete – Soiled, vacuuming",
