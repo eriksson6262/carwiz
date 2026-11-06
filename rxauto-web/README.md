@@ -77,3 +77,7 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
     stejným algoritmem jako `obrazky/normalizuj_dlazdici.py`; nové soubory car-<vůz>-1280.webp v Media Manageru,
     přepsáno v CMS Auta (image + mediagallery) i KonfiguratorVozy (obrazek).
   - Konfigurátor: tlačítka doby pronájmu ukazují aktivní volbu (výchozí 6 měsíců zvýrazněné jako 2 500 km).
+  - Flotila doplněno: Boxer fotky prohozeny (L3H2 = vysoká dlouhá, 3 seat = krátká), X4 a X1 „Modelový rok 2021“ v krátkém popisu,
+    Fiat 500 Cabrio zapnut (zobrazitNaWebu, sjednocená fotka, cena na dotaz). Nové položky GLC (cena na dotaz) a M5 Competition
+    (9 990 Kč/den bez DPH, F90 4,4 V8 460 kW) – zatím skryté, čekají na fotky (pak normalizovat a zapnout zobrazitNaWebu).
+    BMW 218i – fotku mění Erik v CMS.
