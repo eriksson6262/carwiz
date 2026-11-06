@@ -35,7 +35,7 @@ Zpracování protokolů o vrácení vozidel, které posílá HAVEX Mobility (pet
    `data/razitko_rx.pdf`. Nepoužívat celou stránku DS jako zdroj – v PDF zůstane skrytý text předchozích vyúčtování.
 5b. **Český nájemce (ne Fabian, např. DC-tec, Pro Construction)** – fakturuje se 1:1 dle HAVEX protokolu + 21 % DPH (ne přirážka):
    kopie poslední nájemní faktury odběratele, položky „Vyúčtování po vrácení vozidla RZ … – neakceptovatelné poškození vozidla dle protokolu č. <č. HAVEX>“
-   (oddíl A), „… – spoluúčast z pojistné události (n×)“ (spoluúčast dle HAVEX), nadlimitní km dle smlouvy; text nad položkami s odkazem na protokol,
+   (oddíl A), „… – spoluúčast z pojistné události (n×)“ (spoluúčast dle HAVEX), nadlimitní km dle smlouvy (DC-tec 9 Kč/km bez DPH; km z přílohy „Kilometry“ od HAVEX, chodí často dodatečně jako FW); text nad položkami s odkazem na protokol,
    splatnost 22 dní, datum = datum HAVEX protokolu. Vzor FA 20261996 (Pro Construction), FA 20262104 (DC-tec, 9H01004).
 6. **Renteon** – RX vozy deaktivovat aktivitou „Deaktivace vozu“ (def. 121) s neaktivním stavem 31 = „Koupit zpět – pronájem“ (buyback lease), ne 32 (subrent). Fabian vozy v Renteonu nejsou.
 7. **Ukončení pojistek** – Kooperativa (Gieselová) / Generali (Herrmann); pojišťovnu určit z výpisu Kooperativy (předpis pojistného, CSV) a vyúčtování flotily Generali.
