@@ -81,3 +81,8 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
     Fiat 500 Cabrio zapnut (zobrazitNaWebu, sjednocená fotka, cena na dotaz). Nové položky GLC (cena na dotaz) a M5 Competition
     (9 990 Kč/den bez DPH, F90 4,4 V8 460 kW) – zatím skryté, čekají na fotky (pak normalizovat a zapnout zobrazitNaWebu).
     BMW 218i – fotku mění Erik v CMS.
+  - Flotila: štítek na kartě místo paliva ukazuje modelový rok (nové pole `modelovyRok` v CMS Auta; kód
+    `konfigurator/velo/page-flotila-stitek-rok.js`). Roky: Škoda 2026, BMW 2021 (218i 2022), 3008 2021/22, Mercedes 2025, GLC 2026,
+    M5 2021, Fiat 500 2022, Tonale 2024. Boxery a Multivan rok nemají → štítek skrytý.
+  - Popup (lightbox „Leták Škoda“): nový leták „Novinka – Konfigurátor pronájmu“ (840×1188, kreslený v prohlížeči přes canvas,
+    soubor rxauto-letak-konfigurator.webp), klik na leták → stránka Konfigurátor.
