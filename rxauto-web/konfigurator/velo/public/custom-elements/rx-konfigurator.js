@@ -38,6 +38,7 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid #111;outline-o
 .opt[aria-checked=true]{border-color:#111;box-shadow:0 0 0 1px #111}
 .opt .dot{flex:0 0 18px;height:18px;border-radius:50%;border:1.5px solid #999;margin-top:1px}
 .opt[aria-checked=true] .dot{border:5px solid #111}
+.opt[aria-disabled=true]{opacity:.45;cursor:not-allowed}
 .opt .t{flex:1;font-size:14px}
 .opt .t small{display:block;color:var(--mute);font-size:12.5px;margin-top:2px}
 .opt .p{font-size:14px;font-weight:600;white-space:nowrap}
@@ -106,16 +107,18 @@ function spocitej(cfg, s) {
   if (dni < minD(n)) chyby.push(`Minimální délka pronájmu je ${dnyTxt(minD(n))}.`);
   if (vuz.maxMesice && dO > addMonths(od, vuz.maxMesice)) chyby.push(`U tohoto vozu je maximální doba pronájmu ${vuz.maxMesice} měsíců.`);
   const mes = dni / n.dniVMesici;
-  if (vuz.cenaMesic === null) return { vuz, dni, mes, chyby, polozky, naDotaz: true };
-  let celkem = 0, upresnime = false;
-  const add = (label, castka, info) => { polozky.push({ label, castka, info }); if (castka === null) upresnime = true; else celkem += castka; };
   let celeMes = 0; while (celeMes < 600 && addMonths(od, celeMes + 1) <= dO) celeMes++;
   const kratko = celeMes < 1 && dni < n.dniVMesici;
+  if (!kratko && s.spoluucast === '0') chyby.push('Spoluúčast 0 % je možná jen u pronájmu kratšího než 30 dní.');
+  if (vuz.cenaMesic === null) return { vuz, dni, mes, kratko, chyby, polozky, naDotaz: true };
+  let celkem = 0, upresnime = false, najemMesic = 0;
+  const add = (label, castka, info) => { polozky.push({ label, castka, info }); if (castka === null) upresnime = true; else celkem += castka; };
   const denni = vuz.cenaMesic * (n.kratkodobyKoef || 1) / n.dniVMesici;
   if (kratko) add(`Nájem ${vuz.title}`, denni * dni, `${fmt(denni)} / den`);
   else {
     add(`Nájem ${vuz.title}`, vuz.cenaMesic * mes, n.zakladMesice ? `ceník při pronájmu od ${mesTxt(n.zakladMesice)}` : `${fmt(vuz.cenaMesic)} / měsíc`);
     const pct = kratsiPct(n, celeMes);
+    najemMesic = vuz.cenaMesic * (1 + pct);
     if (pct > 0) add(`Kratší pronájem (${mesTxt(Math.max(1, celeMes))}) +${Math.round(pct * 100)} %`, vuz.cenaMesic * pct * mes, `+${fmt(vuz.cenaMesic * pct)} / měsíc`);
   }
   if (s.najezd === 'neomezeny' && vuz.neomezenyPriplatek != null) {
@@ -131,9 +134,14 @@ function spocitej(cfg, s) {
   }
   if (s.spoluucast === '5' || s.spoluucast === '0') {
     const sp = cfg.spoluucast[vuz.kategorie] || {};
-    const p = s.spoluucast === '5' ? sp.priplatek5 : sp.priplatek0;
-    const has = p !== null && p !== undefined;
-    add(s.spoluucast === '5' ? 'Spoluúčast 5 %' : 'Spoluúčast 0 %', has ? p * mes : null, has ? `+${fmt(p)} / měsíc` : 'příplatek upřesníme v nabídce');
+    if (!kratko) {
+      const k = n.spol5MesicPct != null ? n.spol5MesicPct : 0.1;
+      if (s.spoluucast === '5') add('Spoluúčast 5 %', najemMesic * k * mes, `+${Math.round(k * 100)} % z ceny nájmu`);
+    } else {
+      const p = s.spoluucast === '5' ? sp.priplatek5 : sp.priplatek0;
+      const has = p !== null && p !== undefined;
+      add(s.spoluucast === '5' ? 'Spoluúčast 5 %' : 'Spoluúčast 0 %', has ? p * dni : null, has ? `+${fmt(p)} / den` : 'příplatek upřesníme v nabídce');
+    }
   }
   return { vuz, dni, mes, kratko, chyby, polozky, celkem: Math.round(celkem), celkemSDph: Math.round(celkem * (1 + n.dph)), upresnime };
 }
@@ -214,6 +222,9 @@ class RxKonfigurator extends HTMLElement {
       return;
     }
     const v = this.vuz(), n = this.cfg.nastaveni;
+    const _od = parseD(this.s.od), _do = parseD(this.s.do); let _m = 0; while (_m < 600 && addMonths(_od, _m + 1) <= _do) _m++;
+    const kr = _m < 1 && Math.round((_do.getTime() - _od.getTime()) / 86400000) < n.dniVMesici;
+    if (!kr && this.s.spoluucast === '0') this.s.spoluucast = '10';
     const minOd = (() => { const z = new Date(); z.setDate(z.getDate() + 1); return iso(new Date(Date.UTC(z.getFullYear(), z.getMonth(), z.getDate()))); })();
     const karta = c => `<button class="car" data-car="${esc(c.id)}" aria-pressed="${c.id === this.s.vuzId}">
         ${c.obrazek ? `<img src="${esc(c.obrazek)}" alt="" loading="lazy">` : '<div class="noimg"></div>'}<b>${esc(c.title)}</b>${c.modelovyRok ? `<i>Modelový rok ${c.modelovyRok}</i>` : ''}<span>${c.cenaMesic === null ? 'cena na dotaz' : 'od ' + fmt(c.cenaMesic) + ' / měs.'}</span></button>`;
@@ -231,8 +242,8 @@ class RxKonfigurator extends HTMLElement {
       }).join('')}${v && v.neomezenyPriplatek != null ? `<button class="pill" data-km="neomezeny" aria-pressed="${this.s.najezd === 'neomezeny'}">Neomezeně<small>+${fmt(v.neomezenyPriplatek)}</small></button>` : ''}</div><p class="hint">Měsíčně v ceně ${new Intl.NumberFormat('cs-CZ').format(base)} km, každých dalších ${new Intl.NumberFormat('cs-CZ').format(n.krokKm)} km za ${fmt(n.cenaKrok)} / měsíc bez DPH.</p>`;
     }
     const sp = v ? (this.cfg.spoluucast[v.kategorie] || {}) : {};
-    const spOpt = [['10', 'Spoluúčast 10 %, min. 10 000 Kč', 'standard', 'v ceně'], ['5', 'Spoluúčast 5 %, min. 5 000 Kč', 'snížená', sp.priplatek5 != null ? '+' + fmt(sp.priplatek5) + ' / měs.' : 'příplatek dle vozu'], ['0', 'Spoluúčast 0 %', 'bez spoluúčasti', sp.priplatek0 != null ? '+' + fmt(sp.priplatek0) + ' / měs.' : 'příplatek dle vozu']]
-      .map(([k, t, s2, p]) => `<div class="opt" role="radio" tabindex="0" data-sp="${k}" aria-checked="${this.s.spoluucast === k}"><span class="dot"></span><span class="t">${t}<small>${s2}</small></span><span class="p">${p}</span></div>`).join('');
+    const spOpt = [['10', 'Spoluúčast 10 %, min. 10 000 Kč', 'standard', 'v ceně'], ['5', 'Spoluúčast 5 %, min. 5 000 Kč', 'snížená', !kr ? '+' + Math.round((n.spol5MesicPct != null ? n.spol5MesicPct : 0.1) * 100) + ' % z ceny' : (sp.priplatek5 != null ? '+' + fmt(sp.priplatek5) + ' / den' : 'příplatek dle vozu')], ['0', 'Spoluúčast 0 %', !kr ? 'jen u pronájmu kratšího než 30 dní' : 'bez spoluúčasti', !kr ? '' : (sp.priplatek0 != null ? '+' + fmt(sp.priplatek0) + ' / den' : 'příplatek dle vozu')]]
+      .map(([k, t, s2, p]) => `<div class="opt" role="radio" tabindex="0" data-sp="${k}" aria-checked="${this.s.spoluucast === k}" aria-disabled="${k === '0' && !kr}"><span class="dot"></span><span class="t">${t}<small>${s2}</small></span><span class="p">${p}</span></div>`).join('');
     const ridicInfo = (() => { const r = spocitej(this.cfg, this.s); return r.dni >= n.ridicZdarmaOd ? 'zdarma (pronájem nad 30 dní)' : `${n.ridicDen} Kč / den, u pronájmu nad 30 dní zdarma`; })();
 
     this.root.innerHTML = `<style>${CSS}</style><div class="hero"><h1>Konfigurátor pronájmu</h1><p>Vyberte vůz, pobočku, termín a nájezd. Cenu spočítáme hned a dostupnost ověříme v našem rezervačním systému. Pošlete nezávaznou poptávku, po ověření klienta vám potvrdíme rezervaci.</p></div><div class="wrap"><div>
@@ -338,7 +349,7 @@ class RxKonfigurator extends HTMLElement {
     this.root.querySelectorAll('[data-km]').forEach(b => b.onclick = () => { this.s.najezd = b.dataset.km === 'neomezeny' ? 'neomezeny' : Number(b.dataset.km); this.render(); });
     this.root.querySelectorAll('[data-dny]').forEach(b => b.onclick = () => { this.s.do = iso(new Date(parseD(this.s.od).getTime() + Number(b.dataset.dny) * 86400000)); this.render(); this.naplanujOvereni(); });
     this.root.querySelectorAll('[data-mes]').forEach(b => b.onclick = () => { this.s.do = iso(addMonths(parseD(this.s.od), Number(b.dataset.mes))); this.render(); this.naplanujOvereni(); });
-    const radio = el => { this.s.spoluucast = el.dataset.sp; this.render(); };
+    const radio = el => { if (el.getAttribute('aria-disabled') === 'true') return; this.s.spoluucast = el.dataset.sp; this.render(); };
     this.root.querySelectorAll('[data-sp]').forEach(el => { el.onclick = () => radio(el); el.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); radio(el); } }; });
     const r = $('ridic'); const tog = () => { this.s.druhyRidic = !this.s.druhyRidic; this.render(); };
     r.onclick = tog; r.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); tog(); } };

@@ -11,7 +11,9 @@ dostupnost se ověří v Renteonu a klient pošle nezávaznou poptávku (bez pla
   Příplatky (nájezd, spoluúčast) se poměrně přepočítávají × dní / 30. Škody max. 6 měsíců.
 - Nájezd: v ceně 2 500 km/měs., každých dalších 1 000 km = 6 000 Kč/měs. bez DPH.
 - Druhý řidič: u pronájmu nad 30 dní zdarma, jinak 120 Kč/den.
-- Spoluúčast: standard 10 % min. 10 000 Kč; 5 % (min. 5 000) a 0 % za příplatek podle kategorie A/B/C
+- Spoluúčast (Erik 6. 11. 16:30): standard 10 % min. 10 000 Kč. Pod 30 dní: 5 % a 0 % za příplatek Kč/DEN podle kategorie
+  (list Spoluúčast). Od 30 dní: 5 % = +10 % z ceny nájmu (vč. přirážky za kratší pronájem), 0 % nelze (volba zašedlá).
+  Původně: 5 % (min. 5 000) a 0 % za příplatek podle kategorie A/B/C
   (prázdný příplatek → web ukáže „upřesníme v nabídce“).
 - Vůz, který na pobočce není / není volný: hláška, že je dostupný na jiné pobočce a po dohodě ho přistavíme.
 - Později: záloha přes Stripe.

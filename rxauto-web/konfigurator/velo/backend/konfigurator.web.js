@@ -62,16 +62,18 @@ function spocitej(cfg, s) {
   if (dni < minD(n)) chyby.push(`Minimální délka pronájmu je ${dnyTxt(minD(n))}.`);
   if (vuz.maxMesice && dO > addMonths(od, vuz.maxMesice)) chyby.push(`U tohoto vozu je maximální doba pronájmu ${vuz.maxMesice} měsíců.`);
   const mes = dni / n.dniVMesici;
-  if (vuz.cenaMesic === null) return { vuz, dni, mes, chyby, polozky, naDotaz: true };
-  let celkem = 0, upresnime = false;
-  const add = (label, castka, info) => { polozky.push({ label, castka, info }); if (castka === null) upresnime = true; else celkem += castka; };
   let celeMes = 0; while (celeMes < 600 && addMonths(od, celeMes + 1) <= dO) celeMes++;
   const kratko = celeMes < 1 && dni < n.dniVMesici;
+  if (!kratko && s.spoluucast === '0') chyby.push('Spoluúčast 0 % je možná jen u pronájmu kratšího než 30 dní.');
+  if (vuz.cenaMesic === null) return { vuz, dni, mes, kratko, chyby, polozky, naDotaz: true };
+  let celkem = 0, upresnime = false, najemMesic = 0;
+  const add = (label, castka, info) => { polozky.push({ label, castka, info }); if (castka === null) upresnime = true; else celkem += castka; };
   const denni = vuz.cenaMesic * (n.kratkodobyKoef || 1) / n.dniVMesici;
   if (kratko) add(`Nájem ${vuz.title} (${fmtN(denni)} Kč/den)`, denni * dni);
   else {
     add(`Nájem ${vuz.title} (${fmtN(vuz.cenaMesic)} Kč/měs.)`, vuz.cenaMesic * mes);
     const pct = n.zakladMesice && n.priplatekZaMesic ? Math.max(0, n.zakladMesice - Math.max(1, celeMes)) * n.priplatekZaMesic : 0;
+    najemMesic = vuz.cenaMesic * (1 + pct);
     if (pct > 0) add(`Kratší pronájem (${Math.max(1, celeMes)} měs.) +${Math.round(pct * 100)} %`, vuz.cenaMesic * pct * mes);
   }
   if (s.najezd === 'neomezeny' && vuz.neomezenyPriplatek !== null) {
@@ -87,9 +89,14 @@ function spocitej(cfg, s) {
   }
   if (s.spoluucast === '5' || s.spoluucast === '0') {
     const sp = cfg.spoluucast[vuz.kategorie] || {};
-    const p = s.spoluucast === '5' ? sp.priplatek5 : sp.priplatek0;
-    add(s.spoluucast === '5' ? 'Snížená spoluúčast 5 % (min. 5 000 Kč)' : 'Spoluúčast 0 %', p === null || p === undefined ? null : p * mes,
-      p === null || p === undefined ? 'příplatek upřesníme v nabídce' : undefined);
+    if (!kratko) {
+      const k = n.spol5MesicPct != null ? n.spol5MesicPct : 0.1;
+      if (s.spoluucast === '5') add(`Snížená spoluúčast 5 % (min. 5 000 Kč) +${Math.round(k * 100)} % z ceny nájmu`, najemMesic * k * mes);
+    } else {
+      const p = s.spoluucast === '5' ? sp.priplatek5 : sp.priplatek0;
+      add(s.spoluucast === '5' ? 'Snížená spoluúčast 5 % (min. 5 000 Kč)' : 'Spoluúčast 0 %', p === null || p === undefined ? null : p * dni,
+        p === null || p === undefined ? 'příplatek upřesníme v nabídce' : undefined);
+    }
   }
   return { vuz, dni, mes, chyby, polozky, celkem: Math.round(celkem), celkemSDph: Math.round(celkem * (1 + n.dph)), upresnime };
 }

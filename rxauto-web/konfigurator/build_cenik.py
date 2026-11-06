@@ -56,26 +56,27 @@ params = [
     ("Krátkodobý pronájem (pod 30 dní) – násobek měsíční ceny", 2, "Zadal Erik 6. 11. 2026: denní cena = (měsíční cena + 100 %) / 30, tj. × 2 / 30."),
     ("Ceník platí pro pronájem od (měsíců)", 6, "Zadal Erik 6. 11. 2026: uvedená měsíční cena platí pro pronájem na 6 měsíců a déle."),
     ("Příplatek za každý měsíc kratší", 0.10, "Zadal Erik: každý měsíc kratší než 6 = +10 % (1 měsíc +50 %, 3 měsíce +30 %)."),
+    ("Spoluúčast 5 % u pronájmu od 30 dní (z ceny nájmu)", 0.10, "Zadal Erik: od 30 dní snížení z 10 % na 5 % = +10 % z ceny nájmu. Spoluúčast 0 % jen u pronájmu kratšího než 30 dní."),
 ]
 for i, (a, b, c) in enumerate(params, 4):
     wp.cell(i, 1, a).font = N; x = wp.cell(i, 2, b); x.font = INP; wp.cell(i, 3, c).font = NOTE
     x.number_format = PCT if isinstance(b, float) else ("#,##0" if b >= 1000 else "0")
     for cc in range(1, 4): wp.cell(i, cc).border = THIN
 P = {k: f"Parametry!$B${i}" for i, (k, _, _) in enumerate(params, 4)}
-P_DNI, P_MIN, P_KM, P_KROK, P_CENAKROK, P_RIDIC, P_RIDIC_ZDARMA, P_DPH, P_KRAT, P_ZAKLAD, P_PCT = (P[k] for k, _, _ in params)
+P_DNI, P_MIN, P_KM, P_KROK, P_CENAKROK, P_RIDIC, P_RIDIC_ZDARMA, P_DPH, P_KRAT, P_ZAKLAD, P_PCT, P_SPOL5 = (P[k] for k, _, _ in params)
 
 # ---------- Spoluúčast ----------
 wsp = wb.create_sheet("Spoluúčast")
 wsp["A1"] = "Spoluúčast podle kategorie vozu"; wsp["A1"].font = T
-wsp["A2"] = "Standard v ceně: 10 %, min. 10 000 Kč. Příplatky za 5 % (min. 5 000 Kč) a 0 % v Kč bez DPH za měsíc (Erik, 6. 11. 2026)."; wsp["A2"].font = NOTE
-hdr(wsp, 4, ["Kategorie", "Popis", "Standard (v ceně)", "Příplatek 5 % / měsíc", "Příplatek 0 % / měsíc"], [12, 40, 22, 22, 22])
+wsp["A2"] = "Standard v ceně: 10 %, min. 10 000 Kč. Příplatky níže jsou Kč bez DPH za DEN a platí jen pro pronájem kratší než 30 dní. Od 30 dní: 5 % = +10 % z ceny nájmu (list Parametry), 0 % nelze (Erik, 6. 11. 2026)."; wsp["A2"].font = NOTE
+hdr(wsp, 4, ["Kategorie", "Popis", "Standard (v ceně)", "Příplatek 5 % / den (pod 30 dní)", "Příplatek 0 % / den (pod 30 dní)"], [12, 40, 22, 22, 22])
 cats = [("A", "Malé a kompaktní (Fabia, Kamiq)", 200, 400), ("B", "Střední (Karoq, Octavia, 3008)", 300, 500), ("C", "Vyšší (Superb, Kodiaq, Tonale)", 400, 600), ("P", "Prémiové (Mercedes GLE, CLE)", 800, 1500), ("D", "Dodávky (Boxer)", 300, 500), ("O", "Obytné vozy", 400, 800)]
 for i, (k, d, p5, p0) in enumerate(cats, 5):
     wsp.cell(i, 1, k).font = INP; wsp.cell(i, 2, d).font = INP; wsp.cell(i, 3, "10 %, min. 10 000 Kč").font = N
     for cc in (4, 5):
         x = wsp.cell(i, cc, p5 if cc == 4 else p0); x.fill = Y; x.font = INP; x.number_format = KC
     for cc in range(1, 6): wsp.cell(i, cc).border = THIN
-wsp.cell(5, 4).comment = Comment("Doplňte příplatek v Kč bez DPH za měsíc. Prázdné = web nabídne volbu „na dotaz“.", "Claude")
+wsp.cell(5, 4).comment = Comment("Příplatek v Kč bez DPH za den, jen pro pronájem kratší než 30 dní. Prázdné = „upřesníme v nabídce“.", "Claude")
 
 # ---------- Vozy ----------
 wv = wb.create_sheet("Vozy")
@@ -148,8 +149,8 @@ calc = [
     ("Příplatek za nájezd celkem", "=B13*B11", ""),
     ("Druhý řidič", f'=IF(B7="ano",IF(B5>={P_RIDIC_ZDARMA},0,B5*{P_RIDIC}),0)', "nad 30 dní zdarma, jinak 120 Kč/den"),
     ("Kategorie spoluúčasti", f"=INDEX(Vozy!$E${r0}:$E${LAST},MATCH(B4,Vozy!$A${r0}:$A${LAST},0))", ""),
-    ("Příplatek spoluúčast / měsíc", f'=IF(B8="5 %",INDEX(Spoluúčast!$D$5:$D$10,MATCH(B16,Spoluúčast!$A$5:$A$10,0)),IF(B8="0 %",INDEX(Spoluúčast!$E$5:$E$10,MATCH(B16,Spoluúčast!$A$5:$A$10,0)),0))', "prázdné v listu Spoluúčast = 0 / na dotaz"),
-    ("Příplatek spoluúčast celkem", "=B17*B11", ""),
+    ("Příplatek spoluúčast / den (pod 30 dní)", f'=IF(B8="5 %",INDEX(Spoluúčast!$D$5:$D$10,MATCH(B16,Spoluúčast!$A$5:$A$10,0)),IF(B8="0 %",INDEX(Spoluúčast!$E$5:$E$10,MATCH(B16,Spoluúčast!$A$5:$A$10,0)),0))', "list Spoluúčast, Kč za den"),
+    ("Příplatek spoluúčast celkem", f'=IF(B5<{P_DNI},B17*B5,IF(B8="5 %",B12*{P_SPOL5},0))', "pod 30 dní: Kč/den × dny; od 30 dní: 5 % = +10 % z ceny nájmu, 0 % nelze"),
     ("CELKEM bez DPH", "=B12+B14+B15+B18", ""),
     ("CELKEM s DPH", f"=B19*(1+{P_DPH})", ""),
     ("Průměrně za měsíc bez DPH", "=IFERROR(B19/B11,0)", ""),
