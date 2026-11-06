@@ -11,6 +11,11 @@ dostupnost se ověří v Renteonu a klient pošle nezávaznou poptávku (bez pla
   (příplatky zatím prázdné → web ukáže „upřesníme v nabídce“).
 - Vůz, který na pobočce není / není volný: hláška, že je dostupný na jiné pobočce a po dohodě ho přistavíme.
 - Později: záloha přes Stripe.
+- Úprava 6. 11. odpoledne: 3008 = 13 900 Kč/měs. + volba neomezeného nájezdu za pevný příplatek 6 000 Kč/měs.;
+  3008 a Tonale bez omezení doby (tlačítko 12 měsíců); přidány Mercedes GLE a CLE 300 4MATIC (MR 2025, cena na dotaz),
+  Peugeot Boxer L3H2 (skupina Dodávky, 20 700 Kč/měs. = 690 Kč/den × 30 – ověřit), obytné vozy Roller Team
+  Livingstone 2 Sport a Hobby Optima T65 HFL (skupina Obytné vozy, cena na dotaz, dostupnost ručně).
+  Modelové roky: 3008 2022, Tonale 2024, GLE/CLE 2025. Nové kategorie spoluúčasti P (prémiové), D (dodávky), O (obytné).
 
 ## Soubory
 | Soubor | Kde ve Wixu |
@@ -28,9 +33,10 @@ prvku přizpůsobí obsahu. Tlačítko „Spočítat cenu“ na /dlouhodoby-pron
 
 ## CMS kolekce
 - `KonfiguratorVozy` (čtení všichni): title, cenaMesic, kmVCene, kategorieSpoluucasti, sippCz, sippSk, prg/osr/bts,
-  maxMesice, aktivni, poradi, obrazek, popisWeb (text pro klienta), servisVCene, poznamka (interní).
+  maxMesice, aktivni, poradi, obrazek, popisWeb (text pro klienta), servisVCene, poznamka (interní),
+  skupina (Osobní auta / Dodávky / Obytné vozy), modelovyRok, neomezenyPriplatek (Kč/měs., prázdné = bez volby).
 - `KonfiguratorNastaveni`: dniVMesici, minDni, kmVCene, krokKm, cenaKrok, ridicDen, ridicZdarmaOd, dph, najezdy.
-- `KonfiguratorSpoluucast`: A/B/C, priplatek5, priplatek0 (Kč/měs. bez DPH).
+- `KonfiguratorSpoluucast`: A/B/C/P/D/O, priplatek5, priplatek0 (Kč/měs. bez DPH).
 - `Poptavky` (jen admin) – **osobní údaje klientů, nikdy neexportovat do repa.**
 
 Aktualizace ceníku: upravit Excel → `python3 cenik_to_json.py cenik.xlsx` → přepsat položky v CMS
@@ -43,6 +49,7 @@ Aktualizace ceníku: upravit Excel → `python3 cenik_to_json.py cenik.xlsx` →
 - Údaje ve Wix Secrets Manageru: `RENTEON_CZ_USER`, `RENTEON_CZ_PASSWORD`, `RENTEON_SK_USER`, `RENTEON_SK_PASSWORD`
   (zadává Erik, ideálně samostatný API uživatel s právem jen číst dostupnost).
 - Bez údajů / při chybě konfigurátor funguje dál, jen ukáže „ověříme ručně“ a poptávka se uloží se stavem `neovereno`.
+- SIPP nových vozů (CZ, jen Praha): GLE = GFAR, CLE = UEAR, Boxer = FKMR. Obytné vozy nejsou v Renteonu.
 - Omezení mapování SIPP: Kamiq Selection = MC (CFAR), Superb Combi SL = L&K (FWAR), Karoq sdílí IGAR s 3008 (CZ),
   Kodiaq SL = RS (FFAR). Tonale není v Renteonu → vždy „ověříme ručně“.
 

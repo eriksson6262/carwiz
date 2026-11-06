@@ -35,7 +35,7 @@ async function nactiKonfiguraci() {
   const vozy = v.items.map(i => ({
     id: i._id, title: i.title, znacka: i.znacka, cenaMesic: num(i.cenaMesic), kmVCene: num(i.kmVCene),
     kategorie: i.kategorieSpoluucasti, prg: !!i.prg, osr: !!i.osr, bts: !!i.bts,
-    maxMesice: num(i.maxMesice), popisWeb: i.popisWeb || '', servisVCene: i.servisVCene !== false, obrazek: i.obrazek || '', overitelny: !!(i.sippCz || i.sippSk)
+    maxMesice: num(i.maxMesice), popisWeb: i.popisWeb || '', servisVCene: i.servisVCene !== false, skupina: i.skupina || 'Osobní auta', modelovyRok: num(i.modelovyRok), neomezenyPriplatek: num(i.neomezenyPriplatek), obrazek: i.obrazek || '', overitelny: !!(i.sippCz || i.sippSk)
   }));
   cfgCache = { vozy, nastaveni, spoluucast, _sipp: Object.fromEntries(v.items.map(i => [i._id, { sippCz: i.sippCz, sippSk: i.sippSk }])) };
   cfgTime = Date.now();
@@ -66,7 +66,9 @@ function spocitej(cfg, s) {
   let celkem = 0, upresnime = false;
   const add = (label, castka, info) => { polozky.push({ label, castka, info }); if (castka === null) upresnime = true; else celkem += castka; };
   add(`Nájem ${vuz.title} (${fmtN(vuz.cenaMesic)} Kč/měs.)`, vuz.cenaMesic * mes);
-  if (vuz.kmVCene !== null) {
+  if (s.najezd === 'neomezeny' && vuz.neomezenyPriplatek !== null) {
+    add('Neomezený nájezd', vuz.neomezenyPriplatek * mes);
+  } else if (vuz.kmVCene !== null) {
     const km = Number(s.najezd) || vuz.kmVCene;
     const kroky = Math.max(0, Math.ceil((km - vuz.kmVCene) / n.krokKm));
     if (kroky > 0) add(`Navýšení nájezdu na ${fmtN(km)} km/měs.`, kroky * n.cenaKrok * mes);
@@ -167,9 +169,10 @@ export const odeslatPoptavku = webMethod(Permissions.Anyone, async (p) => {
   try { dost = await overInterne(p.vuzId, p.pobocka, p.od, p.do); } catch (e) { dost = { stav: 'neovereno', text: 'neověřeno' }; }
   const spText = { '10': '10 % (min. 10 000 Kč)', '5': '5 % (min. 5 000 Kč)', '0': '0 %' }[p.spoluucast] || '10 % (min. 10 000 Kč)';
   const item = {
-    title: jmeno, email, telefon, firma: str(p.firma), model: v.vuz.title,
+    title: jmeno, email, telefon, firma: str(p.firma), model: v.vuz.title + (v.vuz.modelovyRok ? ' (' + v.vuz.modelovyRok + ')' : ''),
     pobocka: (POBOCKY[p.pobocka] || {}).nazev || '', od: p.od, do: p.do, dni: v.dni,
-    najezd: v.vuz.kmVCene === null ? null : Number(p.najezd) || v.vuz.kmVCene, druhyRidic: !!p.druhyRidic, spoluucast: spText,
+    najezd: v.vuz.kmVCene === null || p.najezd === 'neomezeny' ? null : Number(p.najezd) || v.vuz.kmVCene,
+    najezdText: v.vuz.kmVCene === null || p.najezd === 'neomezeny' ? 'neomezený' : (Number(p.najezd) || v.vuz.kmVCene) + ' km/měs.', druhyRidic: !!p.druhyRidic, spoluucast: spText,
     cenaBezDph: v.naDotaz ? null : v.celkem,
     dostupnost: `${dost.stav}: ${dost.text}`, poznamka: str(p.poznamka, 2000), stav: 'nová'
   };

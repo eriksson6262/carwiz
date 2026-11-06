@@ -22,6 +22,9 @@ h2 .n{display:inline-block;width:24px;height:24px;border-radius:50%;background:#
 .car img{width:100%;aspect-ratio:278/180;object-fit:cover;display:block;border-radius:6px;background:var(--soft)}
 .car b{display:block;font-size:14px;margin-top:6px;line-height:1.25}
 .car span{display:block;font-size:13px;color:var(--mute);margin-top:2px}
+.grp{font-size:12.5px;letter-spacing:2px;text-transform:uppercase;color:var(--mute);margin:18px 0 8px;font-weight:600}
+.car i{display:block;font-style:normal;font-size:12px;color:var(--mute);margin-top:2px}
+.noimg{width:100%;aspect-ratio:278/180;border-radius:6px;background:var(--soft)}
 .row{display:flex;flex-wrap:wrap;gap:8px}
 .pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 16px;font:inherit;font-size:14px;cursor:pointer;color:#111}
 .pill:hover{border-color:#999}
@@ -92,7 +95,9 @@ function spocitej(cfg, s) {
   let celkem = 0, upresnime = false;
   const add = (label, castka, info) => { polozky.push({ label, castka, info }); if (castka === null) upresnime = true; else celkem += castka; };
   add(`Nájem ${vuz.title}`, vuz.cenaMesic * mes, `${fmt(vuz.cenaMesic)} / měsíc`);
-  if (vuz.kmVCene !== null) {
+  if (s.najezd === 'neomezeny' && vuz.neomezenyPriplatek != null) {
+    add('Neomezený nájezd', vuz.neomezenyPriplatek * mes, `+${fmt(vuz.neomezenyPriplatek)} / měsíc`);
+  } else if (vuz.kmVCene !== null) {
     const km = Number(s.najezd) || vuz.kmVCene;
     const kroky = Math.max(0, Math.ceil((km - vuz.kmVCene) / n.krokKm));
     if (kroky > 0) add(`Nájezd ${new Intl.NumberFormat('cs-CZ').format(km)} km/měs.`, kroky * n.cenaKrok * mes, `+${fmt(kroky * n.cenaKrok)} / měsíc`);
@@ -155,7 +160,8 @@ class RxKonfigurator extends HTMLElement {
     this.s.vuzId = id;
     const v = this.vuz();
     if (v) {
-      if (v.kmVCene !== null && !this.najezdy().includes(this.s.najezd)) this.s.najezd = v.kmVCene;
+      if (this.s.najezd === 'neomezeny' && v.neomezenyPriplatek == null) this.s.najezd = null;
+      if (v.kmVCene !== null && this.s.najezd !== 'neomezeny' && !this.najezdy().includes(this.s.najezd)) this.s.najezd = v.kmVCene;
       if (!v[POLE[this.s.pobocka]]) { const k = POBOCKY.find(p => v[POLE[p[0]]]); if (k) this.s.pobocka = k[0]; }
       if (v.maxMesice && parseD(this.s.do) > addMonths(parseD(this.s.od), v.maxMesice)) this.s.do = iso(addMonths(parseD(this.s.od), v.maxMesice));
     }
@@ -185,8 +191,11 @@ class RxKonfigurator extends HTMLElement {
     }
     const v = this.vuz(), n = this.cfg.nastaveni;
     const minOd = (() => { const z = new Date(); z.setDate(z.getDate() + 1); return iso(new Date(Date.UTC(z.getFullYear(), z.getMonth(), z.getDate()))); })();
-    const cars = this.cfg.vozy.map(c => `<button class="car" data-car="${esc(c.id)}" aria-pressed="${c.id === this.s.vuzId}">
-        <img src="${esc(c.obrazek)}" alt="" loading="lazy"><b>${esc(c.title)}</b><span>${c.cenaMesic === null ? 'cena na dotaz' : 'od ' + fmt(c.cenaMesic) + ' / měs.'}</span></button>`).join('');
+    const karta = c => `<button class="car" data-car="${esc(c.id)}" aria-pressed="${c.id === this.s.vuzId}">
+        ${c.obrazek ? `<img src="${esc(c.obrazek)}" alt="" loading="lazy">` : '<div class="noimg"></div>'}<b>${esc(c.title)}</b>${c.modelovyRok ? `<i>Modelový rok ${c.modelovyRok}</i>` : ''}<span>${c.cenaMesic === null ? 'cena na dotaz' : 'od ' + fmt(c.cenaMesic) + ' / měs.'}</span></button>`;
+    const skupiny = [];
+    this.cfg.vozy.forEach(c => { const g = c.skupina || 'Osobní auta'; let x = skupiny.find(y => y.g === g); if (!x) { x = { g, v: [] }; skupiny.push(x); } x.v.push(c); });
+    const cars = skupiny.map(x => (skupiny.length > 1 ? `<div class="grp">${esc(x.g)}</div>` : '') + `<div class="cars">${x.v.map(karta).join('')}</div>`).join('');
     const pob = POBOCKY.map(([k, nz]) => `<button class="pill" data-pob="${k}" aria-pressed="${this.s.pobocka === k}">${nz}${v && !v[POLE[k]] ? '<small>· přistavení</small>' : ''}</button>`).join('');
     let najezd = '';
     if (v && v.kmVCene === null) najezd = `<p class="hint">U vozu ${esc(v.title)} je nájezd neomezený.</p>`;
@@ -195,7 +204,7 @@ class RxKonfigurator extends HTMLElement {
       najezd = `<div class="row">${this.najezdy().map(km => {
         const k = Math.max(0, Math.ceil((km - base) / n.krokKm));
         return `<button class="pill" data-km="${km}" aria-pressed="${(this.s.najezd || base) === km}">${new Intl.NumberFormat('cs-CZ').format(km)} km${k ? `<small>+${fmt(k * n.cenaKrok)}</small>` : '<small>v ceně</small>'}</button>`;
-      }).join('')}</div><p class="hint">Měsíčně v ceně ${new Intl.NumberFormat('cs-CZ').format(base)} km, každých dalších ${new Intl.NumberFormat('cs-CZ').format(n.krokKm)} km za ${fmt(n.cenaKrok)} / měsíc bez DPH.</p>`;
+      }).join('')}${v && v.neomezenyPriplatek != null ? `<button class="pill" data-km="neomezeny" aria-pressed="${this.s.najezd === 'neomezeny'}">Neomezeně<small>+${fmt(v.neomezenyPriplatek)}</small></button>` : ''}</div><p class="hint">Měsíčně v ceně ${new Intl.NumberFormat('cs-CZ').format(base)} km, každých dalších ${new Intl.NumberFormat('cs-CZ').format(n.krokKm)} km za ${fmt(n.cenaKrok)} / měsíc bez DPH.</p>`;
     }
     const sp = v ? (this.cfg.spoluucast[v.kategorie] || {}) : {};
     const spOpt = [['10', 'Spoluúčast 10 %, min. 10 000 Kč', 'standard', 'v ceně'], ['5', 'Spoluúčast 5 %, min. 5 000 Kč', 'snížená', sp.priplatek5 != null ? '+' + fmt(sp.priplatek5) + ' / měs.' : 'příplatek dle vozu'], ['0', 'Spoluúčast 0 %', 'bez spoluúčasti', sp.priplatek0 != null ? '+' + fmt(sp.priplatek0) + ' / měs.' : 'příplatek dle vozu']]
@@ -203,16 +212,16 @@ class RxKonfigurator extends HTMLElement {
     const ridicInfo = (() => { const r = spocitej(this.cfg, this.s); return r.dni >= n.ridicZdarmaOd ? 'zdarma (pronájem nad 30 dní)' : `${n.ridicDen} Kč / den, u pronájmu nad 30 dní zdarma`; })();
 
     this.root.innerHTML = `<style>${CSS}</style><div class="hero"><h1>Konfigurátor pronájmu</h1><p>Vyberte vůz, pobočku, termín a nájezd. Cenu spočítáme hned a dostupnost ověříme v našem rezervačním systému. Pošlete nezávaznou poptávku, po ověření klienta vám potvrdíme rezervaci.</p></div><div class="wrap"><div>
-      <h2><span class="n">1</span>Vůz</h2><div class="cars">${cars}</div>
-      ${v && v.popisWeb ? `<p class="hint">${esc(v.popisWeb)}</p>` : ''}
+      <h2><span class="n">1</span>Vůz</h2>${cars}
+      ${v && (v.popisWeb || v.modelovyRok) ? `<p class="hint">${v.modelovyRok ? `Modelový rok ${v.modelovyRok}. ` : ''}${esc(v.popisWeb || '')}</p>` : ''}
       <h2><span class="n">2</span>Pobočka a termín</h2>
       <div class="row">${pob}</div>
       <div class="dates" style="margin-top:12px">
         <label class="f">Převzetí<input type="date" id="od" min="${minOd}" value="${this.s.od}"></label>
         <label class="f">Vrácení<input type="date" id="do" min="${this.s.od}" value="${this.s.do}"></label>
       </div>
-      <div class="row" style="margin-top:10px">${[1, 2, 3, 6].filter(m => !v || !v.maxMesice || m <= v.maxMesice).map(m => `<button class="pill" data-mes="${m}">${m} ${m === 1 ? 'měsíc' : m < 5 ? 'měsíce' : 'měsíců'}</button>`).join('')}</div>
-      <p class="hint">Minimální doba pronájmu ${n.minDni} dní${v && v.maxMesice ? `, u vozu ${esc(v.title)} maximálně ${v.maxMesice} měsíců` : ''}.</p>
+      <div class="row" style="margin-top:10px">${[1, 2, 3, 6, 12].filter(m => v ? (!v.maxMesice || m <= v.maxMesice) : m <= 6).map(m => `<button class="pill" data-mes="${m}">${m} ${m === 1 ? 'měsíc' : m < 5 ? 'měsíce' : 'měsíců'}</button>`).join('')}</div>
+      <p class="hint">Minimální doba pronájmu ${n.minDni} dní${v && v.maxMesice ? `, u vozu ${esc(v.title)} maximálně ${v.maxMesice} měsíců` : (v ? ', bez omezení maximální doby' : '')}.</p>
       <h2><span class="n">3</span>Nájezd</h2>${najezd}
       <h2><span class="n">4</span>Služby</h2>
       <div class="opt" role="checkbox" tabindex="0" id="ridic" aria-checked="${this.s.druhyRidic}" style="margin-bottom:14px"><span class="dot" style="border-radius:4px"></span><span class="t">Druhý řidič<small>${ridicInfo}</small></span></div>
@@ -241,7 +250,7 @@ class RxKonfigurator extends HTMLElement {
     if (!v) h = `<h3>Vaše konfigurace</h3><p class="meta">Začněte výběrem vozu.</p>`;
     else {
       const pob = POBOCKY.find(p => p[0] === this.s.pobocka)[1];
-      h = `<h3>${esc(v.title)}</h3><p class="meta">${esc(pob)} · ${cz(this.s.od)} – ${cz(this.s.do)}${r.dni ? ` · ${r.dni} dní` : ''}</p>`;
+      h = `<h3>${esc(v.title)}${v.modelovyRok ? ` <small style="font-weight:400;color:var(--mute);font-size:13px">${v.modelovyRok}</small>` : ''}</h3><p class="meta">${esc(pob)} · ${cz(this.s.od)} – ${cz(this.s.do)}${r.dni ? ` · ${r.dni} dní` : ''}</p>`;
       if (r.chyby.length) h += r.chyby.map(c => `<p class="err">${esc(c)}</p>`).join('');
       else if (r.naDotaz) h += `<div class="li"><span>Cena</span><span>na dotaz</span></div><p class="hint">Cenu vám pošleme v nabídce.</p>`;
       else {
@@ -272,7 +281,7 @@ class RxKonfigurator extends HTMLElement {
     const $ = id => this.root.getElementById(id);
     this.root.querySelectorAll('[data-car]').forEach(b => b.onclick = () => this.vyberVuz(b.dataset.car));
     this.root.querySelectorAll('[data-pob]').forEach(b => b.onclick = () => { this.s.pobocka = b.dataset.pob; this.render(); this.naplanujOvereni(); });
-    this.root.querySelectorAll('[data-km]').forEach(b => b.onclick = () => { this.s.najezd = Number(b.dataset.km); this.render(); });
+    this.root.querySelectorAll('[data-km]').forEach(b => b.onclick = () => { this.s.najezd = b.dataset.km === 'neomezeny' ? 'neomezeny' : Number(b.dataset.km); this.render(); });
     this.root.querySelectorAll('[data-mes]').forEach(b => b.onclick = () => { this.s.do = iso(addMonths(parseD(this.s.od), Number(b.dataset.mes))); this.render(); this.naplanujOvereni(); });
     const radio = el => { this.s.spoluucast = el.dataset.sp; this.render(); };
     this.root.querySelectorAll('[data-sp]').forEach(el => { el.onclick = () => radio(el); el.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); radio(el); } }; });

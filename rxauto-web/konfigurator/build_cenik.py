@@ -66,7 +66,7 @@ wsp = wb.create_sheet("Spoluúčast")
 wsp["A1"] = "Spoluúčast podle kategorie vozu"; wsp["A1"].font = T
 wsp["A2"] = "Standard v ceně: 10 %, min. 10 000 Kč. Příplatky za 5 % (min. 5 000 Kč) a 0 % doplňte po kategoriích (Erik: nadefinujeme později)."; wsp["A2"].font = NOTE
 hdr(wsp, 4, ["Kategorie", "Popis", "Standard (v ceně)", "Příplatek 5 % / měsíc", "Příplatek 0 % / měsíc"], [12, 40, 22, 22, 22])
-cats = [("A", "Malé a kompaktní (Fabia, Kamiq)"), ("B", "Střední (Karoq, Octavia, 3008)"), ("C", "Vyšší (Superb, Kodiaq, Tonale)")]
+cats = [("A", "Malé a kompaktní (Fabia, Kamiq)"), ("B", "Střední (Karoq, Octavia, 3008)"), ("C", "Vyšší (Superb, Kodiaq, Tonale)"), ("P", "Prémiové (Mercedes GLE, CLE)"), ("D", "Dodávky (Boxer)"), ("O", "Obytné vozy")]
 for i, (k, d) in enumerate(cats, 5):
     wsp.cell(i, 1, k).font = INP; wsp.cell(i, 2, d).font = INP; wsp.cell(i, 3, "10 %, min. 10 000 Kč").font = N
     for cc in (4, 5):
@@ -78,22 +78,27 @@ wsp.cell(5, 4).comment = Comment("Doplňte příplatek v Kč bez DPH za měsíc.
 wv = wb.create_sheet("Vozy")
 wv["A1"] = "Vozy v konfigurátoru"; wv["A1"].font = T
 cols = ["Model na webu", "Značka", "Cena / měsíc bez DPH", "Nájezd v ceně (km/měs.)", "Kategorie spoluúčasti",
-        "SIPP Renteon CZ", "SIPP Renteon SK", "Praha", "Ostrava", "Bratislava", "Max. doba (měsíce)", "Aktivní", "Poznámka (interní)", "Text pro web", "Servis v ceně"]
-hdr(wv, 3, cols, [26, 12, 16, 14, 12, 12, 12, 9, 9, 11, 12, 9, 46, 46, 11])
+        "SIPP Renteon CZ", "SIPP Renteon SK", "Praha", "Ostrava", "Bratislava", "Max. doba (měsíce)", "Aktivní", "Poznámka (interní)", "Text pro web", "Servis v ceně", "Skupina", "Modelový rok", "Neomezený nájezd – příplatek / měs."]
+hdr(wv, 3, cols, [30, 14, 16, 14, 12, 12, 12, 9, 9, 11, 12, 9, 46, 46, 11, 14, 11, 16])
 cars = [
-    ("Fabia Monte Carlo", "Škoda", 9900, 2500, "A", "EDAR", "EDAR", "ano", "ano", "ne", 6, "ano", "", "", "ano"),
-    ("Kamiq Selection", "Škoda", 10900, 2500, "A", "CFAR", "CFAR", "ano", "ano", "ano", 6, "ano", "", "", "ano"),
-    ("Kamiq Monte Carlo", "Škoda", 11900, 2500, "A", "CFAR", "CFAR", "ano", "ano", "ano", 6, "ano", "Renteon nerozlišuje Kamiq Selection a MC (obojí CFAR).", "", "ano"),
-    ("Karoq Sportline", "Škoda", 12900, 2500, "B", "IGAR", "IGAR", "ano", "ano", "ano", 6, "ano", "IGAR v CZ sdílí s Peugeot 3008.", "", "ano"),
-    ("Octavia", "Škoda", 12900, 2500, "B", "IDAR", "IDAR", "ano", "ne", "ne", 6, "ano", "", "", "ano"),
-    ("Octavia Combi Sportline", "Škoda", 13900, 2500, "B", "IWAR", "IWAR", "ano", "ano", "ano", 6, "ano", "", "", "ano"),
-    ("Superb Sportline", "Škoda", 14900, 2500, "C", "FDAR", "FDAR", "ano", "ne", "ne", 6, "ano", "", "", "ano"),
-    ("Superb Combi Sportline", "Škoda", 14900, 2500, "C", "FWAR", "FWAR", "ano", "ano", "ne", 6, "ano", "", "", "ano"),
-    ("Superb Combi L&K", "Škoda", 16900, 2500, "C", "FWAR", "FWAR", "ano", "ano", "ne", 6, "ano", "Renteon nerozlišuje Sportline a L&K (obojí FWAR).", "", "ano"),
-    ("Kodiaq Sportline", "Škoda", 16900, 2500, "C", "FFAR", "FFAR", "ano", "ano", "ano", 6, "ano", "", "", "ano"),
-    ("Kodiaq RS 4×4", "Škoda", 18900, 2500, "C", "FFAR", "FFAR", "ano", "ano", "ano", 6, "ano", "FFAR = všechny Kodiaqy (+ Peugeot 5008).", "", "ano"),
-    ("Alfa Romeo Tonale PHEV Q4", "Alfa Romeo", 19900, 2500, "C", "", "", "ano", "ne", "ne", "", "ano", "Není v Renteonu – dostupnost ověříme ručně. Bez omezení doby, servis není v ceně, nabíjení zdarma.", "Plug-in hybrid, bez omezení doby pronájmu, nabíjení zdarma. Servis není v ceně.", "ne"),
-    ("Peugeot 3008", "Peugeot", None, None, "B", "IGAR", "CFAR", "ano", "ano", "ano", "", "ano", "Cena na dotaz, neomezený nájezd.", "Neomezený nájezd. Cenu pošleme v nabídce.", "ano"),
+    ("Fabia Monte Carlo", "Škoda", 9900, 2500, "A", "EDAR", "EDAR", "ano", "ano", "ne", 6, "ano", "", "", "ano", "Osobní auta", None, None),
+    ("Kamiq Selection", "Škoda", 10900, 2500, "A", "CFAR", "CFAR", "ano", "ano", "ano", 6, "ano", "", "", "ano", "Osobní auta", None, None),
+    ("Kamiq Monte Carlo", "Škoda", 11900, 2500, "A", "CFAR", "CFAR", "ano", "ano", "ano", 6, "ano", "Renteon nerozlišuje Kamiq Selection a MC (obojí CFAR).", "", "ano", "Osobní auta", None, None),
+    ("Karoq Sportline", "Škoda", 12900, 2500, "B", "IGAR", "IGAR", "ano", "ano", "ano", 6, "ano", "IGAR v CZ sdílí s Peugeot 3008.", "", "ano", "Osobní auta", None, None),
+    ("Octavia", "Škoda", 12900, 2500, "B", "IDAR", "IDAR", "ano", "ne", "ne", 6, "ano", "", "", "ano", "Osobní auta", None, None),
+    ("Octavia Combi Sportline", "Škoda", 13900, 2500, "B", "IWAR", "IWAR", "ano", "ano", "ano", 6, "ano", "", "", "ano", "Osobní auta", None, None),
+    ("Superb Sportline", "Škoda", 14900, 2500, "C", "FDAR", "FDAR", "ano", "ne", "ne", 6, "ano", "", "", "ano", "Osobní auta", None, None),
+    ("Superb Combi Sportline", "Škoda", 14900, 2500, "C", "FWAR", "FWAR", "ano", "ano", "ne", 6, "ano", "", "", "ano", "Osobní auta", None, None),
+    ("Superb Combi L&K", "Škoda", 16900, 2500, "C", "FWAR", "FWAR", "ano", "ano", "ne", 6, "ano", "Renteon nerozlišuje Sportline a L&K (obojí FWAR).", "", "ano", "Osobní auta", None, None),
+    ("Kodiaq Sportline", "Škoda", 16900, 2500, "C", "FFAR", "FFAR", "ano", "ano", "ano", 6, "ano", "", "", "ano", "Osobní auta", None, None),
+    ("Kodiaq RS 4×4", "Škoda", 18900, 2500, "C", "FFAR", "FFAR", "ano", "ano", "ano", 6, "ano", "FFAR = všechny Kodiaqy (+ Peugeot 5008).", "", "ano", "Osobní auta", None, None),
+    ("Alfa Romeo Tonale PHEV Q4", "Alfa Romeo", 19900, 2500, "C", "", "", "ano", "ne", "ne", "", "ano", "Není v Renteonu – dostupnost ověříme ručně.", "Plug-in hybrid 4×4, bez omezení doby pronájmu, nabíjení zdarma. Servis není v ceně.", "ne", "Osobní auta", 2024, None),
+    ("Peugeot 3008", "Peugeot", 13900, 2500, "B", "IGAR", "CFAR", "ano", "ano", "ano", "", "ano", "IGAR v CZ sdílí s Karoq.", "Bez omezení doby pronájmu. Možnost neomezeného nájezdu za pevný příplatek.", "ano", "Osobní auta", 2022, 6000),
+    ("Mercedes-Benz GLE", "Mercedes-Benz", None, 2500, "P", "GFAR", "", "ano", "ne", "ne", "", "ano", "Cena zatím na dotaz – doplnit.", "Prémiové SUV 4MATIC. Cenu pošleme v nabídce.", "ano", "Osobní auta", 2025, None),
+    ("Mercedes-Benz CLE 300 4MATIC", "Mercedes-Benz", None, 2500, "P", "UEAR", "", "ano", "ne", "ne", "", "ano", "Cena zatím na dotaz – doplnit (týdenní nabídka 9 990 Kč/týden vč. DPH).", "Kupé s pohonem 4MATIC. Cenu pošleme v nabídce.", "ano", "Osobní auta", 2025, None),
+    ("Peugeot Boxer 3500 L3H2", "Peugeot", 20700, 2500, "D", "FKMR", "", "ano", "ne", "ne", "", "ano", "690 Kč/den bez DPH × 30 (dle webu „od 690 Kč/den“) – ověřit.", "Dodávka L3H2, manuál, 3 místa.", "ano", "Dodávky", None, None),
+    ("Roller Team Livingstone 2 Sport", "Fiat", None, 2500, "O", "", "", "ano", "ne", "ne", "", "ano", "Není v Renteonu – dostupnost ověříme ručně. Cena doplnit.", "Obytná dodávka 5,99 m, 4 místa ke spaní. Cenu pošleme v nabídce.", "ano", "Obytné vozy", None, None),
+    ("Hobby Optima T65 HFL Premium", "Fiat", None, 2500, "O", "", "", "ano", "ne", "ne", "", "ano", "Není v Renteonu – dostupnost ověříme ručně. Cena doplnit.", "Obytný vůz 7,02 m, 4 místa ke spaní. Cenu pošleme v nabídce.", "ano", "Obytné vozy", None, None),
 ]
 r0 = 4
 for i, c in enumerate(cars, r0):
@@ -101,13 +106,14 @@ for i, c in enumerate(cars, r0):
         x = wv.cell(i, j, v); x.font = NOTE if j == 13 else INP; x.border = THIN
         if j == 3: x.number_format = KC
         if j == 4: x.number_format = "#,##0"
+        if j == 18: x.number_format = KC
     if c[2] is None:
         wv.cell(i, 3).fill = Y; wv.cell(i, 3).comment = Comment("Prázdné = web ukáže „cena na dotaz“.", "Claude")
 LAST = r0 + len(cars) - 1
 wv.cell(LAST + 2, 1, "Zdroj cen: nabídka na rxauto.cz (CMS Auta, CZ ceny Kč/měsíc bez DPH dle IG nabídky 27. 10. 2026). SIPP podle flotily v Renteonu 6. 11. 2026.").font = NOTE
 dv = DataValidation(type="list", formula1='"ano,ne"', allow_blank=True); wv.add_data_validation(dv)
 dv.add(f"H{r0}:J{LAST}"); dv.add(f"L{r0}:L{LAST}"); dv.add(f"O{r0}:O{LAST}")
-dvk = DataValidation(type="list", formula1="=Spoluúčast!$A$5:$A$7", allow_blank=True); wv.add_data_validation(dvk); dvk.add(f"E{r0}:E{LAST}")
+dvk = DataValidation(type="list", formula1="=Spoluúčast!$A$5:$A$10", allow_blank=True); wv.add_data_validation(dvk); dvk.add(f"E{r0}:E{LAST}")
 wv.freeze_panes = "B4"
 
 # ---------- Nájezd ----------
@@ -135,11 +141,11 @@ calc = [
     ("Měsíční cena vozu", f"=INDEX(Vozy!$C${r0}:$C${LAST},MATCH(B4,Vozy!$A${r0}:$A${LAST},0))", "z listu Vozy"),
     ("Počet měsíců (přepočet)", f"=B5/{P_DNI}", "dny / dní v měsíci"),
     ("Pronájem vozu", "=B10*B11", ""),
-    ("Příplatek za nájezd / měsíc", f"=MAX(0,(B6-{P_KM})/{P_KROK})*{P_CENAKROK}", "každých 1 000 km nad nájezd v ceně = 6 000 Kč"),
+    ("Příplatek za nájezd / měsíc", f'=IF(B6="neomezeně",IFERROR(INDEX(Vozy!$R${r0}:$R${LAST},MATCH(B4,Vozy!$A${r0}:$A${LAST},0))*1,0),MAX(0,(B6-{P_KM})/{P_KROK})*{P_CENAKROK})', "každých 1 000 km nad nájezd v ceně = 6 000 Kč; „neomezeně“ = pevný příplatek z listu Vozy (3008: 6 000 Kč)"),
     ("Příplatek za nájezd celkem", "=B13*B11", ""),
     ("Druhý řidič", f'=IF(B7="ano",IF(B5>={P_RIDIC_ZDARMA},0,B5*{P_RIDIC}),0)', "nad 30 dní zdarma, jinak 120 Kč/den"),
     ("Kategorie spoluúčasti", f"=INDEX(Vozy!$E${r0}:$E${LAST},MATCH(B4,Vozy!$A${r0}:$A${LAST},0))", ""),
-    ("Příplatek spoluúčast / měsíc", f'=IF(B8="5 %",INDEX(Spoluúčast!$D$5:$D$7,MATCH(B16,Spoluúčast!$A$5:$A$7,0)),IF(B8="0 %",INDEX(Spoluúčast!$E$5:$E$7,MATCH(B16,Spoluúčast!$A$5:$A$7,0)),0))', "prázdné v listu Spoluúčast = 0 / na dotaz"),
+    ("Příplatek spoluúčast / měsíc", f'=IF(B8="5 %",INDEX(Spoluúčast!$D$5:$D$10,MATCH(B16,Spoluúčast!$A$5:$A$10,0)),IF(B8="0 %",INDEX(Spoluúčast!$E$5:$E$10,MATCH(B16,Spoluúčast!$A$5:$A$10,0)),0))', "prázdné v listu Spoluúčast = 0 / na dotaz"),
     ("Příplatek spoluúčast celkem", "=B17*B11", ""),
     ("CELKEM bez DPH", "=B12+B14+B15+B18", ""),
     ("CELKEM s DPH", f"=B19*(1+{P_DPH})", ""),
