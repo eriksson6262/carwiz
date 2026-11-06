@@ -69,6 +69,13 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid #111;outline-o
 .done h3{margin:0 0 8px;font-size:22px}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:-1px;margin-right:6px}
 @keyframes s{to{transform:rotate(360deg)}}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:2147483000;background:#111;color:#fff;padding:10px 96px 10px 16px;display:none;align-items:center;gap:14px;box-shadow:0 -4px 16px rgba(0,0,0,.18)}
+.bar.on{display:flex}
+.bar .bp{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.bar .bp b{font-size:20px;font-weight:700;white-space:nowrap}
+.bar .bp small{font-size:12px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:520px){.bar{padding:10px 84px 10px 12px;gap:10px}.bar .nm{display:none}.bar .bp b{font-size:18px}.bar button{padding:9px 14px}.bar .dl{display:none}}
+.bar button{margin-left:auto;background:#fff;color:#111;border:0;border-radius:999px;padding:9px 16px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
 @media (max-width:900px){.wrap{grid-template-columns:1fr;gap:0}.sum{position:static}}
 @media (max-width:520px){.hero{padding:20px 12px 0}.hero h1{font-size:24px}.wrap{padding:4px 12px 24px}.cars{grid-template-columns:1fr 1fr;gap:8px}.car b{font-size:13px}.dates,.form{grid-template-columns:1fr}.tot b{font-size:22px}}
 `;
@@ -128,6 +135,7 @@ class RxKonfigurator extends HTMLElement {
     this.dost = null; this.reqId = 0; this.odesilam = false; this.hotovo = null; this.chybaOdeslani = '';
     this.timer = null;
   }
+  disconnectedCallback() { if (this.io) this.io.disconnect(); }
   connectedCallback() {
     if (!document.getElementById('rx-raleway')) {
       const l = document.createElement('link'); l.id = 'rx-raleway'; l.rel = 'stylesheet';
@@ -237,7 +245,8 @@ class RxKonfigurator extends HTMLElement {
         <label class="hp">Web<input id="web" tabindex="-1" autocomplete="off"></label>
         <label class="chk full"><input type="checkbox" id="souhlas" ${this.k.souhlas ? 'checked' : ''}>Souhlasím se zpracováním osobních údajů za účelem vyřízení poptávky a ověření klienta.</label>
       </div>
-      </div><aside class="sum" id="sum"></aside></div>`;
+      </div><aside class="sum" id="sum"></aside></div><div class="bar" id="bar"></div>`;
+    this.sledujSouhrn();
     this.bind();
     this.renderSum();
   }
@@ -273,8 +282,31 @@ class RxKonfigurator extends HTMLElement {
     h += `<button class="cta" id="odeslat" ${lze ? '' : 'disabled'}>${this.odesilam ? '<span class="spin"></span>Odesílám…' : 'Odeslat nezávaznou poptávku'}</button>
       <p class="hint">Poptávka je nezávazná. Po ověření klienta vám pošleme potvrzení a smlouvu. Ceny v Kč.</p>`;
     el.innerHTML = h;
+    this.renderBar(r);
     const b = this.root.getElementById('odeslat');
     if (b) b.onclick = () => this.odeslat();
+  }
+
+  sledujSouhrn() {
+    if (this.io) this.io.disconnect();
+    const sum = this.root.getElementById('sum');
+    if (!sum || !('IntersectionObserver' in window)) return;
+    this.io = new IntersectionObserver(en => { this.sumVidet = en[0].isIntersecting; this.renderBar(); }, { threshold: 0.15 });
+    this.io.observe(sum);
+  }
+
+  renderBar(r) {
+    const bar = this.root.getElementById && this.root.getElementById('bar');
+    if (!bar || !this.cfg) return;
+    r = r || spocitej(this.cfg, this.s);
+    if (!r.vuz || this.sumVidet) { bar.classList.remove('on'); return; }
+    let t;
+    if (r.chyby.length) t = `<div class="bp"><b style="font-size:15px">${esc(r.vuz.title)}</b><small>${esc(r.chyby[0])}</small></div>`;
+    else if (r.naDotaz) t = `<div class="bp"><b>Cena na dotaz</b><small>${esc(r.vuz.title)} · ${r.dni} dní</small></div>`;
+    else t = `<div class="bp"><b>${fmt(r.celkem)} <span style="font-size:13px;font-weight:400">bez DPH</span></b><small><span class="nm">${esc(r.vuz.title)} · </span>${r.dni} dní · ${fmt(r.celkem / r.mes)} / měs.</small></div>`;
+    bar.innerHTML = t + '<button type="button" id="kSouhrnu">Souhrn<span class="dl"> a poptávka</span></button>';
+    bar.classList.add('on');
+    this.root.getElementById('kSouhrnu').onclick = () => this.root.getElementById('sum').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   bind() {
