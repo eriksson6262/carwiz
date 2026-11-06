@@ -61,3 +61,5 @@ Wix cache: změny se projeví hned s ?nocache=…, bez parametru až po vypršen
 ## Konfigurátor pronájmu (2026-11-06)
 Nová stránka /konfigurator (Velo + vlastní prvek, ceník v CMS, dostupnost z Renteonu, poptávky do kolekce Poptavky).
 Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-pronajem přejmenováno na „Spočítat cenu“ → /konfigurator.
+- 2026-11-06: po zapnutí Dev Mode Publish hlásil chybu buildu v původním kódu stránky Flotila (`public/pages/ie56l.js`,
+  ř. 13 – tři nadbytečné „(“ v podmínce filtrů). Opraveno v editoru, jiné chyby kód nehlásí.
