@@ -1,7 +1,7 @@
 // Konfigurátor pronájmu – kód stránky „Konfigurátor“ (Wix page code)
 // Na stránce je vlastní prvek (Custom Element, tag rx-konfigurator) s ID #rxKonfigurator.
 // Volitelně ?vuz=Kodiaq v URL předvybere vůz.
-import wixLocationFrontend from 'wix-location-frontend';
+import wixLocation from 'wix-location';
 import { getKonfigurace, overDostupnost, odeslatPoptavku } from 'backend/konfigurator.web';
 
 $w.onReady(async function () {
@@ -18,7 +18,7 @@ $w.onReady(async function () {
     el.setAttribute('result', JSON.stringify({ ...r, t: Date.now() }));
   });
   const cfg = await getKonfigurace();
-  const q = wixLocationFrontend.query || {};
+  const q = wixLocation.query || {};
   if (q.vuz) cfg.preselect = q.vuz;
   el.setAttribute('config', JSON.stringify(cfg));
 });

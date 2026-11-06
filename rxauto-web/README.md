@@ -57,3 +57,7 @@ Wix cache: změny se projeví hned s ?nocache=…, bez parametru až po vypršen
 - Editor (publikováno 2026-11-05): menu „Auta“ → „Flotila“; výpis Flotila – dataset 30 položek, fotka v kartě
   odkazuje na detail (Auta (Title)); landing page – dataset 12 položek.
 - S publikací šla ven i dřívější změna menu „Dlouhodobý pronájem“ → „Flexibilní pronájem“ (schváleno Erikem).
+
+## Konfigurátor pronájmu (2026-11-06)
+Nová stránka /konfigurator (Velo + vlastní prvek, ceník v CMS, dostupnost z Renteonu, poptávky do kolekce Poptavky).
+Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-pronajem přejmenováno na „Spočítat cenu“ → /konfigurator.

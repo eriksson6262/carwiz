@@ -9,6 +9,9 @@ const POLE = { PRG: 'prg', OSR: 'osr', BTS: 'bts' };
 const CSS = `
 :host{display:block;font-family:raleway,'Raleway','Helvetica Neue',Arial,sans-serif;color:#111;--line:#e3e3e3;--soft:#f6f6f4;--mute:#6b6b6b;--ok:#1f7a3f;--warn:#9a6a00;--bad:#a12a2a}
 *{box-sizing:border-box}
+.hero{max-width:1180px;margin:0 auto;padding:28px 16px 0}
+.hero h1{font-size:34px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin:0 0 8px}
+.hero p{font-size:16px;color:var(--mute);margin:0;max-width:720px;line-height:1.5}
 .wrap{max-width:1180px;margin:0 auto;padding:8px 16px 32px;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:32px;align-items:start}
 h2{font-size:15px;letter-spacing:3px;text-transform:uppercase;font-weight:600;margin:28px 0 12px}
 h2 .n{display:inline-block;width:24px;height:24px;border-radius:50%;background:#111;color:#fff;font-size:12px;line-height:24px;text-align:center;letter-spacing:0;margin-right:10px}
@@ -64,7 +67,7 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid #111;outline-o
 .spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s .7s linear infinite;vertical-align:-1px;margin-right:6px}
 @keyframes s{to{transform:rotate(360deg)}}
 @media (max-width:900px){.wrap{grid-template-columns:1fr;gap:0}.sum{position:static}}
-@media (max-width:520px){.wrap{padding:4px 12px 24px}.cars{grid-template-columns:1fr 1fr;gap:8px}.car b{font-size:13px}.dates,.form{grid-template-columns:1fr}.tot b{font-size:22px}}
+@media (max-width:520px){.hero{padding:20px 12px 0}.hero h1{font-size:24px}.wrap{padding:4px 12px 24px}.cars{grid-template-columns:1fr 1fr;gap:8px}.car b{font-size:13px}.dates,.form{grid-template-columns:1fr}.tot b{font-size:22px}}
 `;
 
 const fmt = n => new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 }).format(Math.round(n)) + ' Kč';
@@ -81,7 +84,7 @@ function spocitej(cfg, s) {
   if (!vuz) return { chyby: ['Vyberte vůz.'], polozky };
   if (!s.od || !s.do) return { vuz, chyby: ['Zvolte termín pronájmu.'], polozky };
   const od = parseD(s.od), dO = parseD(s.do);
-  const dni = Math.round((dO - od) / 86400000);
+  const dni = Math.round((dO.getTime() - od.getTime()) / 86400000);
   if (dni < n.minDni) chyby.push(`Minimální délka pronájmu je ${n.minDni} dní.`);
   if (vuz.maxMesice && dO > addMonths(od, vuz.maxMesice)) chyby.push(`U tohoto vozu je maximální doba pronájmu ${vuz.maxMesice} měsíců.`);
   const mes = dni / n.dniVMesici;
@@ -199,7 +202,7 @@ class RxKonfigurator extends HTMLElement {
       .map(([k, t, s2, p]) => `<div class="opt" role="radio" tabindex="0" data-sp="${k}" aria-checked="${this.s.spoluucast === k}"><span class="dot"></span><span class="t">${t}<small>${s2}</small></span><span class="p">${p}</span></div>`).join('');
     const ridicInfo = (() => { const r = spocitej(this.cfg, this.s); return r.dni >= n.ridicZdarmaOd ? 'zdarma (pronájem nad 30 dní)' : `${n.ridicDen} Kč / den, u pronájmu nad 30 dní zdarma`; })();
 
-    this.root.innerHTML = `<style>${CSS}</style><div class="wrap"><div>
+    this.root.innerHTML = `<style>${CSS}</style><div class="hero"><h1>Konfigurátor pronájmu</h1><p>Vyberte vůz, pobočku, termín a nájezd. Cenu spočítáme hned a dostupnost ověříme v našem rezervačním systému. Pošlete nezávaznou poptávku, po ověření klienta vám potvrdíme rezervaci.</p></div><div class="wrap"><div>
       <h2><span class="n">1</span>Vůz</h2><div class="cars">${cars}</div>
       ${v && v.popisWeb ? `<p class="hint">${esc(v.popisWeb)}</p>` : ''}
       <h2><span class="n">2</span>Pobočka a termín</h2>
@@ -277,7 +280,7 @@ class RxKonfigurator extends HTMLElement {
     r.onclick = tog; r.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); tog(); } };
     $('od').onchange = e => {
       if (!e.target.value) return;
-      const delka = Math.round((parseD(this.s.do) - parseD(this.s.od)) / 86400000);
+      const delka = Math.round((parseD(this.s.do).getTime() - parseD(this.s.od).getTime()) / 86400000);
       this.s.od = e.target.value;
       const novy = new Date(parseD(this.s.od).getTime() + Math.max(delka, this.cfg.nastaveni.minDni) * 86400000);
       this.s.do = iso(novy); this.render(); this.naplanujOvereni();
@@ -298,3 +301,5 @@ class RxKonfigurator extends HTMLElement {
   }
 }
 if (!customElements.get('rx-konfigurator')) customElements.define('rx-konfigurator', RxKonfigurator);
+// Editor Wixu občas neuloží vlastní název tagu – registrujeme i výchozí tag prvku.
+if (!customElements.get('wix-default-custom-element')) customElements.define('wix-default-custom-element', class extends RxKonfigurator {});

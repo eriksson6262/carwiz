@@ -58,7 +58,7 @@ function spocitej(cfg, s) {
   if (!vuz) return { chyby: ['Vyberte vůz.'], polozky };
   if (!s.od || !s.do) return { vuz, chyby: ['Zvolte termín pronájmu.'], polozky };
   const od = parseD(s.od), dO = parseD(s.do);
-  const dni = Math.round((dO - od) / 86400000);
+  const dni = Math.round((dO.getTime() - od.getTime()) / 86400000);
   if (dni < n.minDni) chyby.push(`Minimální délka pronájmu je ${n.minDni} dní.`);
   if (vuz.maxMesice && dO > addMonths(od, vuz.maxMesice)) chyby.push(`U tohoto vozu je maximální doba pronájmu ${vuz.maxMesice} měsíců.`);
   const mes = dni / n.dniVMesici;
@@ -123,7 +123,7 @@ async function dostupnostSipp(kod, sipp, od, dO) {
   return volno;
 }
 
-async function overInterně(vuzId, pobocka, od, dO) {
+async function overInterne(vuzId, pobocka, od, dO) {
   const cfg = await nactiKonfiguraci();
   const vuz = cfg.vozy.find(v => v.id === vuzId);
   if (!vuz || !POBOCKY[pobocka]) return { stav: 'chyba', text: 'Neplatný výběr.' };
@@ -147,7 +147,7 @@ async function overInterně(vuzId, pobocka, od, dO) {
 
 export const overDostupnost = webMethod(Permissions.Anyone, async (q) => {
   if (!q || !q.vuzId || !q.pobocka || !/^\d{4}-\d{2}-\d{2}$/.test(q.od || '') || !/^\d{4}-\d{2}-\d{2}$/.test(q.do || '')) return { stav: 'chyba', text: 'Doplňte vůz, pobočku a termín.' };
-  try { return await overInterně(q.vuzId, q.pobocka, q.od, q.do); }
+  try { return await overInterne(q.vuzId, q.pobocka, q.od, q.do); }
   catch (e) { console.error(e); return { stav: 'neovereno', text: 'Dostupnost se teď nepodařilo ověřit automaticky – ověříme ji ručně.' }; }
 });
 
@@ -164,7 +164,7 @@ export const odeslatPoptavku = webMethod(Permissions.Anyone, async (p) => {
   if (!v.vuz) return { ok: false, chyba: 'Vyberte vůz.' };
   if (v.chyby && v.chyby.length) return { ok: false, chyba: v.chyby.join(' ') };
   let dost;
-  try { dost = await overInterně(p.vuzId, p.pobocka, p.od, p.do); } catch (e) { dost = { stav: 'neovereno', text: 'neověřeno' }; }
+  try { dost = await overInterne(p.vuzId, p.pobocka, p.od, p.do); } catch (e) { dost = { stav: 'neovereno', text: 'neověřeno' }; }
   const spText = { '10': '10 % (min. 10 000 Kč)', '5': '5 % (min. 5 000 Kč)', '0': '0 %' }[p.spoluucast] || '10 % (min. 10 000 Kč)';
   const item = {
     title: jmeno, email, telefon, firma: str(p.firma), model: v.vuz.title,
