@@ -59,13 +59,16 @@ function spocitej(cfg, s) {
   if (!s.od || !s.do) return { vuz, chyby: ['Zvolte termín pronájmu.'], polozky };
   const od = parseD(s.od), dO = parseD(s.do);
   const dni = Math.round((dO.getTime() - od.getTime()) / 86400000);
-  if (dni < n.minDni) chyby.push(`Minimální délka pronájmu je ${n.minDni} dní.`);
+  if (dni < minD(n)) chyby.push(`Minimální délka pronájmu je ${dnyTxt(minD(n))}.`);
   if (vuz.maxMesice && dO > addMonths(od, vuz.maxMesice)) chyby.push(`U tohoto vozu je maximální doba pronájmu ${vuz.maxMesice} měsíců.`);
   const mes = dni / n.dniVMesici;
   if (vuz.cenaMesic === null) return { vuz, dni, mes, chyby, polozky, naDotaz: true };
   let celkem = 0, upresnime = false;
   const add = (label, castka, info) => { polozky.push({ label, castka, info }); if (castka === null) upresnime = true; else celkem += castka; };
-  add(`Nájem ${vuz.title} (${fmtN(vuz.cenaMesic)} Kč/měs.)`, vuz.cenaMesic * mes);
+  const kratko = dni < n.dniVMesici;
+  const denni = vuz.cenaMesic * (n.kratkodobyKoef || 1) / n.dniVMesici;
+  if (kratko) add(`Nájem ${vuz.title} (${fmtN(denni)} Kč/den)`, denni * dni);
+  else add(`Nájem ${vuz.title} (${fmtN(vuz.cenaMesic)} Kč/měs.)`, vuz.cenaMesic * mes);
   if (s.najezd === 'neomezeny' && vuz.neomezenyPriplatek !== null) {
     add('Neomezený nájezd', vuz.neomezenyPriplatek * mes);
   } else if (vuz.kmVCene !== null) {
@@ -85,6 +88,8 @@ function spocitej(cfg, s) {
   }
   return { vuz, dni, mes, chyby, polozky, celkem: Math.round(celkem), celkemSDph: Math.round(celkem * (1 + n.dph)), upresnime };
 }
+function minD(n) { return n.minDniPronajmu != null ? n.minDniPronajmu : n.minDni; }
+function dnyTxt(n) { return n + ' ' + (n === 1 ? 'den' : n >= 2 && n <= 4 ? 'dny' : 'dní'); }
 function fmtN(x) { return new Intl.NumberFormat('cs-CZ').format(Math.round(x)); }
 
 // ---------- Renteon ----------

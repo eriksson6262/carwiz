@@ -87,6 +87,8 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid #111;outline-o
 const fmt = n => new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 }).format(Math.round(n)) + ' Kč';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const parseD = s => { const [y, m, d] = String(s).split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+const minD = n => (n.minDniPronajmu != null ? n.minDniPronajmu : n.minDni);
+const dnyTxt = n => n + ' ' + (n === 1 ? 'den' : n >= 2 && n <= 4 ? 'dny' : 'dní');
 const addMonths = (d, m) => { const x = new Date(d.getTime()); x.setUTCMonth(x.getUTCMonth() + m); return x; };
 const iso = d => d.toISOString().slice(0, 10);
 const cz = s => { const [y, m, d] = s.split('-'); return `${+d}. ${+m}. ${y}`; };
@@ -99,13 +101,16 @@ function spocitej(cfg, s) {
   if (!s.od || !s.do) return { vuz, chyby: ['Zvolte termín pronájmu.'], polozky };
   const od = parseD(s.od), dO = parseD(s.do);
   const dni = Math.round((dO.getTime() - od.getTime()) / 86400000);
-  if (dni < n.minDni) chyby.push(`Minimální délka pronájmu je ${n.minDni} dní.`);
+  if (dni < minD(n)) chyby.push(`Minimální délka pronájmu je ${dnyTxt(minD(n))}.`);
   if (vuz.maxMesice && dO > addMonths(od, vuz.maxMesice)) chyby.push(`U tohoto vozu je maximální doba pronájmu ${vuz.maxMesice} měsíců.`);
   const mes = dni / n.dniVMesici;
   if (vuz.cenaMesic === null) return { vuz, dni, mes, chyby, polozky, naDotaz: true };
   let celkem = 0, upresnime = false;
   const add = (label, castka, info) => { polozky.push({ label, castka, info }); if (castka === null) upresnime = true; else celkem += castka; };
-  add(`Nájem ${vuz.title}`, vuz.cenaMesic * mes, `${fmt(vuz.cenaMesic)} / měsíc`);
+  const kratko = dni < n.dniVMesici;
+  const denni = vuz.cenaMesic * (n.kratkodobyKoef || 1) / n.dniVMesici;
+  if (kratko) add(`Nájem ${vuz.title}`, denni * dni, `${fmt(denni)} / den`);
+  else add(`Nájem ${vuz.title}`, vuz.cenaMesic * mes, `${fmt(vuz.cenaMesic)} / měsíc`);
   if (s.najezd === 'neomezeny' && vuz.neomezenyPriplatek != null) {
     add('Neomezený nájezd', vuz.neomezenyPriplatek * mes, `+${fmt(vuz.neomezenyPriplatek)} / měsíc`);
   } else if (vuz.kmVCene !== null) {
@@ -230,10 +235,10 @@ class RxKonfigurator extends HTMLElement {
       <div class="row">${pob}</div>
       <div class="dates" style="margin-top:12px">
         <label class="f">Převzetí<input type="date" id="od" min="${minOd}" value="${this.s.od}"></label>
-        <label class="f">Vrácení<input type="date" id="do" min="${this.s.od}" value="${this.s.do}"></label>
+        <label class="f">Vrácení<input type="date" id="do" min="${iso(new Date(parseD(this.s.od).getTime() + minD(n) * 86400000))}" value="${this.s.do}"></label>
       </div>
-      <div class="row" style="margin-top:10px">${[1, 2, 3, 6, 12].filter(m => v ? (!v.maxMesice || m <= v.maxMesice) : m <= 6).map(m => `<button class="pill" data-mes="${m}">${m} ${m === 1 ? 'měsíc' : m < 5 ? 'měsíce' : 'měsíců'}</button>`).join('')}</div>
-      <p class="hint">Minimální doba pronájmu ${n.minDni} dní${v && v.maxMesice ? `, u vozu ${esc(v.title)} maximálně ${v.maxMesice} měsíců` : (v ? ', bez omezení maximální doby' : '')}.</p>
+      <div class="row" style="margin-top:10px"><button class="pill" data-dny="7">1 týden</button>${[1, 2, 3, 6, 12].filter(m => v ? (!v.maxMesice || m <= v.maxMesice) : m <= 6).map(m => `<button class="pill" data-mes="${m}">${m} ${m === 1 ? 'měsíc' : m < 5 ? 'měsíce' : 'měsíců'}</button>`).join('')}</div>
+      <p class="hint">Minimální doba pronájmu ${dnyTxt(minD(n))}${v && v.maxMesice ? `, u vozu ${esc(v.title)} maximálně ${v.maxMesice} měsíců` : (v ? ', bez omezení maximální doby' : '')}.</p>
       <h2><span class="n">3</span>Nájezd</h2>${najezd}
       <h2><span class="n">4</span>Služby</h2>
       <div class="opt" role="checkbox" tabindex="0" id="ridic" aria-checked="${this.s.druhyRidic}" style="margin-bottom:14px"><span class="dot" style="border-radius:4px"></span><span class="t">Druhý řidič<small>${ridicInfo}</small></span></div>
@@ -263,19 +268,19 @@ class RxKonfigurator extends HTMLElement {
     if (!v) h = `<h3>Vaše konfigurace</h3><p class="meta">Začněte výběrem vozu.</p>`;
     else {
       const pob = POBOCKY.find(p => p[0] === this.s.pobocka)[1];
-      h = `<h3>${esc(v.title)}${v.modelovyRok ? ` <small style="font-weight:400;color:var(--mute);font-size:13px">${v.modelovyRok}</small>` : ''}</h3><p class="meta">${esc(pob)} · ${cz(this.s.od)} – ${cz(this.s.do)}${r.dni ? ` · ${r.dni} dní` : ''}</p>`;
+      h = `<h3>${esc(v.title)}${v.modelovyRok ? ` <small style="font-weight:400;color:var(--mute);font-size:13px">${v.modelovyRok}</small>` : ''}</h3><p class="meta">${esc(pob)} · ${cz(this.s.od)} – ${cz(this.s.do)}${r.dni ? ` · ${dnyTxt(r.dni)}` : ''}</p>`;
       if (r.chyby.length) h += r.chyby.map(c => `<p class="err">${esc(c)}</p>`).join('');
       else if (r.naDotaz) h += `<div class="li"><span>Cena</span><span>na dotaz</span></div><p class="hint">Cenu vám pošleme v nabídce.</p>`;
       else {
         const mesicne = r.dni >= this.cfg.nastaveni.dniVMesici;
         const del = mesicne ? r.mes : 1;
-        h += `<p class="meta" style="margin:0 0 4px">${mesicne ? 'Měsíčně' : `Za ${r.dni} dní`}</p>`;
+        h += `<p class="meta" style="margin:0 0 4px">${mesicne ? 'Měsíčně' : `Za ${dnyTxt(r.dni)}`}</p>`;
         h += r.polozky.map(p => { const info = mesicne && /\/ měsíc$/.test(p.info || '') ? '' : p.info; return `<div class="li"><span>${esc(p.label)}${info ? `<small>${esc(info)}</small>` : ''}</span><span>${p.castka === null ? '—' : fmt(p.castka / del)}</span></div>`; }).join('');
         if (mesicne) h += `<div class="tot"><span>Cena za měsíc<small>bez DPH</small></span><b>${fmt(r.celkem / r.mes)}</b></div>
           <div class="vat">${fmt(r.celkemSDph / r.mes)} / měsíc s DPH</div>`;
         else h += `<div class="tot"><span>Cena za den<small>bez DPH</small></span><b>${fmt(r.celkem / r.dni)}</b></div>
           <div class="vat">${fmt(r.celkemSDph / r.dni)} / den s DPH</div>
-          <div class="cel"><span>Celkem za ${r.dni} dní</span><span>${fmt(r.celkem)} bez DPH<small>${fmt(r.celkemSDph)} s DPH</small></span></div>`;
+          <div class="cel"><span>Celkem za ${dnyTxt(r.dni)}</span><span>${fmt(r.celkem)} bez DPH<small>${fmt(r.celkemSDph)} s DPH</small></span></div>`;
         h += `${r.upresnime ? '<p class="hint">Příplatek za sníženou spoluúčast upřesníme v nabídce.</p>' : ''}`;
       }
       const d = this.dost;
@@ -311,9 +316,9 @@ class RxKonfigurator extends HTMLElement {
     if (!r.vuz || this.sumVidet) { bar.classList.remove('on'); return; }
     let t;
     if (r.chyby.length) t = `<div class="bp"><b style="font-size:15px">${esc(r.vuz.title)}</b><small>${esc(r.chyby[0])}</small></div>`;
-    else if (r.naDotaz) t = `<div class="bp"><b>Cena na dotaz</b><small>${esc(r.vuz.title)} · ${r.dni} dní</small></div>`;
-    else if (r.dni >= this.cfg.nastaveni.dniVMesici) t = `<div class="bp"><b>${fmt(r.celkem / r.mes)} <span style="font-size:13px;font-weight:400">/ měsíc bez DPH</span></b><small><span class="nm">${esc(r.vuz.title)} · </span>${r.dni} dní</small></div>`;
-    else t = `<div class="bp"><b>${fmt(r.celkem / r.dni)} <span style="font-size:13px;font-weight:400">/ den bez DPH</span></b><small><span class="nm">${esc(r.vuz.title)} · </span>celkem ${fmt(r.celkem)} za ${r.dni} dní</small></div>`;
+    else if (r.naDotaz) t = `<div class="bp"><b>Cena na dotaz</b><small>${esc(r.vuz.title)} · ${dnyTxt(r.dni)}</small></div>`;
+    else if (r.dni >= this.cfg.nastaveni.dniVMesici) t = `<div class="bp"><b>${fmt(r.celkem / r.mes)} <span style="font-size:13px;font-weight:400">/ měsíc bez DPH</span></b><small><span class="nm">${esc(r.vuz.title)} · </span>${dnyTxt(r.dni)}</small></div>`;
+    else t = `<div class="bp"><b>${fmt(r.celkem / r.dni)} <span style="font-size:13px;font-weight:400">/ den bez DPH</span></b><small><span class="nm">${esc(r.vuz.title)} · </span>celkem ${fmt(r.celkem)} za ${dnyTxt(r.dni)}</small></div>`;
     bar.innerHTML = t + '<button type="button" id="kSouhrnu">Souhrn<span class="dl"> a poptávka</span></button>';
     bar.classList.add('on');
     this.root.getElementById('kSouhrnu').onclick = () => this.root.getElementById('sum').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -324,6 +329,7 @@ class RxKonfigurator extends HTMLElement {
     this.root.querySelectorAll('[data-car]').forEach(b => b.onclick = () => this.vyberVuz(b.dataset.car));
     this.root.querySelectorAll('[data-pob]').forEach(b => b.onclick = () => { this.s.pobocka = b.dataset.pob; this.render(); this.naplanujOvereni(); });
     this.root.querySelectorAll('[data-km]').forEach(b => b.onclick = () => { this.s.najezd = b.dataset.km === 'neomezeny' ? 'neomezeny' : Number(b.dataset.km); this.render(); });
+    this.root.querySelectorAll('[data-dny]').forEach(b => b.onclick = () => { this.s.do = iso(new Date(parseD(this.s.od).getTime() + Number(b.dataset.dny) * 86400000)); this.render(); this.naplanujOvereni(); });
     this.root.querySelectorAll('[data-mes]').forEach(b => b.onclick = () => { this.s.do = iso(addMonths(parseD(this.s.od), Number(b.dataset.mes))); this.render(); this.naplanujOvereni(); });
     const radio = el => { this.s.spoluucast = el.dataset.sp; this.render(); };
     this.root.querySelectorAll('[data-sp]').forEach(el => { el.onclick = () => radio(el); el.onkeydown = e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); radio(el); } }; });
@@ -333,7 +339,7 @@ class RxKonfigurator extends HTMLElement {
       if (!e.target.value) return;
       const delka = Math.round((parseD(this.s.do).getTime() - parseD(this.s.od).getTime()) / 86400000);
       this.s.od = e.target.value;
-      const novy = new Date(parseD(this.s.od).getTime() + Math.max(delka, this.cfg.nastaveni.minDni) * 86400000);
+      const novy = new Date(parseD(this.s.od).getTime() + Math.max(delka, minD(this.cfg.nastaveni)) * 86400000);
       this.s.do = iso(novy); this.render(); this.naplanujOvereni();
     };
     $('do').onchange = e => { if (!e.target.value) return; this.s.do = e.target.value; this.render(); this.naplanujOvereni(); };

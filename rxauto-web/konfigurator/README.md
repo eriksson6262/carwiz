@@ -4,7 +4,9 @@ Klient si vybere vůz, pobočku (Praha / Ostrava / Bratislava), termín, nájezd
 dostupnost se ověří v Renteonu a klient pošle nezávaznou poptávku (bez platby – nejdřív prověřujeme klienta).
 
 ## Pravidla (Erik, 6. 11. 2026)
-- Cena = měsíční cena × dní / 30, min. 30 dní, Škody max. 6 měsíců.
+- Od 30 dní: cena = měsíční cena × dní / 30, zvýrazněná cena za měsíc, bez celkového součtu.
+- Pod 30 dní (min. 1 den): denní cena = (měsíční cena + 100 %) / 30 = měsíc × 2 / 30, zvýrazněná cena za den + celkový součet.
+  Příplatky (nájezd, spoluúčast) se poměrně přepočítávají × dní / 30. Škody max. 6 měsíců.
 - Nájezd: v ceně 2 500 km/měs., každých dalších 1 000 km = 6 000 Kč/měs. bez DPH.
 - Druhý řidič: u pronájmu nad 30 dní zdarma, jinak 120 Kč/den.
 - Spoluúčast: standard 10 % min. 10 000 Kč; 5 % (min. 5 000) a 0 % za příplatek podle kategorie A/B/C
@@ -37,7 +39,7 @@ prvku přizpůsobí obsahu. Tlačítko „Spočítat cenu“ na /dlouhodoby-pron
 - `KonfiguratorVozy` (čtení všichni): title, cenaMesic, kmVCene, kategorieSpoluucasti, sippCz, sippSk, prg/osr/bts,
   maxMesice, aktivni, poradi, obrazek, popisWeb (text pro klienta), servisVCene, poznamka (interní),
   skupina (Osobní auta / Dodávky / Obytné vozy), modelovyRok, neomezenyPriplatek (Kč/měs., prázdné = bez volby).
-- `KonfiguratorNastaveni`: dniVMesici, minDni, kmVCene, krokKm, cenaKrok, ridicDen, ridicZdarmaOd, dph, najezdy.
+- `KonfiguratorNastaveni`: dniVMesici, minDniPronajmu (min. 1 den; starý klíč minDni=30 drží jen pro starou zveřejněnou verzi, po publikaci smazat), kratkodobyKoef (2), kmVCene, krokKm, cenaKrok, ridicDen, ridicZdarmaOd, dph, najezdy.
 - `KonfiguratorSpoluucast`: A/B/C/P/D/O, priplatek5, priplatek0 (Kč/měs. bez DPH).
 - `Poptavky` (jen admin) – **osobní údaje klientů, nikdy neexportovat do repa.**
 
