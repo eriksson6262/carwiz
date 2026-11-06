@@ -50,7 +50,11 @@ input:focus,textarea:focus,button:focus-visible{outline:2px solid #111;outline-o
 .li{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:6px 0;border-top:1px solid var(--line)}
 .li small{display:block;color:var(--mute);font-size:12px}
 .tot{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding-top:12px;border-top:2px solid #111}
-.tot b{font-size:26px;font-weight:700;letter-spacing:-.5px}
+.tot b{font-size:30px;font-weight:700;letter-spacing:-.5px;white-space:nowrap}
+.tot b em{font-style:normal;font-size:15px;font-weight:600}
+.tot span small{display:block;font-size:12px;color:var(--mute)}
+.cel{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.cel small{display:block;color:var(--mute);font-size:12px;text-align:right}
 .vat{text-align:right;font-size:13px;color:var(--mute);margin-top:2px}
 .mo{text-align:right;font-size:13px;margin-top:2px}
 .st{margin-top:14px;border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.4;background:#fff;border:1px solid var(--line)}
@@ -263,11 +267,16 @@ class RxKonfigurator extends HTMLElement {
       if (r.chyby.length) h += r.chyby.map(c => `<p class="err">${esc(c)}</p>`).join('');
       else if (r.naDotaz) h += `<div class="li"><span>Cena</span><span>na dotaz</span></div><p class="hint">Cenu vám pošleme v nabídce.</p>`;
       else {
-        h += r.polozky.map(p => `<div class="li"><span>${esc(p.label)}${p.info ? `<small>${esc(p.info)}</small>` : ''}</span><span>${p.castka === null ? '—' : fmt(p.castka)}</span></div>`).join('');
-        h += `<div class="tot"><span>Celkem bez DPH</span><b>${fmt(r.celkem)}</b></div>
-          <div class="vat">${fmt(r.celkemSDph)} s DPH</div>
-          <div class="mo">${fmt(r.celkem / r.mes)} / měsíc bez DPH</div>
-          ${r.upresnime ? '<p class="hint">Příplatek za sníženou spoluúčast upřesníme v nabídce.</p>' : ''}`;
+        const mesicne = r.dni >= this.cfg.nastaveni.dniVMesici;
+        const del = mesicne ? r.mes : 1;
+        h += `<p class="meta" style="margin:0 0 4px">${mesicne ? 'Měsíčně' : `Za ${r.dni} dní`}</p>`;
+        h += r.polozky.map(p => { const info = mesicne && /\/ měsíc$/.test(p.info || '') ? '' : p.info; return `<div class="li"><span>${esc(p.label)}${info ? `<small>${esc(info)}</small>` : ''}</span><span>${p.castka === null ? '—' : fmt(p.castka / del)}</span></div>`; }).join('');
+        if (mesicne) h += `<div class="tot"><span>Cena za měsíc<small>bez DPH</small></span><b>${fmt(r.celkem / r.mes)}</b></div>
+          <div class="vat">${fmt(r.celkemSDph / r.mes)} / měsíc s DPH</div>`;
+        else h += `<div class="tot"><span>Cena za den<small>bez DPH</small></span><b>${fmt(r.celkem / r.dni)}</b></div>
+          <div class="vat">${fmt(r.celkemSDph / r.dni)} / den s DPH</div>
+          <div class="cel"><span>Celkem za ${r.dni} dní</span><span>${fmt(r.celkem)} bez DPH<small>${fmt(r.celkemSDph)} s DPH</small></span></div>`;
+        h += `${r.upresnime ? '<p class="hint">Příplatek za sníženou spoluúčast upřesníme v nabídce.</p>' : ''}`;
       }
       const d = this.dost;
       if (d && d.stav === 'loading') h += `<div class="st"><span class="spin"></span>Ověřuji dostupnost v termínu…</div>`;
@@ -303,7 +312,8 @@ class RxKonfigurator extends HTMLElement {
     let t;
     if (r.chyby.length) t = `<div class="bp"><b style="font-size:15px">${esc(r.vuz.title)}</b><small>${esc(r.chyby[0])}</small></div>`;
     else if (r.naDotaz) t = `<div class="bp"><b>Cena na dotaz</b><small>${esc(r.vuz.title)} · ${r.dni} dní</small></div>`;
-    else t = `<div class="bp"><b>${fmt(r.celkem)} <span style="font-size:13px;font-weight:400">bez DPH</span></b><small><span class="nm">${esc(r.vuz.title)} · </span>${r.dni} dní · ${fmt(r.celkem / r.mes)} / měs.</small></div>`;
+    else if (r.dni >= this.cfg.nastaveni.dniVMesici) t = `<div class="bp"><b>${fmt(r.celkem / r.mes)} <span style="font-size:13px;font-weight:400">/ měsíc bez DPH</span></b><small><span class="nm">${esc(r.vuz.title)} · </span>${r.dni} dní</small></div>`;
+    else t = `<div class="bp"><b>${fmt(r.celkem / r.dni)} <span style="font-size:13px;font-weight:400">/ den bez DPH</span></b><small><span class="nm">${esc(r.vuz.title)} · </span>celkem ${fmt(r.celkem)} za ${r.dni} dní</small></div>`;
     bar.innerHTML = t + '<button type="button" id="kSouhrnu">Souhrn<span class="dl"> a poptávka</span></button>';
     bar.classList.add('on');
     this.root.getElementById('kSouhrnu').onclick = () => this.root.getElementById('sum').scrollIntoView({ behavior: 'smooth', block: 'center' });
