@@ -63,3 +63,11 @@ Nová stránka /konfigurator (Velo + vlastní prvek, ceník v CMS, dostupnost z 
 Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-pronajem přejmenováno na „Spočítat cenu“ → /konfigurator.
 - 2026-11-06: po zapnutí Dev Mode Publish hlásil chybu buildu v původním kódu stránky Flotila (`public/pages/ie56l.js`,
   ř. 13 – tři nadbytečné „(“ v podmínce filtrů). Opraveno v editoru, jiné chyby kód nehlásí.
+- 2026-11-06 večer:
+  - Landing „Auta v nabídce“ – v CMS Auta přidán GLE a landingPage = ano i pro Tonale, CLE, 3008, Boxer;
+    dataset1 v editoru omezuje počet položek → v kódu stránky `setPageSize(30)` (`konfigurator/velo/page-flexibilni-pronajem.js`).
+  - Tlačítko „Spočítat cenu →“ (#button8, odkaz /konfigurator) vráceno do prostředního bílého sloupce mezi fotkami
+    (section2 → columnStrip7 → column25), 170×52, černé, zaoblené, pulzuje (wix-animations), hover = invertní barvy.
+  - Dlaždice GLE / CLE / Tonale sjednoceny se Škodami: 1280×744, bílé pozadí, auto 57 % šířky (max. 48 % výšky),
+    spodek kol v 80 % výšky – `obrazky/normalizuj_dlazdici.py`. GLE je AI fotka (bílé pozadí, SPZ „GLE 2025“).
+    Peugeot 3008 má zdroj jen 420×349 a v kartě je větší než ostatní – chce to lepší fotku.
