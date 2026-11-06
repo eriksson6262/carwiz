@@ -8,7 +8,7 @@ dostupnost se ověří v Renteonu a klient pošle nezávaznou poptávku (bez pla
 - Nájezd: v ceně 2 500 km/měs., každých dalších 1 000 km = 6 000 Kč/měs. bez DPH.
 - Druhý řidič: u pronájmu nad 30 dní zdarma, jinak 120 Kč/den.
 - Spoluúčast: standard 10 % min. 10 000 Kč; 5 % (min. 5 000) a 0 % za příplatek podle kategorie A/B/C
-  (příplatky zatím prázdné → web ukáže „upřesníme v nabídce“).
+  (prázdný příplatek → web ukáže „upřesníme v nabídce“).
 - Vůz, který na pobočce není / není volný: hláška, že je dostupný na jiné pobočce a po dohodě ho přistavíme.
 - Později: záloha přes Stripe.
 - Úprava 6. 11. odpoledne: 3008 = 13 900 Kč/měs. + volba neomezeného nájezdu za pevný příplatek 6 000 Kč/měs.;
@@ -16,6 +16,8 @@ dostupnost se ověří v Renteonu a klient pošle nezávaznou poptávku (bez pla
   Peugeot Boxer L3H2 (skupina Dodávky, 20 700 Kč/měs. = 690 Kč/den × 30 – ověřit), obytné vozy Roller Team
   Livingstone 2 Sport a Hobby Optima T65 HFL (skupina Obytné vozy, cena na dotaz, dostupnost ručně).
   Modelové roky: 3008 2022, Tonale 2024, GLE/CLE 2025. Nové kategorie spoluúčasti P (prémiové), D (dodávky), O (obytné).
+- Ceník od Erika 6. 11. 15:29: GLE 59 900, CLE 29 900, obytné vozy 39 000 Kč/měs.; Boxer ponechán 20 700.
+  Příplatky spoluúčast 5 % / 0 % (Kč/měs.): A 200/400, B 300/500, C 400/600, P 800/1 500, D 300/500, O 400/800.
 
 ## Soubory
 | Soubor | Kde ve Wixu |

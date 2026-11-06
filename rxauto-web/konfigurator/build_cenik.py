@@ -64,13 +64,13 @@ P_DNI, P_MIN, P_KM, P_KROK, P_CENAKROK, P_RIDIC, P_RIDIC_ZDARMA, P_DPH = (P[k] f
 # ---------- Spoluúčast ----------
 wsp = wb.create_sheet("Spoluúčast")
 wsp["A1"] = "Spoluúčast podle kategorie vozu"; wsp["A1"].font = T
-wsp["A2"] = "Standard v ceně: 10 %, min. 10 000 Kč. Příplatky za 5 % (min. 5 000 Kč) a 0 % doplňte po kategoriích (Erik: nadefinujeme později)."; wsp["A2"].font = NOTE
+wsp["A2"] = "Standard v ceně: 10 %, min. 10 000 Kč. Příplatky za 5 % (min. 5 000 Kč) a 0 % v Kč bez DPH za měsíc (Erik, 6. 11. 2026)."; wsp["A2"].font = NOTE
 hdr(wsp, 4, ["Kategorie", "Popis", "Standard (v ceně)", "Příplatek 5 % / měsíc", "Příplatek 0 % / měsíc"], [12, 40, 22, 22, 22])
-cats = [("A", "Malé a kompaktní (Fabia, Kamiq)"), ("B", "Střední (Karoq, Octavia, 3008)"), ("C", "Vyšší (Superb, Kodiaq, Tonale)"), ("P", "Prémiové (Mercedes GLE, CLE)"), ("D", "Dodávky (Boxer)"), ("O", "Obytné vozy")]
-for i, (k, d) in enumerate(cats, 5):
+cats = [("A", "Malé a kompaktní (Fabia, Kamiq)", 200, 400), ("B", "Střední (Karoq, Octavia, 3008)", 300, 500), ("C", "Vyšší (Superb, Kodiaq, Tonale)", 400, 600), ("P", "Prémiové (Mercedes GLE, CLE)", 800, 1500), ("D", "Dodávky (Boxer)", 300, 500), ("O", "Obytné vozy", 400, 800)]
+for i, (k, d, p5, p0) in enumerate(cats, 5):
     wsp.cell(i, 1, k).font = INP; wsp.cell(i, 2, d).font = INP; wsp.cell(i, 3, "10 %, min. 10 000 Kč").font = N
     for cc in (4, 5):
-        x = wsp.cell(i, cc); x.fill = Y; x.font = INP; x.number_format = KC
+        x = wsp.cell(i, cc, p5 if cc == 4 else p0); x.fill = Y; x.font = INP; x.number_format = KC
     for cc in range(1, 6): wsp.cell(i, cc).border = THIN
 wsp.cell(5, 4).comment = Comment("Doplňte příplatek v Kč bez DPH za měsíc. Prázdné = web nabídne volbu „na dotaz“.", "Claude")
 
@@ -94,11 +94,11 @@ cars = [
     ("Kodiaq RS 4×4", "Škoda", 18900, 2500, "C", "FFAR", "FFAR", "ano", "ano", "ano", 6, "ano", "FFAR = všechny Kodiaqy (+ Peugeot 5008).", "", "ano", "Osobní auta", None, None),
     ("Alfa Romeo Tonale PHEV Q4", "Alfa Romeo", 19900, 2500, "C", "", "", "ano", "ne", "ne", "", "ano", "Není v Renteonu – dostupnost ověříme ručně.", "Plug-in hybrid 4×4, bez omezení doby pronájmu, nabíjení zdarma. Servis není v ceně.", "ne", "Osobní auta", 2024, None),
     ("Peugeot 3008", "Peugeot", 13900, 2500, "B", "IGAR", "CFAR", "ano", "ano", "ano", "", "ano", "IGAR v CZ sdílí s Karoq.", "Bez omezení doby pronájmu. Možnost neomezeného nájezdu za pevný příplatek.", "ano", "Osobní auta", 2022, 6000),
-    ("Mercedes-Benz GLE", "Mercedes-Benz", None, 2500, "P", "GFAR", "", "ano", "ne", "ne", "", "ano", "Cena zatím na dotaz – doplnit.", "Prémiové SUV 4MATIC. Cenu pošleme v nabídce.", "ano", "Osobní auta", 2025, None),
-    ("Mercedes-Benz CLE 300 4MATIC", "Mercedes-Benz", None, 2500, "P", "UEAR", "", "ano", "ne", "ne", "", "ano", "Cena zatím na dotaz – doplnit (týdenní nabídka 9 990 Kč/týden vč. DPH).", "Kupé s pohonem 4MATIC. Cenu pošleme v nabídce.", "ano", "Osobní auta", 2025, None),
+    ("Mercedes-Benz GLE", "Mercedes-Benz", 59900, 2500, "P", "GFAR", "", "ano", "ne", "ne", "", "ano", "", "Prémiové SUV 4MATIC.", "ano", "Osobní auta", 2025, None),
+    ("Mercedes-Benz CLE 300 4MATIC", "Mercedes-Benz", 29900, 2500, "P", "UEAR", "", "ano", "ne", "ne", "", "ano", "Týdenní nabídka na webu: 9 990 Kč/týden vč. DPH.", "Kupé s pohonem 4MATIC.", "ano", "Osobní auta", 2025, None),
     ("Peugeot Boxer 3500 L3H2", "Peugeot", 20700, 2500, "D", "FKMR", "", "ano", "ne", "ne", "", "ano", "690 Kč/den bez DPH × 30 (dle webu „od 690 Kč/den“) – ověřit.", "Dodávka L3H2, manuál, 3 místa.", "ano", "Dodávky", None, None),
-    ("Roller Team Livingstone 2 Sport", "Fiat", None, 2500, "O", "", "", "ano", "ne", "ne", "", "ano", "Není v Renteonu – dostupnost ověříme ručně. Cena doplnit.", "Obytná dodávka 5,99 m, 4 místa ke spaní. Cenu pošleme v nabídce.", "ano", "Obytné vozy", None, None),
-    ("Hobby Optima T65 HFL Premium", "Fiat", None, 2500, "O", "", "", "ano", "ne", "ne", "", "ano", "Není v Renteonu – dostupnost ověříme ručně. Cena doplnit.", "Obytný vůz 7,02 m, 4 místa ke spaní. Cenu pošleme v nabídce.", "ano", "Obytné vozy", None, None),
+    ("Roller Team Livingstone 2 Sport", "Fiat", 39000, 2500, "O", "", "", "ano", "ne", "ne", "", "ano", "Není v Renteonu – dostupnost ověříme ručně.", "Obytná dodávka 5,99 m, 4 místa ke spaní.", "ano", "Obytné vozy", None, None),
+    ("Hobby Optima T65 HFL Premium", "Fiat", 39000, 2500, "O", "", "", "ano", "ne", "ne", "", "ano", "Není v Renteonu – dostupnost ověříme ručně.", "Obytný vůz 7,02 m, 4 místa ke spaní.", "ano", "Obytné vozy", None, None),
 ]
 r0 = 4
 for i, c in enumerate(cars, r0):
