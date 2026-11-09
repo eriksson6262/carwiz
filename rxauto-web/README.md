@@ -141,3 +141,5 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
 - 2026-11-09 23:55: 8H34367 opraven na Škoda Karoq SportLine 2.0 TDI DSG (Renteon: 110 kW, diesel, automat, 12 005 km,
   MR 2024, foto car-karoq-1280.webp; cena dál na dotaz – v ZH_RX nemá splátkový kalendář). Scala 8H59043 MR 2024 (Erik).
   Zveřejněno (Erik „publikuj“): hlavička s tlačítkem vedle loga, popup v3 se dvěma novinkami. Ověřeno na živém webu.
+- 2026-11-09 23:52: 8H34367 smazán z ProdejLeasing (v ZH_RX chybně jako Peugeot 3008, bez zůstatkové ceny; v Renteonu je to
+  Karoq SportLine) → 26 vozů.
