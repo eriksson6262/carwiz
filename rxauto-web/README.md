@@ -101,3 +101,7 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
     je má pro všechny vozy).
   - Popup leták v2 (rxauto-letak-konfigurator-v2.webp): jen logo, NOVINKA, nadpis, velká fotka Superbu a tlačítko „Spočítat cenu →“;
     klik → /konfigurator.
+- 2026-11-09 večer: smazáno Hobby Optima (KonfiguratorVozy + Karavany) a motorka KTM 1290 (Motorky) na Erikův pokyn.
+  Nová CMS kolekce `ProdejLeasing` (prodej vozů po operativním leasingu: title, znacka, obrazek, modelovyRok, najezdKm, palivo,
+  prevodovka, vykon, cena, dostupneOd, popis, zobrazitNaWebu, poradi) – stránka v menu čeká na editor (zamčený jiným uživatelem).
+  Čeká: větší fotky Rolleru a Delfínu v konfigurátoru, karta Bürstner Delfin v Karavanech, publikace popupu v2.
