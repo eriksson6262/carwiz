@@ -138,3 +138,6 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
   - Popup „Leták Škoda“ v3: dvě novinky, dva obrázky s vlastním odkazem – #image2 horní půlka (Konfigurátor → /konfigurator),
     #image3 spodní půlka (Prodej vozů po leasingu → /prodej-vozu). Desktop 420×297 každý, mobil 260×184.
     Soubory rxauto-letak-v3-konfigurator.webp, rxauto-letak-v3-prodej.webp (celek rxauto-letak-v3-celek.webp).
+- 2026-11-09 23:55: 8H34367 opraven na Škoda Karoq SportLine 2.0 TDI DSG (Renteon: 110 kW, diesel, automat, 12 005 km,
+  MR 2024, foto car-karoq-1280.webp; cena dál na dotaz – v ZH_RX nemá splátkový kalendář). Scala 8H59043 MR 2024 (Erik).
+  Zveřejněno (Erik „publikuj“): hlavička s tlačítkem vedle loga, popup v3 se dvěma novinkami. Ověřeno na živém webu.
