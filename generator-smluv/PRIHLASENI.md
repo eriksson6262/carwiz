@@ -29,7 +29,13 @@ Zapomenuté heslo: admin nastaví nové v Uživatelích, nebo `python3 auth.py h
 
 ## Přístup z internetu – Tailscale Funnel (Mac mini)
 Generátor běží na Mac mini na `localhost:8765`, ven ho pouští Tailscale Funnel
-(HTTPS adresa typu `https://<jmeno-pocitace>.<tailnet>.ts.net`, bez úprav DNS a routeru).
+(bez úprav DNS a routeru).
+
+**Adresa: https://rxsmlouvy.tail59087a.ts.net** (Tailscale účet eriksson@, počítač `rxsmlouvy`).
+
+Pozor: název počítače nesmí mít dvě pomlčky na 3.–4. místě (např. `rx--macmini`) – Let's Encrypt na něj
+nevydá certifikát (chyba `tlsv1 alert internal error`). Přejmenování: `Tailscale set --hostname=rxsmlouvy`,
+pak `cd /tmp && Tailscale cert rxsmlouvy.tail59087a.ts.net` a znovu `Tailscale funnel --bg 8765`.
 
 1. Nainstaluj Tailscale (tailscale.com/download/mac nebo App Store) a přihlas se.
 2. Admin konzole Tailscale → DNS: zapnout **MagicDNS** a **HTTPS Certificates**.
