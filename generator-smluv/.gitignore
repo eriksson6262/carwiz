@@ -1,0 +1,16 @@
+# Provozní data generátoru – osobní údaje, hesla, přihlášení (nikdy necommitovat)
+users.json
+sessions.json
+audit_log.jsonl
+historie_smluv.json
+ciselna_rada.json
+anthropic_config.json
+vyfakturuj_config.json
+docuseal_config.json
+lan_mode.txt
+*.log
+*.png
+!diagrams/**/*.png
+_zaloha_*/
+_to_delete/
+cloudflared/

@@ -220,9 +220,15 @@
   </div>
   <div style="display:flex;align-items:center;gap:12px">
     <button onclick="toggleHistory()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--grey-light)'">📋 Historie</button>
-    <button onclick="restartGenerator()" title="Restartuje server (po aktualizaci souborů)" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--grey-light)'">🔄 Restart</button>
-    <button onclick="vypnoutGenerator()" title="Vypne server generátoru" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='#e57373'" onmouseout="this.style.color='var(--grey-light)'">⏻ Vypnout</button>
+    <button class="admin-only" onclick="restartGenerator()" title="Restartuje server (po aktualizaci souborů)" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--grey-light)'">🔄 Restart</button>
+    <button class="admin-only" onclick="vypnoutGenerator()" title="Vypne server generátoru" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='#e57373'" onmouseout="this.style.color='var(--grey-light)'">⏻ Vypnout</button>
     <div class="status-badge"><div class="status-dot"></div>ispis.cz online</div>
+    <div id="userChip" style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--grey-light)">
+      <span id="userName"></span>
+      <a class="admin-only" href="/uzivatele" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s;text-decoration:none">👥 Uživatelé</a>
+      <button onclick="zmenitHeslo()" title="Změnit heslo" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s">🔑</button>
+      <button onclick="odhlasit()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s">Odhlásit</button>
+    </div>
   </div>
 </header>
 
@@ -756,6 +762,41 @@
 <footer>RX Auto s.r.o. &nbsp;·&nbsp; Aviatická 1092/8, Praha &nbsp;·&nbsp; Lustrace: ispis.cz &nbsp;·&nbsp; Data zpracovávána důvěrně</footer>
 
 <script>
+// === PŘIHLÁŠENÍ ===
+(function(){
+  const _f=window.fetch.bind(window);
+  window.fetch=async(...a)=>{ const r=await _f(...a); if(r.status===401){ location.href='/login'; } return r; };
+})();
+const CURRENT_USER={};
+(async()=>{
+  try{
+    const d=await (await fetch('/api/me',{cache:'no-store'})).json();
+    if(!d.user){ location.href='/login'; return; }
+    Object.assign(CURRENT_USER,d.user);
+    document.getElementById('userName').textContent='👤 '+d.user.jmeno;
+    const admin=d.user.role==='admin';
+    const st=document.createElement('style');
+    st.textContent=admin?'':'.admin-only{display:none!important}';
+    document.head.appendChild(st);
+  }catch(e){}
+})();
+async function odhlasit(){
+  try{ await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}); }catch(e){}
+  location.href='/login';
+}
+async function zmenitHeslo(){
+  const stare=prompt('Současné heslo:'); if(!stare) return;
+  const nove=prompt('Nové heslo (min. 8 znaků):'); if(!nove) return;
+  if(nove!==prompt('Nové heslo znovu:')){ alert('Hesla se neshodují.'); return; }
+  const d=await (await fetch('/api/heslo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({stare,nove})})).json();
+  alert(d.success?'Heslo změněno.':(d.error||'Nepovedlo se.'));
+}
+function autorText(e){
+  const p=[];
+  if(e.vytvoril) p.push('vytvořil(a) '+e.vytvoril+(e.vytvoreno?' '+e.vytvoreno:''));
+  if(e.upravil && e.upraveno && e.upraveno!==e.vytvoreno) p.push('naposledy '+e.upravil+' '+e.upraveno);
+  return p.join(' · ');
+}
 const state = {
   rp:{front:null,back:null,data:null,needs_back:false},
   op:{front:null,back:null,data:null,needs_back:false},
@@ -1727,12 +1768,13 @@ function renderHistory(items) {
           <span>📅 ${fmtDatumCz(e.datum_zacatku) || '—'} – ${fmtDatumCz(e.datum_konce) || '—'}</span>
           <span>💰 ${e.cena ? e.cena + ' Kč/' + (e.interval_ceny || '') : '—'}</span>
           <span style="color:var(--gold-dim)">🕐 ${e.datum}</span>
+          ${autorText(e)?`<span style="color:var(--grey)" title="${(e.zmeny||[]).map(z=>z.kdy+' '+z.kdo+': '+z.akce).join('\n').replace(/"/g,'&quot;')}">✍️ ${autorText(e)}</span>`:''}
         </div>
       </div>
       <div class="hist-actions" onclick="event.stopPropagation()">
         <button class="hist-btn hist-btn-load" onclick="loadFromHistory('${e.id}')">↩ Načíst</button>
         <button class="hist-btn hist-btn-load" onclick="openVraceni('${e.id}')">🔁 Vrácení</button>
-        <button class="hist-btn hist-btn-del" onclick="deleteHistory('${e.id}')">🗑</button>
+        <button class="hist-btn hist-btn-del admin-only" onclick="deleteHistory('${e.id}')">🗑</button>
       </div>
     </div>
   `).join('');

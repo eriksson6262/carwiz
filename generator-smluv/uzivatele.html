@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uživatelé · RX Auto</title>
+<style>
+  :root{--black:#080807;--white:#f4f1eb;--gold:#c9a84c;--gold-dim:#7a6328;--grey:#7a736a;--red-light:#e74c3c;--green-light:#27ae60;--border:rgba(201,168,76,0.22);--card:rgba(255,255,255,0.025)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:var(--black);color:var(--white);min-height:100vh}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 32px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .logo-main{font-size:20px;font-weight:600;letter-spacing:.05em}.logo-main span{color:var(--gold)}
+  a.btn,button.btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--white);padding:8px 16px;border-radius:100px;font-size:13px;cursor:pointer;text-decoration:none;font-family:inherit}
+  main{max-width:1100px;margin:0 auto;padding:28px 16px}
+  h2{font-size:16px;font-weight:600;margin:0 0 14px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:24px}
+  .tabs{display:flex;gap:8px;margin-bottom:18px}
+  .tab{padding:8px 18px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--grey);cursor:pointer;font-size:13px;font-family:inherit}
+  .tab.active{color:var(--black);background:var(--gold);border-color:var(--gold)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-weight:500;color:var(--grey);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--border)}
+  td{padding:10px;border-bottom:1px solid rgba(201,168,76,0.08);vertical-align:top}
+  .wrap{overflow-x:auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;align-items:end}
+  label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--grey);margin-bottom:6px}
+  input,select{width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--white);font-size:14px;font-family:inherit}
+  select option{background:#151513}
+  .primary{background:var(--gold);color:var(--black);border:none;border-radius:9px;padding:11px 18px;font-weight:600;cursor:pointer;font-size:14px;font-family:inherit}
+  .msg{font-size:13px;margin-top:10px;min-height:18px}
+  .pill{display:inline-block;padding:2px 10px;border-radius:100px;font-size:11px;border:1px solid var(--border)}
+  .on{color:var(--green-light)} .off{color:var(--red-light)}
+  .muted{color:var(--grey)}
+  .lnk{background:none;border:none;color:var(--gold);cursor:pointer;font-size:13px;font-family:inherit;padding:0 6px 0 0}
+  @media (max-width:640px){header{padding:14px 16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-main">RX <span>Auto</span> <span class="muted" style="font-size:13px;letter-spacing:0">· správa</span></div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <span class="muted" id="me" style="font-size:13px"></span>
+    <a class="btn" href="/">← Generátor</a>
+  </div>
+</header>
+<main>
+  <div class="tabs">
+    <button class="tab active" id="tUsers" onclick="tab('users')">👤 Uživatelé</button>
+    <button class="tab" id="tAudit" onclick="tab('audit')">🕘 Kdo co dělal</button>
+  </div>
+
+  <section id="sUsers">
+    <div class="card">
+      <h2 id="formTitle">Nový uživatel</h2>
+      <div class="grid">
+        <div><label>Login</label><input id="uLogin" autocapitalize="none" placeholder="např. tomas"></div>
+        <div><label>Jméno a příjmení</label><input id="uJmeno" placeholder="Tomáš Novák"></div>
+        <div><label>Role</label><select id="uRole"><option value="obsluha">Obsluha</option><option value="admin">Administrátor</option></select></div>
+        <div><label id="lHeslo">Heslo (min. 8 znaků)</label><input id="uHeslo" type="password" autocomplete="new-password"></div>
+        <div><label>Stav</label><select id="uAktivni"><option value="1">Aktivní</option><option value="0">Zablokovaný</option></select></div>
+        <div style="display:flex;gap:8px"><button class="primary" onclick="ulozit()">Uložit</button><button class="btn" onclick="novy()" id="bZrus" style="display:none">Zrušit</button></div>
+      </div>
+      <div class="msg" id="uMsg"></div>
+    </div>
+    <div class="card wrap">
+      <table><thead><tr><th>Login</th><th>Jméno</th><th>Role</th><th>Stav</th><th>Poslední přihlášení</th><th>Založen</th><th></th></tr></thead>
+      <tbody id="uList"></tbody></table>
+    </div>
+  </section>
+
+  <section id="sAudit" style="display:none">
+    <div class="card">
+      <div class="grid">
+        <div><label>Uživatel</label><select id="aLogin" onchange="nactiAudit()"><option value="">Všichni</option></select></div>
+        <div><label>Hledat (číslo smlouvy, klient, SPZ…)</label><input id="aQ" oninput="clearTimeout(window._t);window._t=setTimeout(nactiAudit,300)"></div>
+      </div>
+    </div>
+    <div class="card wrap">
+      <table><thead><tr><th>Kdy</th><th>Kdo</th><th>Akce</th><th>Smlouva</th><th>Klient / vozidlo</th><th>Detail</th></tr></thead>
+      <tbody id="aList"></tbody></table>
+    </div>
+  </section>
+</main>
+<script>
+let users=[], editLogin=null;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url,body){
+  const r=await fetch(url,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store'});
+  if(r.status===401){ location.href='/login'; throw new Error('login'); }
+  return r.json();
+}
+function tab(t){
+  document.getElementById('sUsers').style.display=t==='users'?'':'none';
+  document.getElementById('sAudit').style.display=t==='audit'?'':'none';
+  document.getElementById('tUsers').classList.toggle('active',t==='users');
+  document.getElementById('tAudit').classList.toggle('active',t==='audit');
+  if(t==='audit') nactiAudit();
+}
+async function nactiUzivatele(){
+  const d=await api('/api/users'); if(d.error){ document.body.innerHTML='<p style="padding:40px">'+esc(d.error)+'</p>'; return; }
+  users=d.users;
+  document.getElementById('uList').innerHTML=users.map(u=>`<tr>
+    <td>${esc(u.login)}</td><td>${esc(u.jmeno)}</td>
+    <td><span class="pill">${u.role==='admin'?'Administrátor':'Obsluha'}</span></td>
+    <td class="${u.aktivni?'on':'off'}">${u.aktivni?'aktivní':'zablokovaný'}</td>
+    <td class="muted">${esc(u.posledni_prihlaseni||'—')}</td><td class="muted">${esc(u.vytvoreno||'—')}</td>
+    <td><button class="lnk" onclick="upravit('${esc(u.login)}')">Upravit</button></td></tr>`).join('');
+  document.getElementById('aLogin').innerHTML='<option value="">Všichni</option>'+users.map(u=>`<option value="${esc(u.login)}">${esc(u.jmeno)}</option>`).join('');
+}
+function novy(){
+  editLogin=null;
+  document.getElementById('formTitle').textContent='Nový uživatel';
+  ['uLogin','uJmeno','uHeslo'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('uLogin').disabled=false;
+  document.getElementById('uRole').value='obsluha'; document.getElementById('uAktivni').value='1';
+  document.getElementById('lHeslo').textContent='Heslo (min. 8 znaků)';
+  document.getElementById('bZrus').style.display='none';
+}
+function upravit(login){
+  const u=users.find(x=>x.login===login); if(!u) return;
+  editLogin=login;
+  document.getElementById('formTitle').textContent='Upravit: '+u.jmeno;
+  document.getElementById('uLogin').value=u.login; document.getElementById('uLogin').disabled=true;
+  document.getElementById('uJmeno').value=u.jmeno; document.getElementById('uRole').value=u.role;
+  document.getElementById('uAktivni').value=u.aktivni?'1':'0'; document.getElementById('uHeslo').value='';
+  document.getElementById('lHeslo').textContent='Nové heslo (prázdné = beze změny)';
+  document.getElementById('bZrus').style.display='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+async function ulozit(){
+  const msg=document.getElementById('uMsg');
+  const d=await api('/api/users/save',{novy:!editLogin,login:document.getElementById('uLogin').value,
+    jmeno:document.getElementById('uJmeno').value,role:document.getElementById('uRole').value,
+    heslo:document.getElementById('uHeslo').value,aktivni:document.getElementById('uAktivni').value==='1'});
+  if(d.error){ msg.className='msg off'; msg.textContent=d.error; return; }
+  msg.className='msg on'; msg.textContent='Uloženo: '+d.user.jmeno; novy(); nactiUzivatele();
+}
+async function nactiAudit(){
+  const q=new URLSearchParams({limit:'500',login:document.getElementById('aLogin').value,q:document.getElementById('aQ').value});
+  const d=await api('/api/audit?'+q);
+  const rows=d.audit||[];
+  document.getElementById('aList').innerHTML=rows.length?rows.map(a=>{
+    const det=[a.soubor,a.cil&&('uživatel '+a.cil),a.role,a.login_zadany&&('zadán login '+a.login_zadany),a.firma,a.vysledek&&a.vysledek!=='ok'?a.vysledek:'',a.ip].filter(Boolean).map(esc).join(' · ');
+    return `<tr><td class="muted" style="white-space:nowrap">${esc(a.cas)}</td><td>${esc(a.jmeno||a.login||'—')}</td>
+      <td>${esc(a.akce)}</td><td>${esc(a.cislo_smlouvy||'')}</td>
+      <td>${esc(a.klient||'')}${a.vozidlo?'<br><span class="muted">'+esc(a.vozidlo)+'</span>':''}</td>
+      <td class="muted" style="font-size:12px">${det}</td></tr>`;}).join('')
+    :'<tr><td colspan="6" class="muted">Žádné záznamy</td></tr>';
+}
+(async()=>{
+  const me=await api('/api/me'); if(!me.user){ location.href='/login'; return; }
+  document.getElementById('me').textContent='👤 '+me.user.jmeno;
+  nactiUzivatele();
+})();
+</script>
+</body>
+</html>

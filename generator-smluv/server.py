@@ -2,7 +2,9 @@
 """RX Auto - Lustrace a nájemní smlouva"""
 
 import os, re, json, base64, requests, shutil, zipfile
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import HTTPServer, ThreadingHTTPServer, BaseHTTPRequestHandler
+import threading
+import auth
 from urllib.parse import unquote
 import anthropic
 from smlouva_v2 import generate_smlouva_v2
@@ -38,6 +40,38 @@ DEMO_LUSTRACE = {"pocet_exekuci":0,"ma_exekuce":False,"cena_halerov":0,"kredit_h
 
 HISTORY_FILE = os.path.join(SCRIPT_DIR, "historie_smluv.json")
 
+# Server obsluhuje víc uživatelů najednou → zápisy do historie a číselné řady pod zámkem.
+_DATA_LOCK = threading.RLock()
+# Přihlášený uživatel aktuálního požadavku (nastavuje AppHandler, čte save_to_history).
+_CTX = threading.local()
+
+
+def _kdo():
+    u = getattr(_CTX, "user", None) or {}
+    return u.get("jmeno") or u.get("login") or ""
+
+
+def _ted():
+    from datetime import datetime
+    return datetime.now().strftime("%d.%m.%Y %H:%M")
+
+
+def zapis_zmenu_historie(akce, entry_id=None, cislo=None):
+    """Do záznamu v historii (podle id nebo čísla smlouvy) připíše, kdo a kdy co udělal."""
+    if not entry_id and not cislo:
+        return None
+    with _DATA_LOCK:
+        history = load_history()
+        for e in history:
+            if (entry_id and e.get("id") == entry_id) or (cislo and e.get("cislo_smlouvy") == cislo):
+                e.setdefault("zmeny", []).append({"kdo": _kdo(), "kdy": _ted(), "akce": akce})
+                e["zmeny"] = e["zmeny"][-50:]
+                e["upravil"], e["upraveno"] = _kdo(), _ted()
+                with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                    json.dump(history, f, ensure_ascii=False, indent=2)
+                return e
+    return None
+
 VYFAKTURUJ_CONFIG_FILE = os.path.join(SCRIPT_DIR, "vyfakturuj_config.json")
 VYFAKTURUJ_API_BASE = "https://api.vyfakturuj.cz/2.0"
 DOCUSEAL_CONFIG_FILE = os.path.join(SCRIPT_DIR, "docuseal_config.json")
@@ -52,6 +86,11 @@ def load_history():
     return []
 
 def save_to_history(osobni_data, smlouva_data, filename, firma_data=None, typ_vozidla="osobni"):
+    with _DATA_LOCK:
+        return _save_to_history(osobni_data, smlouva_data, filename, firma_data, typ_vozidla)
+
+
+def _save_to_history(osobni_data, smlouva_data, filename, firma_data=None, typ_vozidla="osobni"):
     history = load_history()
     from datetime import datetime
     entry = {
@@ -100,8 +139,22 @@ def save_to_history(osobni_data, smlouva_data, filename, firma_data=None, typ_vo
         "filename": filename,
     }
     cislo = entry.get("cislo_smlouvy") or ""
+    predchozi = None
     if cislo and "TEST" not in cislo:
+        predchozi = next((h for h in history if (h.get("cislo_smlouvy") or "") == cislo), None)
         history = [h for h in history if (h.get("cislo_smlouvy") or "") != cislo]
+    # Kdo smlouvu vytvořil / změnil (u opravy se zachová původní autor a přidá se změna)
+    kdo, ted = _kdo(), _ted()
+    zmeny = list((predchozi or {}).get("zmeny") or [])
+    if predchozi:
+        entry["vytvoril"] = predchozi.get("vytvoril", "")
+        entry["vytvoreno"] = predchozi.get("vytvoreno") or predchozi.get("datum", "")
+        entry["upravil"], entry["upraveno"] = kdo, ted
+        zmeny.append({"kdo": kdo, "kdy": ted, "akce": "oprava smlouvy"})
+    else:
+        entry["vytvoril"], entry["vytvoreno"] = kdo, ted
+        zmeny.append({"kdo": kdo, "kdy": ted, "akce": "vytvoření smlouvy"})
+    entry["zmeny"] = zmeny[-50:]
     history.insert(0, entry)
     # Zachovej max 200 záznamů
     history = history[:200]
@@ -397,6 +450,11 @@ CISELNA_RADA_FILE = os.path.join(SCRIPT_DIR, "ciselna_rada.json")
 
 
 def dalsi_cislo_smlouvy(datum_zacatku, demo=False):
+    with _DATA_LOCK:
+        return _dalsi_cislo_smlouvy(datum_zacatku, demo)
+
+
+def _dalsi_cislo_smlouvy(datum_zacatku, demo=False):
     """Číselná řada smluv RX_<rok>_<pořadové číslo>, počítadlo v 'ciselna_rada.json'
     (každý rok začíná od 001). Demo režim číslo nespotřebuje — vrací RX_<rok>_TEST."""
     import re as re_r
@@ -1046,23 +1104,111 @@ def vyplnit_smlouvu(osobni_data, smlouva_data, output_path):
         print("CHYBA:\n" + traceback.format_exc())
         return None, str(e)
 
+# Cesty, které vyžadují roli admin
+ADMIN_POST = {"/api/restart", "/api/shutdown", "/api/users/save", "/api/history/delete"}
+ADMIN_GET = {"/uzivatele", "/api/users", "/api/audit"}
+# Akce, které se zapisují do auditu (cesta → popis)
+AUDIT_AKCE = {
+    "/api/process": "smlouva",
+    "/api/vyuctovani": "protokol o vrácení",
+    "/api/podpis-vlozit": "vložení podpisu",
+    "/api/docuseal-send": "odeslání k podpisu (DocuSeal)",
+    "/api/docuseal-stazeni": "stažení podepsané smlouvy",
+    "/api/vyfakturuj-import": "faktura Vyfakturuj",
+    "/api/history/delete": "smazání z historie",
+}
+
+
 class AppHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
-        print(f"→ {self.command} {self.path}")
+        u = getattr(self, "user", None) or {}
+        print(f"→ {self.command} {self.path.split('?')[0]}" + (f"  [{u.get('login')}]" if u else ""))
 
+    # ---------- pomocné ----------
+    def _ip(self):
+        return (self.headers.get("Cf-Connecting-Ip") or
+                (self.headers.get("X-Forwarded-For") or "").split(",")[0].strip() or
+                self.client_address[0])
+
+    def _je_lokalni(self):
+        """Požadavek přímo z tohoto počítače (ne přes tunel z internetu)."""
+        return (self.client_address[0] in ("127.0.0.1", "::1") and
+                not self.headers.get("Cf-Connecting-Ip") and not self.headers.get("X-Forwarded-For"))
+
+    def _https(self):
+        return (self.headers.get("X-Forwarded-Proto") == "https" or
+                '"https"' in (self.headers.get("Cf-Visitor") or ""))
+
+    def _cookie(self, token, max_age):
+        flags = f"{auth.COOKIE}={token}; Path=/; HttpOnly; SameSite=Strict; Max-Age={max_age}"
+        if self._https():
+            flags += "; Secure"
+        return flags
+
+    def _json(self, obj, code=200, cookie=None):
+        data = json.dumps(obj, ensure_ascii=False).encode()
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        if cookie:
+            self.send_header("Set-Cookie", cookie)
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _html(self, name):
+        self.send_response(200); self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Cache-Control", "no-store, must-revalidate")
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        self.end_headers()
+        with open(os.path.join(SCRIPT_DIR, name), "rb") as f: self.wfile.write(f.read())
+
+    def _redirect(self, kam):
+        self.send_response(302); self.send_header("Location", kam); self.end_headers()
+
+    def _nacti_uzivatele(self):
+        self.token = auth.token_z_cookie(self.headers.get("Cookie"))
+        self.user = auth.uzivatel_ze_session(self.token)
+        _CTX.user = self.user
+        return self.user
+
+    def _audit(self, akce, **detail):
+        try:
+            auth.audit(self.user, akce, ip=self._ip(), **detail)
+        except Exception as e:
+            print("⚠️ Audit se nepodařilo zapsat:", e)
+
+    # ---------- GET ----------
     def do_GET(self):
-        if self.path in ("/","/index.html"):
-            self.send_response(200); self.send_header("Content-Type","text/html; charset=utf-8")
-            self.send_header("Cache-Control","no-store, must-revalidate"); self.end_headers()
-            with open(os.path.join(SCRIPT_DIR,"index.html"),"rb") as f: self.wfile.write(f.read())
-        elif self.path == "/api/history":
-            history = load_history()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(json.dumps(history, ensure_ascii=False).encode())
-        elif self.path.startswith("/diagram/"):
-            key = unquote(self.path[9:]).replace(".png", "")
+        path = self.path.split("?")[0]
+        if path == "/login":
+            return self._html("login.html")
+        if path == "/api/me":
+            u = self._nacti_uzivatele()
+            return self._json({"user": u, "bootstrap": (not auth.ma_uzivatele()) and self._je_lokalni(),
+                               "ma_uzivatele": auth.ma_uzivatele()})
+        if not self._nacti_uzivatele():
+            if path.startswith("/api/") or path.startswith("/download/"):
+                return self._json({"error": "Nepřihlášen", "login": True}, 401)
+            return self._redirect("/login")
+        if path in ADMIN_GET and self.user["role"] != "admin":
+            return self._json({"error": "Jen pro administrátora."}, 403)
+
+        if path in ("/", "/index.html"):
+            self._html("index.html")
+        elif path == "/uzivatele":
+            self._html("uzivatele.html")
+        elif path == "/api/users":
+            self._json({"users": auth.seznam_uzivatelu()})
+        elif path == "/api/audit":
+            from urllib.parse import parse_qs, urlparse
+            q = parse_qs(urlparse(self.path).query)
+            self._json({"audit": auth.nacti_audit(limit=int((q.get("limit") or ["500"])[0]),
+                                                   login=(q.get("login") or [None])[0] or None,
+                                                   hledat=(q.get("q") or [None])[0])})
+        elif path == "/api/history":
+            self._json(load_history())
+        elif path.startswith("/diagram/"):
+            key = unquote(path[9:]).replace(".png", "")
             if key in ("car", "hatchback", "kombi", "suv", "coupe", "kabriolet", "van", "trailer", "moto"):
                 fp = os.path.join(SCRIPT_DIR, "diagrams", "sablony", key + ".png")
                 if os.path.exists(fp):
@@ -1070,10 +1216,12 @@ class AppHandler(BaseHTTPRequestHandler):
                     with open(fp, "rb") as f: self.wfile.write(f.read())
                     return
             self.send_response(404); self.end_headers()
-        elif self.path.startswith("/download/"):
-            filename = unquote(self.path[10:])
+        elif path.startswith("/download/"):
+            # jen soubory přímo ve složce generátoru (žádné ../), jen PDF a Excel
+            filename = os.path.basename(unquote(path[10:]))
             filepath = os.path.join(SCRIPT_DIR, filename)
-            if os.path.exists(filepath):
+            if filename.lower().endswith((".pdf", ".xlsx")) and os.path.isfile(filepath):
+                self._audit("stažení souboru", soubor=filename)
                 self.send_response(200)
                 ct = "application/pdf" if filename.endswith(".pdf") else "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 self.send_header("Content-Type", ct)
@@ -1090,8 +1238,76 @@ class AppHandler(BaseHTTPRequestHandler):
         else:
             self.send_response(404); self.end_headers()
 
+    # ---------- POST ----------
     def do_POST(self):
-        body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        path = self.path.split("?")[0]
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(n) or b"{}") if n else {}
+        except Exception:
+            return self._json({"error": "Neplatný požadavek."}, 400)
+        # obrana proti CSRF: jen JSON požadavky
+        if "application/json" not in (self.headers.get("Content-Type") or ""):
+            return self._json({"error": "Neplatný požadavek."}, 400)
+
+        if path == "/api/login":
+            self.user = None
+            try:
+                token, u = auth.prihlas(body.get("login"), body.get("heslo"), self._ip())
+            except ValueError as e:
+                self._audit("neúspěšné přihlášení", login_zadany=(body.get("login") or "")[:40])
+                return self._json({"error": str(e)}, 401)
+            self.user = u
+            self._audit("přihlášení")
+            return self._json({"success": True, "user": u}, cookie=self._cookie(token, auth.SESSION_TTL))
+        if path == "/api/bootstrap":
+            # první administrátor — jen když ještě nikdo neexistuje a jen přímo z tohoto počítače
+            if auth.ma_uzivatele() or not self._je_lokalni():
+                return self._json({"error": "Nepovoleno."}, 403)
+            try:
+                u = auth.uloz_uzivatele(body.get("login"), jmeno=body.get("jmeno"), role="admin",
+                                        heslo=body.get("heslo"), novy=True)
+            except ValueError as e:
+                return self._json({"error": str(e)}, 400)
+            self.user = u
+            self._audit("založen první administrátor", cil=u["login"])
+            token, u = auth.prihlas(body.get("login"), body.get("heslo"), self._ip())
+            return self._json({"success": True, "user": u}, cookie=self._cookie(token, auth.SESSION_TTL))
+
+        if not self._nacti_uzivatele():
+            return self._json({"error": "Nepřihlášen", "login": True}, 401)
+        if path == "/api/logout":
+            self._audit("odhlášení")
+            auth.odhlas(self.token)
+            return self._json({"success": True}, cookie=self._cookie("", 0))
+        if path == "/api/heslo":
+            try:
+                if not auth._over(body.get("stare") or "", auth._nacti()[self.user["login"]].get("heslo", "")):
+                    raise ValueError("Současné heslo nesouhlasí.")
+                auth.uloz_uzivatele(self.user["login"], heslo=body.get("nove"))
+            except ValueError as e:
+                return self._json({"error": str(e)}, 400)
+            self._audit("změna vlastního hesla")
+            return self._json({"success": True})
+        if path in ADMIN_POST and self.user["role"] != "admin":
+            return self._json({"error": "Jen pro administrátora."}, 403)
+
+        if path == "/api/users/save":
+            try:
+                u = auth.uloz_uzivatele(body.get("login"), jmeno=body.get("jmeno"), role=body.get("role"),
+                                        heslo=body.get("heslo") or None,
+                                        aktivni=body.get("aktivni"), novy=bool(body.get("novy")))
+            except ValueError as e:
+                return self._json({"error": str(e)}, 400)
+            co = "založení uživatele" if body.get("novy") else "úprava uživatele"
+            self._audit(co, cil=u["login"], role=u["role"], aktivni=u["aktivni"],
+                        heslo_zmeneno=bool(body.get("heslo")) or None)
+            return self._json({"success": True, "user": u})
+
+        smazany = None
+        if path == "/api/history/delete":
+            smazany = next((e for e in load_history() if e.get("id") == body.get("id")), None)
+
         if self.path == "/api/check": result = self.check_doc(body)
         elif self.path == "/api/classify": result = self.classify(body)
         elif self.path == "/api/ares": result = self.ares(body)
@@ -1117,16 +1333,47 @@ class AppHandler(BaseHTTPRequestHandler):
         elif self.path == "/api/history/delete":
             try:
                 entry_id = body.get("id")
-                history = load_history()
-                history = [e for e in history if e.get("id") != entry_id]
-                with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-                    json.dump(history, f, ensure_ascii=False, indent=2)
+                with _DATA_LOCK:
+                    history = load_history()
+                    history = [e for e in history if e.get("id") != entry_id]
+                    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                        json.dump(history, f, ensure_ascii=False, indent=2)
                 result = {"success": True}
             except Exception as e:
                 result = {"error": str(e)}
         else: self.send_response(404); self.end_headers(); return
-        self.send_response(200); self.send_header("Content-Type","application/json; charset=utf-8"); self.end_headers()
-        self.wfile.write(json.dumps(result, ensure_ascii=False).encode())
+
+        if path in AUDIT_AKCE:
+            self._audit_akce(path, body, result, smazany)
+        elif path in ("/api/restart", "/api/shutdown"):
+            self._audit("restart serveru" if path == "/api/restart" else "vypnutí serveru")
+        self._json(result)
+
+    def _audit_akce(self, path, body, result, smazany=None):
+        result = result if isinstance(result, dict) else {}
+        sd = body.get("smlouva_data") or {}
+        od = result.get("osobni_data") or body.get("osobni_data") or {}
+        klient = f"{od.get('jmeno','') or ''} {od.get('prijmeni','') or ''}".strip()
+        firma = (body.get("firma_data") or {}).get("nazev")
+        cislo = result.get("cislo_smlouvy") or sd.get("cislo_smlouvy") or body.get("cislo_smlouvy")
+        akce = AUDIT_AKCE[path]
+        entry_id = body.get("id")
+        if path == "/api/process":
+            akce = "demo smlouva" if result.get("demo") else (
+                "oprava smlouvy" if (sd.get("cislo_smlouvy") or "").strip() else "vytvoření smlouvy")
+        if path in ("/api/vyuctovani",) or smazany:
+            e = smazany or next((x for x in load_history() if x.get("id") == entry_id), None) or {}
+            cislo = cislo or e.get("cislo_smlouvy")
+            klient = klient or e.get("jmeno", "")
+            sd = sd or e
+        ok = not result.get("error") and result.get("success", True) is not False
+        self._audit(akce, cislo_smlouvy=cislo, klient=klient or None, firma=firma,
+                    vozidlo=sd.get("vozidlo"), soubor=(result.get("smlouva") or {}).get("filename") or body.get("smlouva_filename"),
+                    vysledek="ok" if ok else f"chyba: {str(result.get('error'))[:200]}")
+        if ok and path in ("/api/vyuctovani", "/api/podpis-vlozit", "/api/docuseal-send",
+                           "/api/docuseal-stazeni", "/api/vyfakturuj-import"):
+            zapis_zmenu_historie(akce, entry_id=entry_id if path == "/api/vyuctovani" else None,
+                                 cislo=None if path == "/api/vyuctovani" else cislo)
 
     def check_doc(self, data):
         try:
@@ -1609,4 +1856,6 @@ if __name__ == "__main__":
             ip = "IP-tohoto-počítače"
         print(f"📱 LAN režim ZAPNUTÝ (soubor lan_mode.txt) — z mobilu ve stejné Wi-Fi otevři http://{ip}:{port}")
         print("⚠️  Aplikace je pak dostupná komukoli ve stejné síti. Vypneš smazáním lan_mode.txt a restartem.\n")
-    HTTPServer((host, port), AppHandler).serve_forever()
+    if not auth.ma_uzivatele():
+        print(f"👤 Zatím žádní uživatelé — otevři http://localhost:{port}/login na tomto počítači a založ administrátora.\n")
+    ThreadingHTTPServer((host, port), AppHandler).serve_forever()

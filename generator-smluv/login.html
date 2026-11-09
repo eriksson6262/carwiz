@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Přihlášení · RX Auto</title>
+<style>
+  :root{--black:#080807;--white:#f4f1eb;--gold:#c9a84c;--gold-light:#e8c96a;--grey:#7a736a;--red-light:#e74c3c;--border:rgba(201,168,76,0.22)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:var(--black);color:var(--white);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+  .card{width:100%;max-width:380px;background:rgba(255,255,255,0.025);border:1px solid var(--border);border-radius:16px;padding:32px 28px}
+  .logo{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+  .logo-main{font-size:22px;font-weight:600;letter-spacing:.05em}.logo-main span{color:var(--gold)}
+  .logo-sub{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--grey);margin-top:3px}
+  h1{font-size:18px;font-weight:600;margin-bottom:6px}
+  p.desc{color:var(--grey);font-size:13px;line-height:1.6;margin-bottom:20px}
+  label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);margin:14px 0 6px}
+  input{width:100%;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;color:var(--white);font-size:15px;outline:none}
+  input:focus{border-color:var(--gold)}
+  button{width:100%;margin-top:22px;padding:14px;background:var(--gold);color:var(--black);border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
+  button:disabled{opacity:.5;cursor:default}
+  .err{color:var(--red-light);font-size:13px;margin-top:14px;min-height:18px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><rect width="44" height="44" rx="10" fill="#c9a84c" fill-opacity="0.12"/><rect width="44" height="44" rx="10" stroke="#c9a84c" stroke-opacity="0.4"/><text x="22" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="#c9a84c">RX</text></svg>
+    <div><div class="logo-main">RX <span>Auto</span></div><div class="logo-sub">Generátor smluv</div></div>
+  </div>
+
+  <form id="fLogin" style="display:none" onsubmit="return prihlas(event)">
+    <h1>Přihlášení</h1>
+    <label for="login">Login</label>
+    <input id="login" autocomplete="username" autocapitalize="none" required>
+    <label for="heslo">Heslo</label>
+    <input id="heslo" type="password" autocomplete="current-password" required>
+    <button id="bLogin" type="submit">Přihlásit</button>
+    <div class="err" id="eLogin"></div>
+  </form>
+
+  <form id="fBoot" style="display:none" onsubmit="return zaloz(event)">
+    <h1>První spuštění</h1>
+    <p class="desc">Zatím neexistuje žádný uživatel. Založ si účet administrátora — pak v sekci Uživatelé přidáš ostatní.</p>
+    <label for="bjmeno">Jméno a příjmení</label>
+    <input id="bjmeno" required>
+    <label for="blogin">Login</label>
+    <input id="blogin" autocapitalize="none" autocomplete="username" required>
+    <label for="bheslo">Heslo (min. 8 znaků)</label>
+    <input id="bheslo" type="password" autocomplete="new-password" minlength="8" required>
+    <button type="submit">Založit administrátora</button>
+    <div class="err" id="eBoot"></div>
+  </form>
+
+  <div id="noUsers" style="display:none">
+    <h1>Generátor ještě není nastavený</h1>
+    <p class="desc">Administrátora lze založit jen přímo na počítači, kde generátor běží (http://localhost:8765/login).</p>
+  </div>
+</div>
+<script>
+async function post(url, body){
+  const r = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return r.json();
+}
+async function prihlas(ev){
+  ev.preventDefault();
+  const b=document.getElementById('bLogin'); b.disabled=true;
+  document.getElementById('eLogin').textContent='';
+  try{
+    const d=await post('/api/login',{login:document.getElementById('login').value,heslo:document.getElementById('heslo').value});
+    if(d.success){ location.href='/'; return false; }
+    document.getElementById('eLogin').textContent=d.error||'Přihlášení se nepovedlo.';
+  }catch(e){ document.getElementById('eLogin').textContent='Server neodpovídá.'; }
+  b.disabled=false; return false;
+}
+async function zaloz(ev){
+  ev.preventDefault();
+  const d=await post('/api/bootstrap',{jmeno:document.getElementById('bjmeno').value,login:document.getElementById('blogin').value,heslo:document.getElementById('bheslo').value});
+  if(d.success){ location.href='/'; return false; }
+  document.getElementById('eBoot').textContent=d.error||'Nepovedlo se.'; return false;
+}
+(async()=>{
+  try{
+    const d=await (await fetch('/api/me',{cache:'no-store'})).json();
+    if(d.user){ location.href='/'; return; }
+    if(d.bootstrap){ document.getElementById('fBoot').style.display=''; return; }
+    if(!d.ma_uzivatele){ document.getElementById('noUsers').style.display=''; return; }
+  }catch(e){}
+  document.getElementById('fLogin').style.display='';
+  document.getElementById('login').focus();
+})();
+</script>
+</body>
+</html>
