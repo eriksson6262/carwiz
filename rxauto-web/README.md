@@ -93,3 +93,5 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
     text (CLE „190 kW (258 k)“, Tonale „206 kW (280 k)“, X1 cena na 3 řádky) → zkráceno na „190 kW“, „206 kW“,
     „18 900 Kč/měsíc bez DPH“. Všech 25 karet má teď stejnou výšku 560 px. Nové texty držet krátké (výkon jen v kW, cena 1–2 řádky).
   - Z Flotily smazána omylem vložená kopie starého tlačítka „Spočítat cenu“.
+  - Zveřejněno 2026-11-09 13:15 (Erik „publikuj“): konfigurátor (předvolba 6 měsíců, bez příplatků), tlačítko „Spočítat cenu →“
+    mezi fotkami, Flotila se štítky roku, popup s letákem Konfigurátor → /konfigurator. Ověřeno na živém webu.
