@@ -152,3 +152,4 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
     Detaily auta a karavanu (#button2 Poptat → Spočítej). Kód: `konfigurator/velo/page-dlazdice-spocitej.js`,
     `page-detail-spocitej.js`. Nový vůz do konfigurátoru = doplnit jeho _id do konfiguratorVuz v Auta/Karavany.
   - Hlavička: tlačítko „Flexibilní pronájem →“ posunuto níž (Y 8) – zarovnané s logem.
+  Zveřejněno 2026-11-10 00:31 (Erik „publikuj“), ověřeno na živém webu (dlaždice, detail M5 = Poptat, Delfin = Spočítej).
