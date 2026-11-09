@@ -122,3 +122,19 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
     (v DOM musí být `<rx-prodej>`).
 - 2026-11-09 23:05: z ProdejLeasing smazány 8H58836 (Karoq) a 8H59271 (Superb Combi L&K) na Erikův pokyn → 28 vozů.
   Stránka Prodej vozů zveřejněna (Erik „publikuj“), ověřeno na živém webu (menu + 28 karet).
+- 2026-11-09 noc (2):
+  - ProdejLeasing: smazán levnější Multivan 8AR9080 (4MOTION) → 27 vozů. Modelové roky podle Renteonu: Renteon nemá vyplněné
+    `ProductionYear`, rok = prefix inventárního čísla (např. 22/7 → 2022, sedí s datem první aktivity). Změna jen X4 8AX8544 → 2021.
+    Scala 8H59043 v Renteonu není → 2026 (leasing od 4/2026).
+  - Pozor: 8H34367 je v tabulce ZH_RX jako Peugeot 3008, v Renteonu jako Škoda Karoq SportLine – ověřit.
+  - AI fotky (Photo Studio): Scala Monte Carlo červená, Formentor šedá (barva z Renteonu), 2008 Allure oranžová, 2008 GT bílá.
+    Normalizace 1280×744 (vůz 57 % šířky) v prohlížeči, nahrány jako jeden sprite `prodej-sprite-4vozy.webp` (1280×2976),
+    v CMS obrazek = crop URL `/v1/crop/x_0,y_<744*i>,w_1280,h_744/fill/w_640,h_400,...`.
+  - Upload tip: PUT na upload.wixmp.com z ExecuteWixAPI nejde (401 – přidává Wix auth). Nahrávat z prohlížeče (fetch PUT),
+    víc obrázků = jeden sprite + crop URL nebo `site-media/v1/files/import` s crop URL (vytvoří samostatné soubory).
+  - Hlavička: tlačítko „Flexibilní pronájem →“ (#button11) přesunuto vedle loga (desktop X 560 / Y 3, 200×38), kulaté rohy 18 px,
+    stín, hover zelená #19a463 s bílým textem. Menu už nepřekrývá „Kontakt“. Mobil: X 76, šířka 176, text bez šipky
+    (`web/masterPage.js`).
+  - Popup „Leták Škoda“ v3: dvě novinky, dva obrázky s vlastním odkazem – #image2 horní půlka (Konfigurátor → /konfigurator),
+    #image3 spodní půlka (Prodej vozů po leasingu → /prodej-vozu). Desktop 420×297 každý, mobil 260×184.
+    Soubory rxauto-letak-v3-konfigurator.webp, rxauto-letak-v3-prodej.webp (celek rxauto-letak-v3-celek.webp).
