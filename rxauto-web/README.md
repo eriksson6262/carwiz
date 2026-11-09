@@ -95,3 +95,9 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
   - Z Flotily smazána omylem vložená kopie starého tlačítka „Spočítat cenu“.
   - Zveřejněno 2026-11-09 13:15 (Erik „publikuj“): konfigurátor (předvolba 6 měsíců, bez příplatků), tlačítko „Spočítat cenu →“
     mezi fotkami, Flotila se štítky roku, popup s letákem Konfigurátor → /konfigurator. Ověřeno na živém webu.
+  - Odpoledne: BMW X4 a X3 nové AI fotky (MR 2022, štítek i popis), X1 zlatá metalíza (MR 2021) – Photo Studio, sjednoceno 1280×744.
+  - Konfigurátor: Roller Team s AI fotkou, nově Bürstner Delfin (AI fotka) a obytný přívěs Lifestyle Camper X-Line (fotka z kolekce
+    Karavany) – oba „cena na dotaz“, Praha, spoluúčast O, mimo Renteon. U přívěsu se zatím ukazují volby nájezdu (konfigurátor
+    je má pro všechny vozy).
+  - Popup leták v2 (rxauto-letak-konfigurator-v2.webp): jen logo, NOVINKA, nadpis, velká fotka Superbu a tlačítko „Spočítat cenu →“;
+    klik → /konfigurator.
