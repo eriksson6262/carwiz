@@ -143,3 +143,12 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
   Zveřejněno (Erik „publikuj“): hlavička s tlačítkem vedle loga, popup v3 se dvěma novinkami. Ověřeno na živém webu.
 - 2026-11-09 23:52: 8H34367 smazán z ProdejLeasing (v ZH_RX chybně jako Peugeot 3008, bez zůstatkové ceny; v Renteonu je to
   Karoq SportLine) → 26 vozů.
+- 2026-11-10 00:30: Odkazy „Spočítej“ přímo do konfigurátoru s předvybraným vozem (`/konfigurator?vuz=<_id KonfiguratorVozy>`).
+  - Nové pole `konfiguratorVuz` (TEXT) v CMS Auta a Karavany = _id vozu v KonfiguratorVozy. Vyplněno pro 16 aut
+    (GLE, CLE, Kamiq ×2, Octavia, Octavia Combi SL, Superb SL/Combi SL/Combi L&K, Tonale, Karoq, 3008, Kodiaq SL/RS,
+    Fabia MC, Boxer L3H2) a 3 karavany (Delfin, Roller, X-Line). Prázdné = vůz v konfigurátoru není → „Poptat“ (M5, GLC, X1–X4,
+    218i, Multivan, 500 Cabrio, Boxer 3 seat).
+  - Dlaždice: Flotila (#button1 Poptat → Spočítej), Flexibilní pronájem (#button1 Více → Spočítej, zrušeno napojení na dataset).
+    Detaily auta a karavanu (#button2 Poptat → Spočítej). Kód: `konfigurator/velo/page-dlazdice-spocitej.js`,
+    `page-detail-spocitej.js`. Nový vůz do konfigurátoru = doplnit jeho _id do konfiguratorVuz v Auta/Karavany.
+  - Hlavička: tlačítko „Flexibilní pronájem →“ posunuto níž (Y 8) – zarovnané s logem.
