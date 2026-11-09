@@ -1144,11 +1144,16 @@ class AppHandler(BaseHTTPRequestHandler):
 
     def _je_lokalni(self):
         """Požadavek přímo z tohoto počítače (ne přes tunel z internetu)."""
-        return (self.client_address[0] in ("127.0.0.1", "::1") and
-                not self.headers.get("Cf-Connecting-Ip") and not self.headers.get("X-Forwarded-For"))
+        if self.client_address[0] not in ("127.0.0.1", "::1"):
+            return False
+        # cokoli, co přišlo přes tunel/proxy (Cloudflare, Tailscale Funnel), není lokální
+        return not any(self.headers.get(h) for h in (
+            "Cf-Connecting-Ip", "X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto",
+            "Tailscale-Funnel-Request", "Tailscale-User-Login", "Forwarded"))
 
     def _https(self):
         return (self.headers.get("X-Forwarded-Proto") == "https" or
+                bool(self.headers.get("Tailscale-Funnel-Request")) or
                 '"https"' in (self.headers.get("Cf-Visitor") or ""))
 
     def _cookie(self, token, max_age):

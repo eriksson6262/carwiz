@@ -162,7 +162,9 @@ def prihlas(login, heslo, ip=""):
     login = (login or "").strip().lower()
     with _lock:
         klic = f"{ip}|{login}"
-        if _omezeni(klic) or _omezeni(ip):
+        # za tunelem bez skutečné IP (127.0.0.1) se neblokuje celá IP, jen konkrétní login
+        lokalni_ip = ip in ("127.0.0.1", "::1", "")
+        if _omezeni(klic) or (not lokalni_ip and _omezeni(ip)):
             raise ValueError("Příliš mnoho neúspěšných pokusů. Zkus to za 15 minut.")
         users = _nacti()
         u = users.get(login)

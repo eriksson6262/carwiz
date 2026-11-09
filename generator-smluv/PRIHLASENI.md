@@ -26,3 +26,17 @@ Alternativa z Terminálu: `python3 auth.py pridat erik "Erik Rajohnson" admin`
 - `audit_log.jsonl` – auditní log
 
 Zapomenuté heslo: admin nastaví nové v Uživatelích, nebo `python3 auth.py heslo <login>`.
+
+## Přístup z internetu – Tailscale Funnel (Mac mini)
+Generátor běží na Mac mini na `localhost:8765`, ven ho pouští Tailscale Funnel
+(HTTPS adresa typu `https://<jmeno-pocitace>.<tailnet>.ts.net`, bez úprav DNS a routeru).
+
+1. Nainstaluj Tailscale (tailscale.com/download/mac nebo App Store) a přihlas se.
+2. Admin konzole Tailscale → DNS: zapnout **MagicDNS** a **HTTPS Certificates**.
+3. Terminál na Mac mini:
+   `/Applications/Tailscale.app/Contents/MacOS/Tailscale funnel --bg 8765`
+   (při prvním spuštění vypíše odkaz na povolení Funnelu – otevřít a potvrdit).
+4. Adresu zjistíš: `/Applications/Tailscale.app/Contents/MacOS/Tailscale funnel status`
+5. Vypnutí: `/Applications/Tailscale.app/Contents/MacOS/Tailscale funnel --https=443 off`
+
+Administrátora zakládej **před** zapnutím Funnelu, lokálně na http://localhost:8765/login.
