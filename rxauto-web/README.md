@@ -105,3 +105,6 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
   Nová CMS kolekce `ProdejLeasing` (prodej vozů po operativním leasingu: title, znacka, obrazek, modelovyRok, najezdKm, palivo,
   prevodovka, vykon, cena, dostupneOd, popis, zobrazitNaWebu, poradi) – stránka v menu čeká na editor (zamčený jiným uživatelem).
   Čeká: větší fotky Rolleru a Delfínu v konfigurátoru, karta Bürstner Delfin v Karavanech, publikace popupu v2.
+- 2026-11-09 22:15: editor převzat (s.hanka měl editor zavřený), zveřejněn popup v2. Roller a Delfin v konfigurátoru zvětšené
+  (vůz 94 % šířky / 92 % výšky dlaždice), nová karta Bürstner Delfin v kolekci Karavany (AI fotka 1200×628, palivo Diesel,
+  ostatní údaje prázdné – doplnit). Ověřeno na živém webu.
