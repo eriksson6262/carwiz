@@ -86,3 +86,10 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
     M5 2021, Fiat 500 2022, Tonale 2024. Boxery a Multivan rok nemají → štítek skrytý.
   - Popup (lightbox „Leták Škoda“): nový leták „Novinka – Konfigurátor pronájmu“ (840×1188, kreslený v prohlížeči přes canvas,
     soubor rxauto-letak-konfigurator.webp), klik na leták → stránka Konfigurátor.
+- 2026-11-09:
+  - Fotky 218i, GLC Coupé a M5 Competition (AI z Photo Studia, Erik) sjednoceny na 1280×744, GLC a M5 zapnuty na Flotile
+    (GLC přejmenováno na „GLC Coupé“ podle fotky).
+  - Rozházené dlaždice na Flotile: opakovač skládá karty po sloupcích, takže vyšší karta posune vše pod ní. Příčina = zalomený
+    text (CLE „190 kW (258 k)“, Tonale „206 kW (280 k)“, X1 cena na 3 řádky) → zkráceno na „190 kW“, „206 kW“,
+    „18 900 Kč/měsíc bez DPH“. Všech 25 karet má teď stejnou výšku 560 px. Nové texty držet krátké (výkon jen v kW, cena 1–2 řádky).
+  - Z Flotily smazána omylem vložená kopie starého tlačítka „Spočítat cenu“.
