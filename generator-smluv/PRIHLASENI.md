@@ -46,3 +46,10 @@ pak `cd /tmp && Tailscale cert rxsmlouvy.tail59087a.ts.net` a znovu `Tailscale f
 5. Vypnutí: `/Applications/Tailscale.app/Contents/MacOS/Tailscale funnel --https=443 off`
 
 Administrátora zakládej **před** zapnutím Funnelu, lokálně na http://localhost:8765/login.
+
+## Automatické spouštění (Mac mini)
+Jednou dvojklik na `Instalovat_autostart.command`. Pak launchd (úloha `cz.rxauto.generator`)
+po přihlášení do Macu a každé 2 minuty zkontroluje port 8765 a když generátor neběží, spustí
+`Autostart_generator.command` (přes Terminál, protože jen ten smí ke složce na Ploše). Záznamy: `autostart.log`.
+Po výpadku proudu musí být Mac přihlášený → zapnout automatické přihlášení (Nastavení → Uživatelé a skupiny).
+Vypnutí: `./Instalovat_autostart.command odinstalovat`.
