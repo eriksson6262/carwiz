@@ -120,3 +120,5 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
     se do CMS/repa neukládají – v kolekci je jen výsledná prodejní cena.
   - Pozor v editoru: název tagu custom elementu se uloží až po opuštění pole (Tab) a znovu-otevření dialogu; ověřit v Test Site
     (v DOM musí být `<rx-prodej>`).
+- 2026-11-09 23:05: z ProdejLeasing smazány 8H58836 (Karoq) a 8H59271 (Superb Combi L&K) na Erikův pokyn → 28 vozů.
+  Stránka Prodej vozů zveřejněna (Erik „publikuj“), ověřeno na živém webu (menu + 28 karet).
