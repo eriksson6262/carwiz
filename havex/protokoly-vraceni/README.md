@@ -31,7 +31,7 @@ Zpracování protokolů o vrácení vozidel, které posílá HAVEX Mobility (pet
    Beyrovi: odpověď do jeho vlákna z erik@ s `RZ Protokol o vraceni vozidla - podepsano.pdf`.
    Kooperativa (Gieselová): tabulka `Ukonceni_PS_Kooperativa_<datum>.xlsx` + protokoly `RZ.pdf`; čísla PS z DETAIL_PREDPIS xlsx (e-mail „Předpis pojistného … 6667100466“).
    Razítko bez přístupu k ~/Downloads: vyrenderovat oblast razítka z posledního odeslaného „Damage statement“ (příloha v Spark, `faktury@` → penzugy@)
-   `pdftoppm -r 400` (cca x 410–540, y 404–448 pt od shora u jednostránkového DS), bílou zprůhlednit a vložit PNG do A4 PDF na 218,611 (šířka 125 pt) →
+   `pdftoppm -r 400` (cca x 410–540, y 404–448 pt od shora u jednostránkového DS; u DS z listopadu 2026 s oddílem B je razítko níž – x 400–545, y 565–613 pt; podpisovou linku pod razítkem odříznout), bílou zprůhlednit a vložit PNG do A4 PDF na 218,611 (šířka 125 pt) →
    `data/razitko_rx.pdf`. Nepoužívat celou stránku DS jako zdroj – v PDF zůstane skrytý text předchozích vyúčtování.
 5b. **Český nájemce (ne Fabian, např. DC-tec, Pro Construction)** – fakturuje se 1:1 dle HAVEX protokolu + 21 % DPH (ne přirážka):
    kopie poslední nájemní faktury odběratele, položky „Vyúčtování po vrácení vozidla RZ … – neakceptovatelné poškození vozidla dle protokolu č. <č. HAVEX>“
