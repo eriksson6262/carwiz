@@ -108,3 +108,15 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
 - 2026-11-09 22:15: editor převzat (s.hanka měl editor zavřený), zveřejněn popup v2. Roller a Delfin v konfigurátoru zvětšené
   (vůz 94 % šířky / 92 % výšky dlaždice), nová karta Bürstner Delfin v kolekci Karavany (AI fotka 1200×628, palivo Diesel,
   ostatní údaje prázdné – doplnit). Ověřeno na živém webu.
+- 2026-11-09 noc: Karavany – Roller Team nová AI fotka (1200×628 jako Delfin). Konfigurátor – fotky osobních aut v dlaždicích
+  zvětšené přes Wix crop URL (`/v1/crop/x_230,y_192,w_820,h_477/fill/w_640,h_372,...`) v poli obrazek kolekce KonfiguratorVozy.
+- Nová stránka v menu „Prodej vozů“ (/prodej-vozu, SEO title „Prodej vozů z operativního leasingu | RX AUTO“):
+  - vlastní prvek `rx-prodej` (Velo `public/custom-elements/rx-prodej.js`, ID `#rxProdej`), kód stránky
+    `prodej-leasing/velo/page-prodej-leasing.js` načte kolekci `ProdejLeasing` (zobrazitNaWebu, řazení poradi) a pošle JSON do atributu `data`.
+  - Výhody: jeden majitel, autorizovaný servis, doložený nájezd, pronájem na vyzkoušení, žádné maskované opravy, odpočet DPH,
+    férová cena, výkup protiúčtem. Financování na Erikův pokyn odebráno.
+  - Ceny (Erik): aktuální zůstatková cena z tabulky ZH_RX pro aktuální měsíc + marže 40 000 Kč bez DPH (Peugeot 15 000),
+    zaokrouhleno nahoru na tisíce; jen bez DPH. Nájezd z Renteonu (CZ+SK, api/car/getSimpleList). Interní zůstatky ani marže
+    se do CMS/repa neukládají – v kolekci je jen výsledná prodejní cena.
+  - Pozor v editoru: název tagu custom elementu se uloží až po opuštění pole (Tab) a znovu-otevření dialogu; ověřit v Test Site
+    (v DOM musí být `<rx-prodej>`).
