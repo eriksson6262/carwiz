@@ -11,8 +11,20 @@ from smlouva_v2 import generate_smlouva_v2
 
 ARES_API_URL = "https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty"
 
-ISPIS_USERNAME = "info@rxuauto.cz"
-ISPIS_PASSWORD = "RXAuto2021"
+def _nacti_ispis():
+    """Přístup k ispis.cz: soubor 'ispis_config.json' ({"username": "...", "password": "..."})
+    ve složce generátoru (není v gitu), jinak proměnné ISPIS_USERNAME / ISPIS_PASSWORD."""
+    cfg = {}
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ispis_config.json"), encoding="utf-8") as f:
+            cfg = json.load(f)
+    except Exception:
+        pass
+    return (cfg.get("username") or os.environ.get("ISPIS_USERNAME") or "",
+            cfg.get("password") or os.environ.get("ISPIS_PASSWORD") or "")
+
+
+ISPIS_USERNAME, ISPIS_PASSWORD = _nacti_ispis()
 ISPIS_API_URL = "https://ispis.cz/api/lustraceSearchSubject"
 SMLOUVA_FILENAME = "NS RX Retail Osobni Claude.xlsx"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
