@@ -2395,25 +2395,72 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeHmenu()
 <!-- PROHLÍŽEČ PDF (okno v aplikaci, aby šlo vždy zpět) -->
 <div id="pdfViewer" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.92);flex-direction:column">
   <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));background:#12110f;border-bottom:1px solid var(--border)">
-    <button type="button" onclick="zavritPdf()" style="background:var(--gold);color:#080807;border:none;border-radius:100px;padding:9px 16px;font-size:14px;font-weight:600;cursor:pointer">✕ Zavřít</button>
+    <button type="button" onclick="zavritPdf()" style="flex-shrink:0;white-space:nowrap;background:var(--gold);color:#080807;border:none;border-radius:100px;padding:9px 16px;font-size:14px;font-weight:600;cursor:pointer">✕ Zavřít</button>
     <span id="pdfViewerName" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--grey-light)"></span>
-    <button type="button" onclick="sdiletPdf()" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--white);border-radius:100px;padding:8px 14px;font-size:13px;cursor:pointer">⤴ Sdílet / uložit</button>
+    <button type="button" onclick="sdiletPdf()" style="flex-shrink:0;white-space:nowrap;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--white);border-radius:100px;padding:8px 14px;font-size:13px;cursor:pointer">⤴ Sdílet</button>
   </div>
-  <iframe id="pdfViewerFrame" style="flex:1;width:100%;border:0;background:#fff"></iframe>
+  <div id="pdfViewerPages" style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:10px 8px 40px;display:flex;flex-direction:column;align-items:center;gap:10px"></div>
+  <iframe id="pdfViewerFrame" style="display:none;flex:1;width:100%;border:0;background:#fff"></iframe>
 </div>
 <script>
 let pdfViewerHref=null;
-function otevritPdf(href){
+// PDF se vykresluje přes pdf.js stránku po stránce – vložené okno (iframe) ukazuje na iPhonu jen 1. stranu.
+const PDFJS_URL='/static/pdfjs/pdf.min.js';   // pdf.js 3.11.174 přímo v generátoru (složka static/pdfjs)
+const PDFJS_WORKER='/static/pdfjs/pdf.worker.min.js';
+let _pdfjsP=null, _pdfRenderId=0;
+function nactiPdfJs(){
+  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if(!_pdfjsP) _pdfjsP=new Promise((res,rej)=>{
+    const sc=document.createElement('script'); sc.src=PDFJS_URL;
+    sc.onload=()=>{ try{ pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER; res(pdfjsLib);}catch(e){rej(e);} };
+    sc.onerror=()=>{ _pdfjsP=null; rej(new Error('pdf.js se nenačetl')); };
+    document.head.appendChild(sc);
+  });
+  return _pdfjsP;
+}
+async function otevritPdf(href){
   pdfViewerHref=href;
   const name=decodeURIComponent(href.split('/download/')[1]||'').split('?')[0];
   document.getElementById('pdfViewerName').textContent=name;
-  document.getElementById('pdfViewerFrame').src=href+(href.includes('?')?'&':'?')+'inline=1';
+  const pages=document.getElementById('pdfViewerPages'), frame=document.getElementById('pdfViewerFrame');
+  pages.innerHTML='<div style="color:var(--grey-light);padding:40px;font-size:14px">Načítám PDF…</div>';
+  pages.style.display='flex'; frame.style.display='none';
   document.getElementById('pdfViewer').style.display='flex';
   document.body.style.overflow='hidden';
+  const id=++_pdfRenderId;
+  try{
+    const lib=await nactiPdfJs();
+    const data=await (await fetch(href+(href.includes('?')?'&':'?')+'inline=1',{cache:'no-store'})).arrayBuffer();
+    const pdf=await lib.getDocument({data}).promise;
+    if(id!==_pdfRenderId) return;
+    pages.innerHTML='';
+    const sirka=Math.min(pages.clientWidth-16, 900), dpr=Math.min(window.devicePixelRatio||1, 2.5);
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      if(id!==_pdfRenderId) return;
+      const vp0=page.getViewport({scale:1}), scale=sirka/vp0.width, vp=page.getViewport({scale:scale*dpr});
+      const c=document.createElement('canvas');
+      c.width=Math.floor(vp.width); c.height=Math.floor(vp.height);
+      c.style.cssText=`width:${Math.floor(vp0.width*scale)}px;height:${Math.floor(vp0.height*scale)}px;background:#fff;border-radius:4px;box-shadow:0 2px 12px rgba(0,0,0,.5);flex-shrink:0`;
+      pages.appendChild(c);
+      await page.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+    }
+    const info=document.createElement('div');
+    info.style.cssText='color:var(--grey);font-size:12px;padding:6px';
+    info.textContent=`${pdf.numPages} ${pdf.numPages===1?'strana':(pdf.numPages<5?'strany':'stran')}`;
+    pages.appendChild(info);
+  }catch(e){
+    // záloha: vložené okno prohlížeče
+    if(id!==_pdfRenderId) return;
+    pages.style.display='none'; frame.style.display='block';
+    frame.src=href+(href.includes('?')?'&':'?')+'inline=1';
+  }
 }
 function zavritPdf(){
+  _pdfRenderId++;
   document.getElementById('pdfViewer').style.display='none';
   document.getElementById('pdfViewerFrame').src='about:blank';
+  document.getElementById('pdfViewerPages').innerHTML='';
   document.body.style.overflow='';
 }
 async function sdiletPdf(){

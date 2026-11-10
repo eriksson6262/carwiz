@@ -1451,6 +1451,18 @@ class AppHandler(BaseHTTPRequestHandler):
                                                    hledat=(q.get("q") or [None])[0])})
         elif path == "/api/history":
             self._json([{k: v for k, v in e.items() if k != "podpis_predani"} for e in load_history()])
+        elif path.startswith("/static/pdfjs/"):
+            # pdf.js pro prohlížeč PDF v aplikaci (vložené okno ukazuje na iPhonu jen 1. stranu)
+            fn = os.path.basename(path)
+            fp = os.path.join(SCRIPT_DIR, "static", "pdfjs", fn)
+            if fn in ("pdf.min.js", "pdf.worker.min.js") and os.path.isfile(fp):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/javascript; charset=utf-8")
+                self.send_header("Cache-Control", "public, max-age=604800")
+                self.end_headers()
+                with open(fp, "rb") as f: self.wfile.write(f.read())
+            else:
+                self.send_response(404); self.end_headers()
         elif path.startswith("/diagram/"):
             key = unquote(path[9:]).replace(".png", "")
             if key in ("car", "hatchback", "kombi", "suv", "coupe", "kabriolet", "van", "trailer", "moto"):
