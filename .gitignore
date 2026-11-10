@@ -27,3 +27,11 @@ __pycache__/
 node_modules/
 .venv/
 **/out/
+
+# Generátor smluv – nákresy poškození, historie, konfigurace
+generator-smluv/nakresy/
+generator-smluv/historie_smluv.json
+generator-smluv/*_config.json
+generator-smluv/users.json
+generator-smluv/sessions.json
+generator-smluv/audit_log.jsonl

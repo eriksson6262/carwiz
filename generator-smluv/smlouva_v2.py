@@ -327,9 +327,10 @@ def _generate_smlouva_v2(osobni_data, smlouva_data, firma_data, output_path,
         "IČO: 06044310&nbsp;&nbsp; DIČ: CZ06044310",
         "info@rxauto.cz&nbsp;&nbsp; www.rxauto.cz",
     ]
-    zastupce_jmeno = (firma_data.get("zastupce", "") or cele_jmeno) if is_firma else ""
     ridic_je_zastupce = is_firma and firma_data.get("ridic_je_zastupce", True)
     nahradni_firma = is_firma and bool(smlouva_data.get("nahradni_vozidlo"))
+    # u náhradního vozidla pro firmu (např. Global Assistance) se zástupce neuvádí, pokud není zadán
+    zastupce_jmeno = (firma_data.get("zastupce", "") or ("" if nahradni_firma else cele_jmeno)) if is_firma else ""
     if is_firma:
         dic_val = firma_data.get("dic", "") or ""
         ico_dic_line = f"IČO: {firma_data.get('ico','')}"
@@ -425,6 +426,15 @@ def _generate_smlouva_v2(osobni_data, smlouva_data, firma_data, output_path,
             f"Nájemné se účtuje po jednotkách ({'za každý den' if po_dnech else 'za každý měsíc'}) "
             "až do skutečného vrácení vozidla.", styles["BodySmall"]))
     if nahradni:
+        _nahr = (smlouva_data.get("nahrazovane_vozidlo") or "").strip()
+        _zak = (smlouva_data.get("cislo_zakazky") or "").strip()
+        _det = []
+        if _nahr:
+            _det.append(f"Vozidlo je poskytnuto jako náhrada za vozidlo <b>{_nahr}</b>.")
+        if _zak:
+            _det.append(f"Číslo zakázky: <b>{_zak}</b>.")
+        if _det:
+            story.append(Paragraph(" ".join(_det), styles["Body"]))
         if is_firma:
             story.append(Paragraph(
                 "<b>NÁHRADNÍ VOZIDLO.</b> Jedná se o náhradní vozidlo. Zplnomocnění zástupce společnosti "
@@ -456,9 +466,10 @@ def _generate_smlouva_v2(osobni_data, smlouva_data, firma_data, output_path,
         cena_s_dph = ""
     interval_txt = "měsíčně" if smlouva_data.get("interval_ceny") == "měsíčně" else "denně"
     jistina = smlouva_data.get("jistina", "")
+    cena_text = str(cena_raw or "").strip() if cena_num is None else ""   # např. „dle ceníku Global Assistance“
     story.append(field_row([
-        ("NÁJEMNÉ BEZ DPH", f"{cena_bez_dph} {mena} / {interval_txt}" if cena_bez_dph else ""),
-        ("NÁJEMNÉ VČ. DPH 21%", f"{cena_s_dph} {mena} / {interval_txt}" if cena_s_dph else ""),
+        ("NÁJEMNÉ BEZ DPH", f"{cena_bez_dph} {mena} / {interval_txt}" if cena_bez_dph else cena_text),
+        ("NÁJEMNÉ VČ. DPH 21%", f"{cena_s_dph} {mena} / {interval_txt}" if cena_s_dph else cena_text),
         ("JISTINA", f"{jistina} {mena}" if jistina else ""),
     ], col_widths=[56 * mm] * 3))
     story.append(Paragraph(
@@ -658,13 +669,25 @@ def _generate_smlouva_v2(osobni_data, smlouva_data, firma_data, output_path,
         story.append(Spacer(1, 4 * mm))
         vr = vraceni or {}
         vr_km = vr.get("km_vraceni")
+        _vr_podpis = ""
+        if vr.get("podpis_png"):
+            try:
+                _raw_vr = _b64.b64decode(vr["podpis_png"].split(",", 1)[-1])
+                _pv = Image(_BytesIO(_raw_vr))
+                _w = min(44 * mm, 8 * mm * _pv.imageWidth / _pv.imageHeight)
+                _vr_podpis = Image(_BytesIO(_raw_vr), width=_w, height=8 * mm)
+                _vr_podpis.hAlign = "LEFT"
+            except Exception:
+                _vr_podpis = ""
+        _vr_imgs = (_vr_podpis, _mk_razitko(9, 44) if vr.get("podpis_png") else "")
         story.extend(_section("Vrácení vozidla", [
             ("KDO VRACÍ", vr.get("kdo_vraci", "") or ""),
             ("MÍSTO VRÁCENÍ", vr.get("misto_vraceni") or smlouva_data.get("misto_vraceni", "")),
-            ("DATUM VRÁCENÍ", _cz_datum(vr.get("datum_vraceni", "")) if vr.get("datum_vraceni") else ""),
+            ("DATUM VRÁCENÍ", (_cz_datum(vr.get("datum_vraceni", "")) + (" " + vr["cas_vraceni"] if vr.get("cas_vraceni") else "")) if vr.get("datum_vraceni") else ""),
             ("STAV KILOMETRŮ", f"{vr_km} km" if vr_km else ""),
             ("STAV NÁDRŽE", vr.get("nadrz_vraceni", "") or ""),
-        ], poskozeni_text=vr.get("poskozeni_text", ""),
+        ], poskozeni_text=vr.get("poskozeni_text", ""), sign_imgs=_vr_imgs,
+           sign_labels=(("Vrací: " + vr["kdo_vraci"]) if vr.get("kdo_vraci") else "Za nájemce (vrací)", "Za pronajímatele (přebírá)"),
            diagram_raw=_nakres_raw(vr.get("poskozeni_nakres"))))
 
     if jen_protokol:

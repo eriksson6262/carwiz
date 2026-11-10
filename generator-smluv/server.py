@@ -28,6 +28,12 @@ ISPIS_USERNAME, ISPIS_PASSWORD = _nacti_ispis()
 ISPIS_API_URL = "https://ispis.cz/api/lustraceSearchSubject"
 SMLOUVA_FILENAME = "NS RX Retail Osobni Claude.xlsx"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Ikona na plochu iPhonu (Web Clip / PWA)
+VEREJNA_ADRESA = "https://rxsmlouvy.tail59087a.ts.net/"   # použije se, když se profil stahuje z localhost
+PWA_ALIASY = {"/apple-touch-icon.png": "apple-touch-icon.png",
+              "/apple-touch-icon-precomposed.png": "apple-touch-icon.png",
+              "/favicon.ico": "icon-192.png", "/manifest.json": "manifest.json"}
 def _nacti_anthropic_key():
     """Klíč k Anthropic API: přednostně ze souboru 'anthropic_config.json'
     ({"api_key": "sk-ant-..."}), jinak z proměnné prostředí ANTHROPIC_API_KEY,
@@ -88,6 +94,31 @@ VYFAKTURUJ_CONFIG_FILE = os.path.join(SCRIPT_DIR, "vyfakturuj_config.json")
 VYFAKTURUJ_API_BASE = "https://api.vyfakturuj.cz/2.0"
 DOCUSEAL_CONFIG_FILE = os.path.join(SCRIPT_DIR, "docuseal_config.json")
 
+NAKRES_DIR = os.path.join(SCRIPT_DIR, "nakresy")
+
+
+def uloz_nakres(entry_id, cast, data_url):
+    """Uloží nákres poškození (PNG data URL) do nakresy/<id>_<cast>.png, vrátí název souboru."""
+    if not entry_id or not (data_url or "").startswith("data:image/png"):
+        return ""
+    os.makedirs(NAKRES_DIR, exist_ok=True)
+    jmeno = re.sub(r"[^A-Za-z0-9_-]+", "_", f"{entry_id}_{cast}") + ".png"
+    with open(os.path.join(NAKRES_DIR, jmeno), "wb") as f:
+        f.write(base64.b64decode(data_url.split(",", 1)[-1]))
+    return jmeno
+
+
+def nacti_nakres(jmeno):
+    """Vrátí nákres jako PNG data URL (nebo "")."""
+    if not jmeno:
+        return ""
+    fp = os.path.join(NAKRES_DIR, os.path.basename(jmeno))
+    if not os.path.isfile(fp):
+        return ""
+    with open(fp, "rb") as f:
+        return "data:image/png;base64," + base64.b64encode(f.read()).decode()
+
+
 def load_history():
     if os.path.exists(HISTORY_FILE):
         try:
@@ -145,6 +176,8 @@ def _save_to_history(osobni_data, smlouva_data, filename, firma_data=None, typ_v
         "poskozeni_predani": smlouva_data.get('poskozeni_predani', '') or '',
         "cislo_smlouvy": smlouva_data.get('cislo_smlouvy', '') or '',
         "cislo_zakazky": smlouva_data.get('cislo_zakazky', '') or '',
+        "nahrazovane_vozidlo": smlouva_data.get('nahrazovane_vozidlo', '') or '',
+        "global_assistance": bool(smlouva_data.get('global_assistance')) or je_global_assistance(firma_data),
         "cas_predani": smlouva_data.get('cas_predani', '') or '',
         "typ_vozidla": typ_vozidla or 'osobni',
         "firma": firma_data or None,
@@ -167,6 +200,8 @@ def _save_to_history(osobni_data, smlouva_data, filename, firma_data=None, typ_v
         entry["vytvoril"], entry["vytvoreno"] = kdo, ted
         zmeny.append({"kdo": kdo, "kdy": ted, "akce": "vytvoření smlouvy"})
     entry["zmeny"] = zmeny[-50:]
+    _nk = uloz_nakres(entry["id"], "predani", smlouva_data.get("poskozeni_nakres") or "")
+    entry["nakres_predani"] = _nk or (predchozi or {}).get("nakres_predani", "")
     history.insert(0, entry)
     # Zachovej max 200 záznamů
     history = history[:200]
@@ -280,7 +315,7 @@ _POLE_SCHEMA = ('{"spz":null,"znacka_model":null,"typ_vozidla":null,"cena":null,
     '"interval_ceny":null,"jistina":null,"sjednany_najezd":null,"interval_najezdu":null,"datum_zacatku":null,'
     '"datum_konce":null,"delka_mesicu":null,"delka_dnu":null,"email":null,"telefon":null,"misto_predani":null,'
     '"misto_vraceni":null,"flexi":false,"nahradni_vozidlo":false,"ico":null,"firma_nazev":null,"ridic":null,'
-    '"neomezeny_najezd":false,"bez_kauce":false,"cislo_zakazky":null}')
+    '"neomezeny_najezd":false,"bez_kauce":false,"cislo_zakazky":null,"nahrazovane_vozidlo":null}')
 
 _POLE_PRAVIDLA = """Pravidla:
 - spz: poznávací značka velkými písmeny bez mezer (např. "1ALB766"). znacka_model: zbytek popisu vozidla pěkně zapsaný (např. "BMW 2" z "bmw 2", "Škoda Octavia").
@@ -289,7 +324,7 @@ _POLE_PRAVIDLA = """Pravidla:
 - jistina = kauce / záloha / depozit, číslo (15tis = 15000).
 - sjednany_najezd: číslo km (2500). interval_najezdu: "měsíc", "rok", "den" nebo "pronájem" (za celou dobu pronájmu).
 - datum_zacatku / datum_konce: ISO rrrr-mm-dd, relativní výrazy (dneska, zítra, od pondělí, 1. listopadu) přepočítej podle dnešního data. Pokud je konec vyjádřen délkou ("na půl roku", "za 3 měsíce", "na 14 dní"), dej datum_konce null a vyplň delka_mesicu (půl roku = 6) nebo delka_dnu.
-- flexi: true pokud je řečeno "flexi" / bez pevného konce / vrácení není známo (pak datum_konce i délka null). nahradni_vozidlo: true pokud jde o náhradní vozidlo. ico: 8místné IČO firmy (nájemce), pokud je uvedeno (jen číslice) — NE IČO RX Auto / pronajímatele. firma_nazev: název firmy-nájemce. ridic: jméno řidiče, pokud je uvedeno. neomezeny_najezd: true při "neomezené km". bez_kauce: true při "bez kauce". cislo_zakazky: číslo zakázky / objednávky (typicky u Global Assistance), pokud je uvedeno.
+- flexi: true pokud je řečeno "flexi" / bez pevného konce / vrácení není známo (pak datum_konce i délka null). nahradni_vozidlo: true pokud jde o náhradní vozidlo. ico: 8místné IČO firmy (nájemce), pokud je uvedeno (jen číslice) — NE IČO RX Auto / pronajímatele. firma_nazev: název firmy-nájemce. ridic: jméno řidiče, pokud je uvedeno. neomezeny_najezd: true při "neomezené km". bez_kauce: true při "bez kauce". cislo_zakazky: číslo zakázky / objednávky (typicky u Global Assistance), pokud je uvedeno. nahrazovane_vozidlo: jen u náhradního vozidla — vozidlo klienta, ZA KTERÉ se náhradní vozidlo poskytuje (SPZ + značka model), jinak null.
 - email, telefon, místa předání/vrácení jen pokud jsou výslovně uvedena."""
 
 
@@ -368,6 +403,7 @@ def _normalizuj_pole(d):
         "misto_predani": (d.get("misto_predani") or None),
         "misto_vraceni": (d.get("misto_vraceni") or None),
         "cislo_zakazky": (str(d.get("cislo_zakazky")).strip() if d.get("cislo_zakazky") else None),
+        "nahrazovane_vozidlo": (str(d.get("nahrazovane_vozidlo")).strip() if d.get("nahrazovane_vozidlo") else None),
     }
 
 
@@ -389,7 +425,20 @@ Vrať POUZE JSON přesně v tomto tvaru (co v popisu není, dej null/false — n
     return _normalizuj_pole(_llm_pole([{"type": "text", "text": prompt}]))
 
 
-def parse_dokument_najmu(files):
+GA_PRAVIDLA = """
+DŮLEŽITÉ — tento dokument je OBJEDNÁVKA / ZADÁNÍ od asistenční společnosti Global Assistance na NÁHRADNÍ VOZIDLO:
+- Nájemcem je Global Assistance: firma_nazev = název Global Assistance, ico = IČO Global Assistance (objednatele), pokud je uvedeno.
+- nahradni_vozidlo = true.
+- Vozidlo uvedené v objednávce je vozidlo KLIENTA, za které se náhradní vozidlo poskytuje → dej ho do nahrazovane_vozidlo
+  (např. "1AB2345 — Škoda Octavia"). spz, znacka_model a typ_vozidla nech null (naše náhradní vozidlo se zadává ručně).
+- cislo_zakazky = číslo zakázky / případu / objednávky Global Assistance (přesně, včetně písmen a lomítek).
+- ridic = jméno klienta (řidiče), telefon / email = kontakt na klienta, pokud jsou uvedeny.
+- datum_zacatku = datum přistavení / zahájení; delka_dnu = počet schválených dní náhradního vozidla (pokud je uveden).
+- misto_predani = místo přistavení, misto_vraceni = místo vrácení (jen pokud jsou uvedeny).
+- cena, jistina, nájezd vyplň jen pokud jsou v objednávce výslovně uvedeny."""
+
+
+def parse_dokument_najmu(files, ga=False):
     """Z fotky / PDF libovolného dokumentu (faktura, objednávka, e-mail, nabídka, stará smlouva…)
     vytáhne údaje pro předvyplnění smlouvy: vozidlo, dobu nájmu, cenu, firmu, řidiče…"""
     if not files:
@@ -406,8 +455,137 @@ Vrať POUZE JSON přesně v tomto tvaru (co v dokumentu není, dej null/false �
 {_POLE_SCHEMA}
 
 {_POLE_PRAVIDLA}
-- U faktury: cena = cena nájmu za jednotku (den/měsíc), ne celková částka za období, pokud lze rozlišit; DPH urči podle toho, zda je uvedená cena bez DPH nebo s DPH. Období na dokladu (např. 2.8.–7.9.2026) = datum_zacatku/datum_konce."""})
-    return _normalizuj_pole(_llm_pole(content))
+- U faktury: cena = cena nájmu za jednotku (den/měsíc), ne celková částka za období, pokud lze rozlišit; DPH urči podle toho, zda je uvedená cena bez DPH nebo s DPH. Období na dokladu (např. 2.8.–7.9.2026) = datum_zacatku/datum_konce.""" + (GA_PRAVIDLA if ga else "")})
+    pole = _normalizuj_pole(_llm_pole(content))
+    if ga:
+        pole["nahradni_vozidlo"] = True
+        pole["vozidlo"] = None          # naše vozidlo se zadává ručně
+        pole["typ_vozidla"] = None
+    return pole
+
+
+GA_CONFIG_FILE = os.path.join(SCRIPT_DIR, "global_assistance.json")
+
+
+def _bez_diak(t):
+    import unicodedata
+    return unicodedata.normalize("NFKD", t or "").encode("ascii", "ignore").decode("ascii")
+
+
+def global_assistance_firma(ico_hint=None):
+    """Údaje firmy Global Assistance pro smlouvu. Pořadí: uložený global_assistance.json
+    → ARES podle IČO z objednávky → ARES vyhledání podle názvu. Nalezené se uloží."""
+    if os.path.exists(GA_CONFIG_FILE):
+        try:
+            with open(GA_CONFIG_FILE, encoding="utf-8") as f:
+                cfg = json.load(f)
+            if cfg.get("ico") and cfg.get("nazev"):
+                return cfg
+        except Exception:
+            pass
+    firma = None
+    if ico_hint:
+        r = ares_lookup(ico_hint)
+        if not r.get("error") and "global assistance" in " ".join(_bez_diak(r.get("nazev", "")).lower().split()):
+            firma = r
+    if not firma:
+        try:
+            r = requests.post(ARES_API_URL + "/vyhledat", json={"obchodniJmeno": "Global Assistance", "pocet": 20},
+                              timeout=15)
+            r.raise_for_status()
+            kand = [x for x in (r.json().get("ekonomickeSubjekty") or [])
+                    if "global assistance" in " ".join(_bez_diak(x.get("obchodniJmeno", "")).lower().split())]
+            kand.sort(key=lambda x: (0 if "a.s" in x.get("obchodniJmeno", "").lower() else 1))
+            if kand:
+                x = kand[0]
+                firma = {"ico": x.get("ico", ""), "nazev": x.get("obchodniJmeno", ""), "dic": x.get("dic", ""),
+                         "sidlo": (x.get("sidlo") or {}).get("textovaAdresa", "")}
+        except Exception as e:
+            print("GA ARES:", e)
+    if firma:
+        firma = {k: firma.get(k, "") for k in ("ico", "nazev", "dic", "sidlo")}
+        try:
+            with open(GA_CONFIG_FILE, "w", encoding="utf-8") as f:
+                json.dump(firma, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+    return firma
+
+
+EMAIL_CONFIG_FILE = os.path.join(SCRIPT_DIR, "email_config.json")
+
+
+def odeslat_email(prijemce, predmet, text, soubory):
+    """Odešle e-mail s přílohami přes SMTP podle email_config.json (heslo nikdy v kódu)."""
+    import smtplib, ssl, mimetypes
+    from email.message import EmailMessage
+    if not os.path.exists(EMAIL_CONFIG_FILE):
+        raise RuntimeError("Chybí email_config.json (viz email_config.example.json) — e-mail nebyl odeslán.")
+    with open(EMAIL_CONFIG_FILE, encoding="utf-8") as f:
+        cfg = json.load(f)
+    msg = EmailMessage()
+    msg["From"] = cfg.get("from") or cfg["user"]
+    msg["To"] = prijemce
+    msg["Subject"] = predmet
+    msg.set_content(text)
+    for fp in soubory:
+        with open(fp, "rb") as f:
+            msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename=os.path.basename(fp))
+    host, port = cfg["smtp_host"], int(cfg.get("smtp_port", 465))
+    try:
+        import certifi
+        ctx = ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        ctx = ssl.create_default_context()
+    if port == 465:
+        with smtplib.SMTP_SSL(host, port, context=ctx, timeout=30) as srv:
+            srv.login(cfg["user"], cfg["password"]); srv.send_message(msg)
+    else:
+        with smtplib.SMTP(host, port, timeout=30) as srv:
+            srv.starttls(context=ctx); srv.login(cfg["user"], cfg["password"]); srv.send_message(msg)
+
+
+def _je_stranka_protokolu(page):
+    try:
+        t = page.extract_text() or ""
+    except Exception:
+        return False
+    return "Předávací protokol" in t[:400] and "ke smlouvě" in t[:400]
+
+
+def spojit_pdf(soubory, vystup, bez_protokolu=()):
+    """Spojí PDF do jednoho souboru (pypdf / PyPDF2). Vrátí True, pokud se povedlo.
+    Ze souborů v bez_protokolu vynechá strany předávacího protokolu."""
+    try:
+        try:
+            from pypdf import PdfWriter, PdfReader
+        except ImportError:
+            from PyPDF2 import PdfWriter, PdfReader
+        w = PdfWriter()
+        for fp in soubory:
+            for p in PdfReader(fp).pages:
+                if fp in bez_protokolu and _je_stranka_protokolu(p):
+                    continue
+                w.add_page(p)
+        with open(vystup, "wb") as f:
+            w.write(f)
+        return True
+    except Exception as e:
+        print("Spojení PDF se nepovedlo:", e)
+        return False
+
+
+def uprav_historii(filename=None, cislo=None, **pole):
+    """Doplní pole do záznamu v historii (podle souboru smlouvy nebo čísla smlouvy)."""
+    with _DATA_LOCK:
+        history = load_history()
+        for e in history:
+            if (filename and e.get("filename") == filename) or (cislo and e.get("cislo_smlouvy") == cislo):
+                e.update(pole)
+                with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                    json.dump(history, f, ensure_ascii=False, indent=2)
+                return e
+    return None
 
 
 def lustrace_cee(jmeno, prijmeni, datum):
@@ -1144,16 +1322,11 @@ class AppHandler(BaseHTTPRequestHandler):
 
     def _je_lokalni(self):
         """Požadavek přímo z tohoto počítače (ne přes tunel z internetu)."""
-        if self.client_address[0] not in ("127.0.0.1", "::1"):
-            return False
-        # cokoli, co přišlo přes tunel/proxy (Cloudflare, Tailscale Funnel), není lokální
-        return not any(self.headers.get(h) for h in (
-            "Cf-Connecting-Ip", "X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto",
-            "Tailscale-Funnel-Request", "Tailscale-User-Login", "Forwarded"))
+        return (self.client_address[0] in ("127.0.0.1", "::1") and
+                not self.headers.get("Cf-Connecting-Ip") and not self.headers.get("X-Forwarded-For"))
 
     def _https(self):
         return (self.headers.get("X-Forwarded-Proto") == "https" or
-                bool(self.headers.get("Tailscale-Funnel-Request")) or
                 '"https"' in (self.headers.get("Cf-Visitor") or ""))
 
     def _cookie(self, token, max_age):
@@ -1179,6 +1352,55 @@ class AppHandler(BaseHTTPRequestHandler):
         self.end_headers()
         with open(os.path.join(SCRIPT_DIR, name), "rb") as f: self.wfile.write(f.read())
 
+    def _pwa_soubor(self, path):
+        jmeno = PWA_ALIASY.get(path) or os.path.basename(path)
+        fp = os.path.join(SCRIPT_DIR, "pwa", jmeno)
+        if not os.path.isfile(fp):
+            self.send_response(404); self.end_headers(); return
+        ct = "application/manifest+json" if jmeno.endswith(".json") else "image/png"
+        with open(fp, "rb") as f: data = f.read()
+        self.send_response(200); self.send_header("Content-Type", ct)
+        self.send_header("Cache-Control", "public, max-age=86400")
+        self.send_header("Content-Length", str(len(data))); self.end_headers()
+        self.wfile.write(data)
+
+    def _iphone_profil(self):
+        """Konfigurační profil iOS (Web Clip) – po instalaci se na plochu přidá ikona generátoru."""
+        import plistlib, uuid
+        host = (self.headers.get("X-Forwarded-Host") or self.headers.get("Host") or "").split(",")[0].strip()
+        hostname = host.split(":")[0]
+        if not host or hostname in ("localhost", "127.0.0.1", "::1", "[::1]"):
+            url = VEREJNA_ADRESA
+        elif ":" in host:                      # přímý přístup v síti (http://IP:8765)
+            url = f"http://{host}/"
+        else:                                   # Tailscale Funnel / doména – vždy https
+            url = f"https://{host}/"
+        with open(os.path.join(SCRIPT_DIR, "pwa", "apple-touch-icon.png"), "rb") as f: ikona = f.read()
+        clip = {
+            "PayloadType": "com.apple.webClip.managed", "PayloadVersion": 1,
+            "PayloadIdentifier": "cz.rxauto.generator.webclip",
+            "PayloadUUID": str(uuid.uuid5(uuid.NAMESPACE_URL, url + "#webclip")).upper(),
+            "PayloadDisplayName": "RX Smlouvy",
+            "Label": "RX Smlouvy", "URL": url, "Icon": ikona,
+            "IsRemovable": True, "FullScreen": True, "Precomposed": True,
+        }
+        profil = {
+            "PayloadType": "Configuration", "PayloadVersion": 1,
+            "PayloadIdentifier": "cz.rxauto.generator",
+            "PayloadUUID": str(uuid.uuid5(uuid.NAMESPACE_URL, url + "#profil")).upper(),
+            "PayloadDisplayName": "RX Auto – Generátor smluv",
+            "PayloadDescription": "Přidá na plochu ikonu RX Smlouvy, která otevře generátor smluv RX Auto.",
+            "PayloadOrganization": "RX Auto, s.r.o.",
+            "PayloadRemovalDisallowed": False,
+            "PayloadContent": [clip],
+        }
+        data = plistlib.dumps(profil)
+        self.send_response(200)
+        self.send_header("Content-Type", "application/x-apple-aspen-config")
+        self.send_header("Content-Disposition", 'attachment; filename="RX_Smlouvy.mobileconfig"')
+        self.send_header("Content-Length", str(len(data))); self.end_headers()
+        self.wfile.write(data)
+
     def _redirect(self, kam):
         self.send_response(302); self.send_header("Location", kam); self.end_headers()
 
@@ -1197,6 +1419,11 @@ class AppHandler(BaseHTTPRequestHandler):
     # ---------- GET ----------
     def do_GET(self):
         path = self.path.split("?")[0]
+        # ikona aplikace / instalace na plochu iPhonu – veřejné (bez přihlášení), neobsahují žádná data
+        if path.startswith("/pwa/") or path in PWA_ALIASY:
+            return self._pwa_soubor(path)
+        if path == "/iphone.mobileconfig":
+            return self._iphone_profil()
         if path == "/login":
             return self._html("login.html")
         if path == "/api/me":
@@ -1223,7 +1450,7 @@ class AppHandler(BaseHTTPRequestHandler):
                                                    login=(q.get("login") or [None])[0] or None,
                                                    hledat=(q.get("q") or [None])[0])})
         elif path == "/api/history":
-            self._json(load_history())
+            self._json([{k: v for k, v in e.items() if k != "podpis_predani"} for e in load_history()])
         elif path.startswith("/diagram/"):
             key = unquote(path[9:]).replace(".png", "")
             if key in ("car", "hatchback", "kombi", "suv", "coupe", "kabriolet", "van", "trailer", "moto"):
@@ -1247,7 +1474,8 @@ class AppHandler(BaseHTTPRequestHandler):
                 ascii_name = unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').decode('ascii')
                 from urllib.parse import quote
                 utf8_name = quote(filename, safe='')
-                self.send_header("Content-Disposition", f'attachment; filename="{ascii_name}"; filename*=UTF-8''{utf8_name}')
+                _disp = "inline" if ("inline=1" in self.path and filename.lower().endswith(".pdf")) else "attachment"
+                self.send_header("Content-Disposition", f'{_disp}; filename="{ascii_name}"; filename*=UTF-8''{utf8_name}')
                 self.end_headers()
                 with open(filepath,"rb") as f: self.wfile.write(f.read())
             else:
@@ -1624,12 +1852,20 @@ class AppHandler(BaseHTTPRequestHandler):
                     "vozidlo", "datum_zacatku", "cas_predani", "palivo", "misto_predani", "poskozeni_predani",
                     "misto_vraceni", "stav_tachometru_predani", "stav_nadrze", "nahradni_vozidlo")}
                 smlouva_p["cislo_smlouvy"] = vys["cislo_smlouvy"]
+                smlouva_p["poskozeni_nakres"] = nacti_nakres(entry.get("nakres_predani"))
+                _nk_vr = uloz_nakres(entry.get("id"), "vraceni", data.get("poskozeni_nakres") or "")
+                if _nk_vr:
+                    uprav_historii(filename=entry.get("filename"), nakres_vraceni=_nk_vr)
                 posk_text = ""
                 if posk or posk_popis:
                     posk_text = posk_popis or "poškození vozidla"
                     if posk:
                         posk_text += f" — náhrada škody {posk:,.0f} {vys['mena']}".replace(",", " ")
-                vraceni = {"poskozeni_nakres": data.get("poskozeni_nakres") or "",
+                cas_vr = (data.get("cas_vraceni") or "").strip() or datetime.now().strftime("%H:%M")
+                _pv = data.get("podpis_vraceni") or ""
+                vraceni = {"misto_vraceni": (data.get("misto_vraceni") or "").strip(), "cas_vraceni": cas_vr,
+                           "podpis_png": _pv if _pv.startswith("data:image/png") else "",
+                           "poskozeni_nakres": data.get("poskozeni_nakres") or "",
                            "kdo_vraci": data.get("kdo_vraci", ""),
                            "datum_vraceni": vra.strftime("%d.%m.%Y"),
                            "km_vraceni": (f"{km1:,.0f}".replace(",", " ") if km1 is not None else ""),
@@ -1638,17 +1874,68 @@ class AppHandler(BaseHTTPRequestHandler):
                 generate_smlouva_v2(osobni_p, smlouva_p, entry.get("firma") or None,
                                     os.path.join(SCRIPT_DIR, fname_protokol),
                                     vys["cislo_smlouvy"], typ_vozidla=entry.get("typ_vozidla", "osobni"),
-                                    vraceni=vraceni, jen_protokol=True)
+                                    vraceni=vraceni, jen_protokol=True,
+                                    podpis_png=entry.get("podpis_predani") or None)
             except Exception:
                 import traceback
                 print("CHYBA (protokol vrácení):\n" + traceback.format_exc())
                 fname_protokol = None
 
-            return {"success": True, "filename": fname, "filename_protokol": fname_protokol, "vysledek": vys}
+            out = {"success": True, "filename": fname, "filename_protokol": fname_protokol, "vysledek": vys}
+            if entry.get("global_assistance") or je_global_assistance(entry.get("firma")):
+                out.update(self._ga_po_vraceni(entry, fname, fname_protokol, vys))
+            return out
         except Exception as e:
             import traceback
             print("CHYBA (vyuctovani):\n" + traceback.format_exc())
             return {"success": False, "error": str(e)}
+
+    def _ga_po_vraceni(self, entry, fname_vyuct, fname_protokol, vys):
+        """Global Assistance: po vrácení spojí smlouvu + protokol vrácení + vyúčtování do jednoho PDF
+        a pošle ho e-mailem na info@rxauto.cz. Pro WhatsApp vrátí soubor ke sdílení."""
+        res = {"ga": True}
+        sml = entry.get("filename") or ""
+        podep = sml[:-4] + "_podepsana.pdf" if sml.endswith(".pdf") else ""
+        if podep and os.path.isfile(os.path.join(SCRIPT_DIR, podep)):
+            sml = podep
+        dily = [os.path.join(SCRIPT_DIR, x) for x in (sml, fname_protokol, fname_vyuct)
+                if x and os.path.isfile(os.path.join(SCRIPT_DIR, x))]
+        zak = re.sub(r"[^A-Za-z0-9_-]+", "_", entry.get("cislo_zakazky") or entry.get("cislo_smlouvy") or "zakazka").strip("_")
+        balik = "GA_" + zak + "_kompletni.pdf"
+        prilohy = dily
+        _sml_path = os.path.join(SCRIPT_DIR, sml) if sml else ""
+        _bez = (_sml_path,) if (fname_protokol and os.path.isfile(os.path.join(SCRIPT_DIR, fname_protokol))) else ()
+        if dily and spojit_pdf(dily, os.path.join(SCRIPT_DIR, balik), bez_protokolu=_bez):
+            prilohy = [os.path.join(SCRIPT_DIR, balik)]
+            res["ga_soubor"] = balik
+        elif dily:
+            res["ga_soubor"] = os.path.basename(dily[0])
+        res["ga_soubory"] = [os.path.basename(x) for x in prilohy]
+        voz = entry.get("vozidlo") or ""
+        res["ga_whatsapp_text"] = (f"Margareto, vráceno náhradní vozidlo {voz} — Global Assistance, "
+                                   f"zakázka {entry.get('cislo_zakazky') or '—'}, řidič {entry.get('jmeno') or '—'}. "
+                                   "Kompletní PDF (smlouva, předávací protokol s vrácením, vyúčtování) v příloze.")
+        try:
+            odeslat_email(
+                "info@rxauto.cz",
+                f"Global Assistance — zakázka {entry.get('cislo_zakazky') or ''} — vráceno {voz}".strip(),
+                "Dobrý den,\n\nnáhradní vozidlo pro Global Assistance bylo vráceno.\n\n"
+                f"Zakázka: {entry.get('cislo_zakazky') or '—'}\n"
+                f"Náhradní vozidlo: {voz or '—'}\n"
+                f"Nahrazované vozidlo: {entry.get('nahrazovane_vozidlo') or '—'}\n"
+                f"Řidič: {entry.get('jmeno') or '—'}\n"
+                f"Předání: {entry.get('datum_zacatku') or ''} {entry.get('cas_predani') or ''}\n"
+                f"Vrácení: {vys.get('datum_vraceni') or ''}\n\n"
+                "V příloze kompletní PDF (smlouva, předávací protokol s vrácením, vyúčtování).\n\nGenerátor smluv RX Auto",
+                prilohy)
+            res["ga_email"] = "E-mail s kompletním PDF odeslán na info@rxauto.cz."
+            zapis_zmenu_historie("e-mail GA na info@rxauto.cz", entry_id=entry.get("id"))
+        except Exception as e:
+            import traceback
+            print("CHYBA (e-mail GA):\n" + traceback.format_exc(), flush=True)
+            res["ga_email_chyba"] = f"{type(e).__name__}: {e}"
+            zapis_zmenu_historie(f"e-mail GA NEODEŠEL: {type(e).__name__}: {e}"[:200], entry_id=entry.get("id"))
+        return res
 
     def podpis_vlozit_route(self, data):
         """Vloží vlastnoruční podpis (PNG z canvas) do již vygenerované smlouvy —
@@ -1666,13 +1953,26 @@ class AppHandler(BaseHTTPRequestHandler):
             firma_data = data.get("firma_data") or None
             typ_vozidla = data.get("typ_vozidla", "osobni")
             cislo_smlouvy = smlouva_data.get("cislo_smlouvy") or cislo_smlouvy_z_data(smlouva_data.get("datum_zacatku", ""))
-            if not osobni_data.get("jmeno"):
+            if not osobni_data.get("jmeno") and not firma_data and not smlouva_data.get("vozidlo") \
+                    and not smlouva_data.get("cislo_smlouvy"):
                 raise RuntimeError("Chybí údaje smlouvy — nejdřív smlouvu vygeneruj.")
             output_path = os.path.join(SCRIPT_DIR, filename)
+            smlouva_data = dict(smlouva_data)
+            if not (smlouva_data.get("cas_predani") or "").strip():
+                from datetime import datetime as _dtp
+                smlouva_data["cas_predani"] = _dtp.now().strftime("%H:%M")   # čas předání = podpis řidiče
+                uprav_historii(filename=filename, cas_predani=smlouva_data["cas_predani"])
             _, podpis_pozice = generate_smlouva_v2(
                 osobni_data, smlouva_data, firma_data, output_path,
                 cislo_smlouvy, typ_vozidla=typ_vozidla, podpis_png=podpis_png)
-            return {"success": True, "filename": filename}
+            _extra = {}
+            _hist_e = next((h for h in load_history() if h.get("filename") == filename), None)
+            if _hist_e and smlouva_data.get("poskozeni_nakres"):
+                _nk = uloz_nakres(_hist_e.get("id"), "predani", smlouva_data.get("poskozeni_nakres"))
+                if _nk:
+                    _extra["nakres_predani"] = _nk
+            uprav_historii(filename=filename, podpis_predani=podpis_png, **_extra)   # do protokolu při vrácení
+            return {"success": True, "filename": filename, "cas_predani": smlouva_data.get("cas_predani", "")}
         except Exception as e:
             import traceback
             print("CHYBA (podpis):\n" + traceback.format_exc())
@@ -1730,7 +2030,14 @@ class AppHandler(BaseHTTPRequestHandler):
 
     def extract_doc_route(self, data):
         try:
-            return {"success": True, "pole": parse_dokument_najmu(data.get("files") or [])}
+            ga = bool(data.get("ga"))
+            pole = parse_dokument_najmu(data.get("files") or [], ga=ga)
+            if ga:
+                try:
+                    pole["ga_firma"] = global_assistance_firma(pole.get("ico"))
+                except Exception as e:
+                    print("GA firma:", e)
+            return {"success": True, "pole": pole}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
