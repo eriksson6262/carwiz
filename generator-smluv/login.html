@@ -2,7 +2,6 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="theme-color" content="#080807">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Přihlášení · RX Auto</title>
 <style>
@@ -22,6 +21,14 @@
   button:disabled{opacity:.5;cursor:default}
   .err{color:var(--red-light);font-size:13px;margin-top:14px;min-height:18px}
 </style>
+<link rel="apple-touch-icon" href="/pwa/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/pwa/icon-192.png">
+<link rel="manifest" href="/pwa/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RX Smlouvy">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#080807">
 </head>
 <body>
 <!-- SPLASH: úvodní animace při startu na mobilu (jednou za relaci, ťuknutím přeskočit) -->
@@ -143,7 +150,6 @@
 })();
 </script>
 <!-- /SPLASH -->
-
 <div class="card">
   <div class="logo">
     <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><rect width="44" height="44" rx="10" fill="#c9a84c" fill-opacity="0.12"/><rect width="44" height="44" rx="10" stroke="#c9a84c" stroke-opacity="0.4"/><text x="22" y="30" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="#c9a84c">RX</text></svg>
@@ -177,6 +183,10 @@
     <h1>Generátor ještě není nastavený</h1>
     <p class="desc">Administrátora lze založit jen přímo na počítači, kde generátor běží (http://localhost:8765/login).</p>
   </div>
+<div id="iphoneApp" style="display:none;margin-top:22px;padding-top:18px;border-top:1px solid var(--border);text-align:center">
+    <a id="iphoneBtn" href="/iphone.mobileconfig" style="display:inline-block;background:rgba(201,168,76,0.12);border:1px solid var(--border);color:var(--gold);padding:8px 18px;border-radius:100px;font-size:13px;text-decoration:none">📱 Přidat aplikaci na plochu</a>
+    <div id="iphoneHint" style="display:none;color:var(--grey);font-size:12px;line-height:1.6;margin-top:10px"></div>
+  </div>
 </div>
 <script>
 async function post(url, body){
@@ -209,6 +219,19 @@ async function zaloz(ev){
   }catch(e){}
   document.getElementById('fLogin').style.display='';
   document.getElementById('login').focus();
+})();
+</script>
+<script>
+(function(){
+  var ua=navigator.userAgent, ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var standalone=window.navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+  var box=document.getElementById('iphoneApp'); if(!box||!ios||standalone) return;
+  box.style.display='';
+  var hint=document.getElementById('iphoneHint');
+  if(/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)){ hint.textContent='Instalace funguje jen v Safari – otevři tuto stránku v Safari.'; hint.style.display=''; return; }
+  document.getElementById('iphoneBtn').addEventListener('click',function(){
+    setTimeout(function(){ hint.innerHTML='Klepni na <b>Povolit</b>, pak otevři <b>Nastavení → Stažený profil → Instalovat</b>. Ikona RX Smlouvy se objeví na ploše.'; hint.style.display=''; },400);
+  });
 })();
 </script>
 </body>

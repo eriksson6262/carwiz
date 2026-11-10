@@ -2,7 +2,6 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="theme-color" content="#080807">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RX Auto — Generátor smluv</title>
 <style>
@@ -23,6 +22,18 @@
   header{display:flex;align-items:center;justify-content:space-between;padding:22px 48px;border-bottom:1px solid var(--border);position:relative}
   header::after{content:'';position:absolute;bottom:0;left:48px;right:48px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.4),transparent)}
   .logo{display:flex;align-items:center;gap:16px}
+  .hmenu{position:relative}
+  .hmenu-btn{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 10px 8px 16px;border-radius:100px;font-family:inherit;font-size:13px;cursor:pointer;transition:all .2s}
+  .hmenu-btn:hover,.hmenu.open .hmenu-btn{color:var(--white);border-color:rgba(201,168,76,0.5)}
+  .hmenu-ico{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:rgba(201,168,76,0.14);color:var(--gold);font-size:14px}
+  .hmenu-panel{display:none;position:absolute;right:0;top:calc(100% + 8px);min-width:230px;background:#12110f;border:1px solid var(--border);border-radius:14px;padding:6px;box-shadow:0 18px 40px rgba(0,0,0,0.55);z-index:1000}
+  .hmenu.open .hmenu-panel{display:block}
+  .hmenu-item{display:block;width:100%;text-align:left;background:none;border:none;color:var(--white);padding:11px 14px;border-radius:9px;font-family:inherit;font-size:14px;cursor:pointer;text-decoration:none}
+  .hmenu-item:hover{background:rgba(201,168,76,0.1)}
+  .hmenu-danger{color:#e57373}
+  .hmenu-sep{height:1px;background:var(--border);margin:6px 8px}
+  .hmenu-status{display:flex;align-items:center;gap:8px;padding:9px 14px 11px;font-size:12px;color:var(--green-light)}
+  @media(max-width:600px){header{padding:16px 18px}header::after{left:18px;right:18px}#userName{display:none}.hmenu-btn{padding:6px}}
   .logo-svg{width:44px;height:44px;flex-shrink:0}
   .logo-text{display:flex;flex-direction:column;line-height:1}
   .logo-main{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:22px;font-weight:600;letter-spacing:.05em;color:var(--white)}
@@ -54,6 +65,19 @@
   .step-line.done{background:rgba(39,174,96,0.35)}
 
   /* UPLOAD */
+  .ga-switch{display:flex;align-items:center;gap:14px;width:100%;margin:0 0 18px;padding:14px 16px;border:1.5px solid var(--border);border-radius:14px;background:rgba(255,255,255,0.025);color:var(--white);font-family:inherit;text-align:left;cursor:pointer;transition:all .2s}
+  .ga-switch:hover{border-color:rgba(201,168,76,0.45)}
+  .ga-logo{flex:0 0 auto;display:flex;align-items:center;justify-content:center;min-width:54px;height:40px;padding:0 8px;border-radius:9px;background:#fff;color:#003b7a;font-weight:800;font-size:15px;letter-spacing:.02em}
+  .ga-logo img{max-height:30px;max-width:110px;display:block}
+  .ga-txt{flex:1;min-width:0}.ga-txt b{display:block;font-size:14px}.ga-txt small{display:block;font-size:12px;color:var(--grey);margin-top:2px;line-height:1.4}
+  .ga-knob{flex:0 0 auto;width:46px;height:26px;border-radius:13px;background:rgba(255,255,255,0.12);position:relative;transition:background .2s}
+  .ga-knob::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s}
+  body.ga-mode .ga-switch{border-color:#2f7de1;background:rgba(47,125,225,0.10)}
+  body.ga-mode .ga-knob{background:#2f7de1}
+  body.ga-mode .ga-knob::after{left:23px}
+  #gaPanel{display:none;margin:-8px 0 20px;padding:14px 16px;border:1px solid rgba(47,125,225,0.45);border-radius:12px;background:rgba(47,125,225,0.06)}
+  body.ga-mode #gaPanel{display:block}
+  body.ga-mode .ga-hide{display:none!important}
   .section-label{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
   .smart-upload-zone{border:2px dashed rgba(201,168,76,0.45);border-radius:16px;padding:36px 24px;text-align:center;cursor:pointer;transition:all .3s;background:linear-gradient(135deg,rgba(201,168,76,0.06),rgba(201,168,76,0.02));position:relative;margin-bottom:8px}
   .smart-upload-zone:hover{border-color:rgba(201,168,76,0.7);background:rgba(201,168,76,0.08);transform:translateY(-1px)}
@@ -202,42 +226,15 @@
   .hist-empty{text-align:center;padding:48px;color:var(--grey);font-size:14px}
 
   footer{text-align:center;padding:28px;color:var(--grey);font-size:11px;border-top:1px solid var(--border);margin-top:72px;letter-spacing:.05em}
-
-  /* === MOBIL === */
-  @media(max-width:760px){
-    html,body{overflow-x:hidden}
-    header{flex-wrap:wrap;gap:10px;padding:12px 16px!important}
-    header>div:last-child{flex-wrap:wrap;justify-content:flex-start;gap:6px!important;width:100%}
-    header button,header a{padding:6px 11px!important;font-size:12px!important}
-    header .status-badge{display:none}
-    #userChip{flex-wrap:wrap;gap:6px!important;margin-left:auto}
-    #userName{width:100%;text-align:right;font-size:12px}
-    .logo-main{font-size:18px!important}
-    main{padding:28px 16px}
-    /* kroky: jen čísla, popisek u aktivního */
-    .step-label{display:none}
-    .step-label.active{display:inline;font-size:11px}
-    .step-line{margin:0 6px}
-    /* demo tlačítko neplave přes obsah */
-    #demoWrap{position:static!important;text-align:center;padding:8px 0 24px}
-    /* historie */
-    .hist-head{flex-direction:column;align-items:stretch!important;gap:12px}
-    .hist-head>div:last-child{width:100%}
-    #historySearch{flex:1;width:auto!important;min-width:0}
-    .history-row{flex-wrap:wrap;padding:14px 14px;gap:10px 12px}
-    .history-row:hover{transform:none}
-    .hist-avatar{width:34px;height:34px;font-size:14px}
-    .hist-main{flex:1 1 calc(100% - 50px)}
-    .hist-meta{gap:4px 12px}
-    .hist-actions{width:100%;justify-content:flex-end;flex-wrap:wrap}
-    .hist-btn{padding:9px 14px}
-    /* modální okna přes celou šířku */
-    .modal-overlay{padding:10px!important;align-items:flex-start!important}
-    .modal{padding:22px 18px!important;max-height:calc(100vh - 20px)!important;border-radius:14px}
-    .toggle-btn{padding:8px 10px!important;font-size:12px!important}
-    input,select,textarea{font-size:16px!important}  /* iOS nezoomuje při psaní */
-  }
 </style>
+<link rel="apple-touch-icon" href="/pwa/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/pwa/icon-192.png">
+<link rel="manifest" href="/pwa/manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RX Smlouvy">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#080807">
 </head>
 <body>
 <!-- SPLASH: úvodní animace při startu na mobilu (jednou za relaci, ťuknutím přeskočit) -->
@@ -360,7 +357,6 @@
 </script>
 <!-- /SPLASH -->
 
-
 <header>
   <div class="logo">
     <!-- RX Auto logo SVG -->
@@ -374,17 +370,23 @@
       <div class="logo-sub">Půjčovna vozidel</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <button onclick="toggleHistory()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--grey-light)'">📋 Historie</button>
-    <button class="admin-only" onclick="restartGenerator()" title="Restartuje server (po aktualizaci souborů)" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--grey-light)'">🔄 Restart</button>
-    <button class="admin-only" onclick="vypnoutGenerator()" title="Vypne server generátoru" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s" onmouseover="this.style.color='#e57373'" onmouseout="this.style.color='var(--grey-light)'">⏻ Vypnout</button>
-    <div class="status-badge"><div class="status-dot"></div>ispis.cz online</div>
-    <div id="userChip" style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--grey-light)">
-      <span id="userName"></span>
-      <a class="admin-only" href="/uzivatele" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s;text-decoration:none">👥 Uživatelé</a>
-      <button onclick="zmenitHeslo()" title="Změnit heslo" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s">🔑</button>
-      <button onclick="odhlasit()" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--grey-light);padding:8px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;cursor:pointer;transition:all .2s">Odhlásit</button>
+  <div class="hmenu" id="hmenu">
+    <button class="hmenu-btn" id="hmenuBtn" onclick="toggleHmenu(event)" aria-haspopup="true" aria-expanded="false">
+      <span id="userName"></span><span class="hmenu-ico">☰</span>
+    </button>
+    <div class="hmenu-panel" id="hmenuPanel" role="menu">
+      <div class="hmenu-status"><div class="status-dot"></div>ispis.cz online</div>
+      <button class="hmenu-item" onclick="closeHmenu();toggleHistory()">📋 Historie</button>
+      <a class="hmenu-item" id="iphoneApp" style="display:none" href="/iphone.mobileconfig"><span id="iphoneBtn">📱 Přidat na plochu</span></a>
+      <a class="hmenu-item admin-only" href="/uzivatele">👥 Uživatelé</a>
+      <button class="hmenu-item" onclick="closeHmenu();zmenitHeslo()">🔑 Změnit heslo</button>
+      <div class="hmenu-sep admin-only"></div>
+      <button class="hmenu-item admin-only" onclick="closeHmenu();restartGenerator()">🔄 Restart serveru</button>
+      <button class="hmenu-item hmenu-danger admin-only" onclick="closeHmenu();vypnoutGenerator()">⏻ Vypnout server</button>
+      <div class="hmenu-sep"></div>
+      <button class="hmenu-item" onclick="closeHmenu();odhlasit()">↩ Odhlásit</button>
     </div>
+    <span id="iphoneHint" style="display:none;position:fixed;left:16px;right:16px;bottom:16px;z-index:9999;background:#151411;border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--white);font-size:13px;line-height:1.6"></span>
   </div>
 </header>
 
@@ -460,6 +462,10 @@
           <option>Plná</option><option>7/8</option><option>3/4</option><option>5/8</option><option>1/2</option>
           <option>3/8</option><option>1/4</option><option>1/8</option><option>Prázdná</option>
         </select></div>
+      <div class="form-field" id="vrf_misto"><label class="form-label" id="vr_misto_lbl">Místo vrácení</label>
+        <input class="form-input" id="vr_misto" placeholder="kde bylo vozidlo převzato" /></div>
+      <div class="form-field"><label class="form-label">Čas vrácení</label>
+        <input class="form-input" id="vr_cas" type="time" /></div>
       <div class="form-field"><label class="form-label">Kdo vozidlo vrací</label>
         <input class="form-input" id="vr_kdo" placeholder="jméno" /></div>
       <div class="form-field"><label class="form-label">Poškození — částka</label>
@@ -469,6 +475,15 @@
       <div class="form-field full">
         <button type="button" class="toggle-btn" onclick="openNakres('vraceni')">🖌️ Zakreslit poškození na nákresu vozidla</button>
         <span id="nakresVraceniInfo" style="display:none;font-size:11px;color:var(--green-light);margin-left:8px">✓ nákres uložen</span>
+      </div>
+      <div class="form-field full" id="vrf_podpis">
+        <label class="form-label required">Podpis vracejícího</label>
+        <canvas id="vrPodpisCanvas" width="1160" height="320"
+          style="width:100%;height:150px;background:#fff;border-radius:10px;border:1px dashed rgba(0,0,0,0.3);touch-action:none;cursor:crosshair;display:block"></canvas>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+          <span style="font-size:11px;color:var(--grey)">Podepiš prstem / stylusem / myší</span>
+          <button type="button" class="toggle-btn" style="flex:0 0 auto;padding:6px 12px" onclick="vrPodpisClear()">↺ Vymazat</button>
+        </div>
       </div>
       <div class="form-field full">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
@@ -549,7 +564,7 @@
       </div>
 
       <div class="form-field full" id="ff_vozidlo">
-        <label class="form-label required">Vozidlo (SPZ, značka, model)</label>
+        <label class="form-label required" id="lbl_vozidlo">Vozidlo (SPZ, značka, model)</label>
         <input class="form-input" id="fi_vozidlo" placeholder="např. 1AB2345 — BMW 320d" />
         <span class="form-error-msg">Povinné pole</span>
       </div>
@@ -570,9 +585,14 @@
       </div>
       <div class="form-field full" id="ff_nahradni_vozidlo">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-          <input type="checkbox" id="fi_nahradni_vozidlo" style="margin:0" onchange="updateZmocneni()">
+          <input type="checkbox" id="fi_nahradni_vozidlo" style="margin:0" onchange="updateZmocneni();updateNahrazovane()">
           Náhradní vozidlo <span style="opacity:.5">(u firmy se nevyžaduje zmocnění řidiče)</span>
         </label>
+      </div>
+      <div class="form-field full" id="ff_nahrazovane_vozidlo" style="display:none">
+        <label class="form-label">Nahrazované vozidlo <span style="opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(vozidlo klienta, za které se náhradní vozidlo poskytuje)</span></label>
+        <input class="form-input" id="fi_nahrazovane_vozidlo" placeholder="např. 1AB2345 — Škoda Octavia" />
+        <span class="form-error-msg">Povinné pole</span>
       </div>
       <div class="form-field full" id="ff_cislo_zakazky" style="display:none">
         <label class="form-label required">Číslo zakázky <span style="opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(Global Assistance — použije se jako číslo smlouvy)</span></label>
@@ -763,6 +783,21 @@
 
   <div id="uploadSection">
     <div id="activeBox" style="display:none;margin:0 0 16px;padding:12px 16px;border:1px solid rgba(201,168,76,0.3);border-radius:12px;background:rgba(201,168,76,0.05);font-size:13px;line-height:1.6"></div>
+    <button type="button" class="ga-switch" id="gaSwitch" onclick="setGA(!state.ga)" aria-pressed="false">
+      <span class="ga-logo"><img src="/pwa/ga-logo.png" alt="Global Assistance" onerror="this.parentNode.textContent='GA'"></span>
+      <span class="ga-txt"><b>Zakázka Global Assistance</b><small>Náhradní vozidlo · bez lustrace · předvyplnění z objednávky</small></span>
+      <span class="ga-knob"></span>
+    </button>
+    <div id="gaPanel">
+      <div class="section-label" style="color:#6fa8f0;margin-bottom:10px">1 · Objednávka Global Assistance</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-dl secondary" type="button" onclick="document.getElementById('docFileInput').click()">📎 Nahrát objednávku (foto / PDF)</button>
+        <button class="btn-dl secondary" type="button" onclick="document.getElementById('docCamInput').click()">📷 Vyfotit objednávku</button>
+      </div>
+      <div id="gaStatus" style="display:none;margin:10px 0 0;font-size:12px;line-height:1.6"></div>
+      <div style="font-size:12px;color:var(--grey);margin-top:10px;line-height:1.6">2 · Nahraj doklady řidiče a klepni na <b>Připravit smlouvu</b> — lustrace se nedělá.
+        Ve formuláři zadej <b>naše náhradní vozidlo</b>, stav km, nádrž a místo předání. Čas předání se doplní při podpisu řidiče.</div>
+    </div>
     <div class="section-label">Rychlé nahrání</div>
     <div class="smart-upload-zone" id="smartUploadZone">
       <input type="file" id="smartInput" accept="image/*,application/pdf,.pdf" multiple onchange="handleSmartUpload(this)"/>
@@ -803,6 +838,7 @@
     </div>
     </div>
 
+    <div class="ga-hide">
     <div class="section-label" style="margin-top:24px">Jiný dokument <span style="opacity:.5;font-weight:400;text-transform:none;letter-spacing:0">(nepovinné — faktura, objednávka, e-mail… z něj se předvyplní smlouva)</span></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn-dl secondary" type="button" onclick="document.getElementById('docFileInput').click()">📎 Nahrát (foto / PDF)</button>
@@ -820,6 +856,7 @@
       <button class="btn-dl secondary" id="popisBtn" onclick="parsePopis()" style="white-space:nowrap">✨ Předvyplnit</button>
     </div>
     <div id="popisStatus" style="display:none;margin:8px 0 4px;font-size:12px;line-height:1.6"></div>
+    </div>
 
     <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn-analyze" id="analyzeBtn" disabled onclick="openFormModal(false)" style="flex:2">✦ Ověřit a připravit smlouvu</button>
@@ -900,7 +937,7 @@
 
   <!-- PANEL HISTORIE -->
   <div id="historyPanel" style="display:none;animation:fadeUp .3s ease">
-    <div class="hist-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
       <div>
         <div class="section-label">Historie smluv</div>
         <div style="color:var(--grey);font-size:13px;margin-top:4px">Kliknutím na záznam načtete údaje zpět do formuláře</div>
@@ -1172,7 +1209,8 @@ function fillDocFields(){
   });
 }
 function openFormModal(skipLustrace){
-  state.skipLustrace = !!skipLustrace;
+  state.skipLustrace = !!skipLustrace || !!state.ga;
+  if(state.ga) aplikujGAFormular();
   fillDocFields();
   autoTypVozidla();
   { const af=document.getElementById('adminFields'); if(af) af.style.display=state.adminMode?'contents':'none';
@@ -1195,12 +1233,16 @@ function closeFormModal(){
 function submitForm(){
   const flexi = document.getElementById('fi_flexi').checked;
   const nahradni = document.getElementById('fi_nahradni_vozidlo').checked;
-  const fields=['vozidlo','datum_zacatku','cena','sjednany_najezd','jistina','email','telefon'];
+  const GA = !!state.ga;
+  const fields = GA
+    ? ['vozidlo','nahrazovane_vozidlo','datum_zacatku','telefon','stav_tachometru_predani','stav_nadrze','misto_predani']
+    : ['vozidlo','datum_zacatku','cena','sjednany_najezd','jistina','email','telefon'];
   if(!flexi) fields.push('datum_konce','pocet_intervalu');
   const isFirma = document.getElementById('fi_typ_najemce').value === 'firma';
   const ridicJeZastupce = document.getElementById('fi_ridic_je_zastupce').value === '1';
   if(isFirma){
-    fields.push('firma_ico','firma_nazev','firma_sidlo','firma_zastupce');
+    fields.push('firma_ico','firma_nazev','firma_sidlo');
+    if(!jeGlobalAssistance()) fields.push('firma_zastupce');
     if(!ridicJeZastupce && !nahradni) fields.push('zmocneni');
     if(jeGlobalAssistance()) fields.push('cislo_zakazky');
   }
@@ -1250,6 +1292,8 @@ function submitForm(){
     flexi: flexi,
     nahradni_vozidlo: nahradni,
     cislo_zakazky: jeGlobalAssistance() ? document.getElementById('fi_cislo_zakazky').value.trim() : '',
+    nahrazovane_vozidlo: nahradni ? document.getElementById('fi_nahrazovane_vozidlo').value.trim() : '',
+    global_assistance: !!state.ga,
   };
   state.docOverride={};
   DOC_FIELDS.forEach(([t,f])=>{ const v=document.getElementById('fi_doc_'+f).value.trim(); if(v) state.docOverride[f]=v; });
@@ -1563,6 +1607,9 @@ function reset(){
   setFlexi(false);
   document.getElementById('fi_nahradni_vozidlo').checked=false; updateZmocneni();
   document.getElementById('fi_cislo_zakazky').value=''; updateZakazka();
+  document.getElementById('fi_nahrazovane_vozidlo').value=''; updateNahrazovane();
+  { const gs=document.getElementById('gaStatus'); if(gs) gs.style.display='none'; }
+  if(state.ga) setTimeout(aplikujGAFormular,0);
   state.typManual=false; setTypVozidla('osobni',false);
   state.formData=null; state.lastSmlouvaFilename=null; state.lastOsobniData=null;
   document.getElementById('fi_stav_nadrze').value='';
@@ -1620,7 +1667,51 @@ document.addEventListener('DOMContentLoaded',()=>{
   const el=document.getElementById('fi_vozidlo'); if(el) el.addEventListener('input',autoTypVozidla);
 });
 
+
+// ---- Global Assistance režim ----
+const GA_CENA='dle ceníku Global Assistance';
+function setGA(on){
+  state.ga=!!on;
+  if(!state.ga){ const c=document.getElementById('fi_cena'); if(c.value===GA_CENA){ c.value=''; setInterval('ceny','měsíčně'); } }
+  document.body.classList.toggle('ga-mode',state.ga);
+  document.getElementById('gaSwitch').setAttribute('aria-pressed',state.ga);
+  try{ localStorage.setItem('rx_ga', state.ga?'1':''); }catch(e){}
+  if(state.ga) aplikujGAFormular();
+  else {
+    document.getElementById('lbl_vozidlo').textContent='Vozidlo (SPZ, značka, model)';
+    document.getElementById('ff_ridic_je_zastupce').style.display='';
+  }
+  { const b=document.getElementById('analyzeBtn'); if(b) b.textContent = state.ga ? '✦ Připravit smlouvu Global Assistance' : '✦ Ověřit a připravit smlouvu'; }
+  { const b=document.getElementById('contractOnlyBtn'); if(b) b.style.display = state.ga ? 'none' : ''; }
+  updateZakazka(); updateNahrazovane();
+}
+function aplikujGAFormular(){
+  setTypNajemce('firma');
+  document.getElementById('fi_nahradni_vozidlo').checked=true;
+  setRidicJeZastupce(false); updateZmocneni();
+  document.getElementById('ff_ridic_je_zastupce').style.display='none';
+  document.getElementById('lbl_vozidlo').textContent='Náhradní vozidlo RX Auto — které vezeme (SPZ, značka, model)';
+  // výchozí účtování GA: po dnech, cena dle ceníku GA (lze přepsat)
+  { const c=document.getElementById('fi_cena');
+    if(!c.value.trim()){ c.value=GA_CENA; setInterval('ceny','denně'); } }
+  const gf=state.gaFirma;
+  if(gf){
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el&&v&&!el.value) el.value=v; };
+    set('fi_firma_ico',gf.ico); set('fi_firma_nazev',gf.nazev); set('fi_firma_sidlo',gf.sidlo); set('fi_firma_dic',gf.dic);
+  }
+  updateZakazka(); updateNahrazovane();
+}
+function updateNahrazovane(){
+  const show=document.getElementById('fi_nahradni_vozidlo').checked || !!state.ga;
+  const ff=document.getElementById('ff_nahrazovane_vozidlo');
+  ff.style.display=show?'':'none';
+  ff.querySelector('.form-label').classList.toggle('required', !!state.ga);
+  if(!show){ ff.classList.remove('has-error'); document.getElementById('fi_nahrazovane_vozidlo').classList.remove('error'); }
+}
+document.addEventListener('DOMContentLoaded',()=>{ let g=''; try{ g=localStorage.getItem('rx_ga')||''; }catch(e){} if(g) setGA(true); });
+
 function jeGlobalAssistance(){
+  if(state.ga) return true;
   if(document.getElementById('fi_typ_najemce').value!=='firma') return false;
   const n=(document.getElementById('fi_firma_nazev').value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
   return n.includes('global assistance');
@@ -1628,6 +1719,7 @@ function jeGlobalAssistance(){
 function updateZakazka(){
   const show=jeGlobalAssistance();
   document.getElementById('ff_cislo_zakazky').style.display = show ? '' : 'none';
+  { const zf=document.getElementById('ff_firma_zastupce'); if(zf) zf.querySelector('.form-label').classList.toggle('required', !show); }
   if(!show){ document.getElementById('ff_cislo_zakazky').classList.remove('has-error'); document.getElementById('fi_cislo_zakazky').classList.remove('error'); }
 }
 
@@ -1702,10 +1794,19 @@ function setCenaDph(val){
 function applyPrefill(p){
   const vyplneno=[];
   const put=(id,val,label)=>{ if(val){ document.getElementById('fi_'+id).value=val; vyplneno.push(label); } };
+  if(state.ga){
+    if(p.ga_firma){ state.gaFirma=p.ga_firma; setTypNajemce('firma');
+      const F=p.ga_firma; ['ico','nazev','sidlo','dic'].forEach(k=>{ if(F[k]) document.getElementById('fi_firma_'+k).value=F[k]; });
+      vyplneno.push('nájemce '+(F.nazev||'Global Assistance')); p.ico=null; p.firma_nazev=null; }
+    else if(!p.ico && !document.getElementById('fi_firma_nazev').value){ p.firma_nazev=p.firma_nazev||'Global Assistance'; }
+    p.nahradni_vozidlo=true; p.vozidlo=null; p.typ_vozidla=null;
+    aplikujGAFormular();
+  }
+  if(p.nahrazovane_vozidlo){ document.getElementById('fi_nahrazovane_vozidlo').value=p.nahrazovane_vozidlo; vyplneno.push('nahrazované vozidlo '+p.nahrazovane_vozidlo); }
   if(p.typ_vozidla) setTypVozidla(p.typ_vozidla);
   if(p.ico){ setTypNajemce('firma'); document.getElementById('fi_firma_ico').value=p.ico; vyplneno.push('IČO'); onIcoInput(); }
   else if(p.firma_nazev){ setTypNajemce('firma'); put('firma_nazev',p.firma_nazev,'firma'); }
-  if(p.nahradni_vozidlo){ document.getElementById('fi_nahradni_vozidlo').checked=true; updateZmocneni(); vyplneno.push('náhradní vozidlo'); }
+  if(p.nahradni_vozidlo){ document.getElementById('fi_nahradni_vozidlo').checked=true; updateZmocneni(); updateNahrazovane(); vyplneno.push('náhradní vozidlo'); }
   if(p.cislo_zakazky){ document.getElementById('fi_cislo_zakazky').value=p.cislo_zakazky; vyplneno.push('číslo zakázky'); }
   updateZakazka();
   if(p.flexi){ setFlexi(true); vyplneno.push('flexi'); }
@@ -1723,7 +1824,8 @@ function applyPrefill(p){
     if(el && el.value.trim()){ el.classList.remove('error'); if(ff) ff.classList.remove('has-error'); }
   });
   const cenaTxt=p.cena?` · ${p.cena} ${p.cena_dph==='s_dph'?'s DPH':(p.cena_dph==='bez_dph'?'bez DPH':'(DPH nezadáno — zkontroluj přepínač)')}`:'';
-  const ridicTxt=p.ridic?` Řidič v dokumentu: ${p.ridic} (zkontroluj, že odpovídá dokladům).`:'';
+  const ridicTxt=(p.ridic?` Řidič v dokumentu: ${p.ridic} (zkontroluj, že odpovídá dokladům).`:'')
+    + (state.ga?' Naše náhradní vozidlo zadej ve formuláři.':'');
   return {vyplneno, text: vyplneno.length
     ? `✅ Předvyplněno: ${vyplneno.join(', ')}${cenaTxt}.${ridicTxt} Zkontroluj v následujícím formuláři a doplň zbytek.`
     : '⚠️ Nenašel jsem žádné použitelné údaje.'};
@@ -1753,15 +1855,16 @@ async function parsePopis(){
 }
 
 async function handleOtherDoc(input){
+  const SID = state.ga ? 'gaStatus' : 'docStatus';
   const files=Array.from(input.files||[]); input.value='';
   if(!files.length) return;
-  if(files.length>4){ setPrefillStatus('docStatus','⚠️ Nahraj maximálně 4 soubory.',false); return; }
-  setPrefillStatus('docStatus',`⏳ Čtu dokument (${files.length})...`,true);
+  if(files.length>4){ setPrefillStatus(SID,'⚠️ Nahraj maximálně 4 soubory.',false); return; }
+  setPrefillStatus(SID,`⏳ Čtu dokument (${files.length})...`,true);
   try{
     const payload=[];
     for(const f of files){
       if(f.type==='application/pdf'){
-        if(f.size>9000000){ setPrefillStatus('docStatus','⚠️ PDF je větší než 9 MB.',false); return; }
+        if(f.size>9000000){ setPrefillStatus(SID,'⚠️ PDF je větší než 9 MB.',false); return; }
         const {b64}=await new Promise(res=>{const r=new FileReader();r.onload=e=>res({b64:e.target.result.split(',')[1]});r.readAsDataURL(f);});
         payload.push({data:b64,media_type:'application/pdf'});
       } else {
@@ -1769,13 +1872,13 @@ async function handleOtherDoc(input){
         payload.push({data:b64,media_type:mime});
       }
     }
-    const res=await fetch('/api/extract-doc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:payload})});
+    const res=await fetch('/api/extract-doc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({files:payload,ga:!!state.ga})});
     const data=await res.json();
-    if(!data.success){ setPrefillStatus('docStatus','⚠️ '+(data.error||'Dokument se nepodařilo přečíst.'),false); return; }
+    if(!data.success){ setPrefillStatus(SID,'⚠️ '+(data.error||'Dokument se nepodařilo přečíst.'),false); return; }
     const r=applyPrefill(data.pole);
-    setPrefillStatus('docStatus',r.text,r.vyplneno.length>0);
+    setPrefillStatus(SID,r.text,r.vyplneno.length>0);
   }catch(err){
-    setPrefillStatus('docStatus','⚠️ Dokument se nepodařilo přečíst: '+err.message,false);
+    setPrefillStatus(SID,'⚠️ Dokument se nepodařilo přečíst: '+err.message,false);
   }
 }
 
@@ -2002,6 +2105,7 @@ function loadFromHistory(id) {
       stav_tachometru_predani: e.stav_tachometru_predani,
       korespondencni_adresa: e.korespondencni_adresa,
       cislo_zakazky: e.cislo_zakazky,
+      nahrazovane_vozidlo: e.nahrazovane_vozidlo,
     };
     Object.entries(fields).forEach(([k,v]) => {
       const el = document.getElementById('fi_' + k);
@@ -2012,7 +2116,7 @@ function loadFromHistory(id) {
     if(e.mena) setMena(e.mena);
     setCenaDph(e.cena_dph === 's_dph' ? 's_dph' : 'bez_dph');
     if(e.flexi) setFlexi(true);
-    if(e.nahradni_vozidlo){ document.getElementById('fi_nahradni_vozidlo').checked=true; updateZmocneni(); }
+    if(e.nahradni_vozidlo){ document.getElementById('fi_nahradni_vozidlo').checked=true; updateZmocneni(); updateNahrazovane(); }
     if(e.stav_nadrze) document.getElementById('fi_stav_nadrze').value=e.stav_nadrze;
     if(e.palivo) document.getElementById('fi_palivo').value=e.palivo;
     if(e.poskozeni_predani) document.getElementById('fi_poskozeni_predani').value=e.poskozeni_predani;
@@ -2157,11 +2261,14 @@ async function submitPodpis(){
     st.innerHTML=`✅ Podpis vložen do smlouvy.
       <a href="/download/${encodeURIComponent(data.filename)}" style="color:var(--gold)">📄 Stáhnout podepsanou smlouvu</a>`;
     const b=document.getElementById('podpisBtn'); if(b){ b.textContent='✅ Podepsáno na místě'; }
+    if(data.cas_predani){ if(state.formData) state.formData.cas_predani=data.cas_predani;
+      const ci=document.getElementById('fi_cas_predani'); if(ci) ci.value=data.cas_predani;
+      st.innerHTML+=` <span style="opacity:.7">· čas předání ${data.cas_predani}</span>`; }
   } catch(err){ st.innerHTML='⚠️ '+err.message; }
 }
 
 // ---- Vrácení vozidla / vyúčtování ----
-let vraceniId=null;
+let vraceniId=null, vraceniGA=false;
 function openVraceni(id){
   const e=allHistory.find(x=>x.id===id); if(!e) return;
   vraceniId=id;
@@ -2169,11 +2276,17 @@ function openVraceni(id){
     `${e.jmeno||'—'} · ${e.vozidlo||'—'}<br><small style="opacity:.65">Předání: ${fmtDatumCz(e.datum_zacatku)||'—'}`+
     `${e.stav_tachometru_predani?' · '+e.stav_tachometru_predani+' km':''}${e.stav_nadrze?' · nádrž '+e.stav_nadrze:''}</small>`;
   document.getElementById('vr_datum').value=new Date().toISOString().slice(0,10);
+  { const n=new Date(); document.getElementById('vr_cas').value=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); }
+  document.getElementById('vr_misto').value=e.misto_vraceni||'';
+  { const ga=!!(e.global_assistance||e.cislo_zakazky); vraceniGA=ga;
+    document.getElementById('vr_misto_lbl').classList.toggle('required',ga);
+    document.getElementById('vrf_misto').classList.remove('has-error'); }
   document.getElementById('vr_km').value=''; document.getElementById('vr_nadrz').value='';
   document.getElementById('vr_kdo').value=e.jmeno||'';
   document.getElementById('vr_poskozeni').value=''; document.getElementById('vr_poskozeni_popis').value='';
   document.getElementById('vr_faktura').checked=false;
   state.nakresVraceni=null; document.getElementById('nakresVraceniInfo').style.display='none';
+  vrPodpisClear(); document.getElementById('vrf_podpis').classList.remove('has-error');
   const st=document.getElementById('vrStatus'); st.style.display='none'; st.innerHTML='';
   document.getElementById('modalVraceni').classList.add('show');
 }
@@ -2181,6 +2294,12 @@ async function submitVraceni(){
   const e=allHistory.find(x=>x.id===vraceniId)||{};
   if(document.getElementById('vr_faktura').checked && (e.mena||'CZK')!=='CZK'
      && !confirm(`Pozor: smlouva je v ${e.mena} — faktura ve Vyfakturuj se vystaví v ${e.mena}. Pokračovat?`)) return;
+  if(vraceniGA && !document.getElementById('vr_misto').value.trim()){
+    document.getElementById('vrf_misto').classList.add('has-error'); document.getElementById('vr_misto').focus(); return; }
+  if(vraceniGA && (!document.getElementById('vr_km').value.trim() || !document.getElementById('vr_nadrz').value)){
+    alert('Doplň stav tachometru a nádrže při vrácení.'); return; }
+  if(!vrPodpisKreslil){ const f=document.getElementById('vrf_podpis'); f.classList.add('has-error');
+    f.scrollIntoView({behavior:'smooth',block:'center'}); alert('Chybí podpis vracejícího.'); return; }
   const st=document.getElementById('vrStatus');
   st.style.display='block'; st.innerHTML='⏳ Počítám vyúčtování…';
   try{
@@ -2190,6 +2309,9 @@ async function submitVraceni(){
         km_vraceni:document.getElementById('vr_km').value,
         nadrz_vraceni:document.getElementById('vr_nadrz').value,
         kdo_vraci:document.getElementById('vr_kdo').value,
+        misto_vraceni:document.getElementById('vr_misto').value,
+        cas_vraceni:document.getElementById('vr_cas').value,
+        podpis_vraceni:document.getElementById('vrPodpisCanvas').toDataURL('image/png'),
         poskozeni_nakres:state.nakresVraceni||'',
         poskozeni_castka:document.getElementById('vr_poskozeni').value,
         poskozeni_popis:document.getElementById('vr_poskozeni_popis').value,
@@ -2208,7 +2330,34 @@ async function submitVraceni(){
     st.innerHTML='✅ '+(info.join(' · ')||'Hotovo')+
       `<br><a href="/download/${encodeURIComponent(data.filename)}" style="color:var(--gold)">📄 Stáhnout vyúčtování (PDF)</a>`+
       (data.filename_protokol?` &nbsp;·&nbsp; <a href="/download/${encodeURIComponent(data.filename_protokol)}" style="color:var(--gold)">📋 Předávací protokol s vrácením (PDF)</a>`:'');
+    if(data.ga){
+      gaSdileni={soubor:data.ga_soubor, text:data.ga_whatsapp_text||''};
+      st.innerHTML+=`<div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(47,125,225,0.45);border-radius:10px;background:rgba(47,125,225,0.06)">
+        <b>Global Assistance</b><br>`+
+        (data.ga_email?`✅ ${data.ga_email}`:`⚠️ E-mail neodešel: ${data.ga_email_chyba||'neznámá chyba'}`)+
+        (data.ga_soubor?`<br><a href="/download/${encodeURIComponent(data.ga_soubor)}" style="color:var(--gold)">📄 Kompletní PDF</a>`+
+        `<div style="margin-top:10px"><button class="btn-dl primary" type="button" onclick="sdiletGAWhatsApp()">📲 Poslat do WhatsApp — OSR (Margareta)</button></div>`:'')+
+        `</div>`;
+    }
   } catch(err){ st.innerHTML='⚠️ '+err.message; }
+}
+
+
+let gaSdileni=null;
+async function sdiletGAWhatsApp(){
+  if(!gaSdileni||!gaSdileni.soubor) return;
+  const text=gaSdileni.text;
+  try{
+    const r=await fetch('/download/'+encodeURIComponent(gaSdileni.soubor));
+    const blob=await r.blob();
+    const file=new File([blob], gaSdileni.soubor, {type:'application/pdf'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.clipboard.writeText(text); }catch(e){}
+      await navigator.share({files:[file], text});   // vyber WhatsApp → skupina OSR
+      return;
+    }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  window.open('https://wa.me/?text='+encodeURIComponent(text),'_blank');
 }
 
 async function deleteHistory(id) {
@@ -2220,8 +2369,92 @@ async function deleteHistory(id) {
 
 </script>
 <!-- DEMO BUTTON -->
-<div id="demoWrap" style="position:fixed;bottom:24px;right:24px;z-index:50">
+<div style="position:fixed;bottom:24px;right:24px;z-index:50">
   <button onclick="demoMode()" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.4);padding:10px 18px;border-radius:100px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:12px;cursor:pointer;transition:all .2s;letter-spacing:.05em" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.4)'">🧪 Demo režim</button>
 </div>
+<script>
+(function(){
+  var ua=navigator.userAgent, ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var standalone=window.navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+  var box=document.getElementById('iphoneApp'); if(!box||!ios||standalone) return;
+  box.style.display='block';
+  var hint=document.getElementById('iphoneHint');
+  if(/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua)){ hint.textContent='Instalace funguje jen v Safari – otevři tuto stránku v Safari.'; hint.style.display=''; return; }
+  document.getElementById('iphoneApp').addEventListener('click',function(){ closeHmenu();
+    setTimeout(function(){ hint.innerHTML='Klepni na <b>Povolit</b>, pak otevři <b>Nastavení → Stažený profil → Instalovat</b>. Ikona RX Smlouvy se objeví na ploše.'; hint.style.display=''; },400);
+  });
+})();
+</script>
+<script>
+function toggleHmenu(e){e.stopPropagation();var m=document.getElementById('hmenu');var o=m.classList.toggle('open');document.getElementById('hmenuBtn').setAttribute('aria-expanded',o);}
+function closeHmenu(){var m=document.getElementById('hmenu');m.classList.remove('open');document.getElementById('hmenuBtn').setAttribute('aria-expanded',false);}
+document.addEventListener('click',function(e){var m=document.getElementById('hmenu');if(m&&!m.contains(e.target))closeHmenu();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeHmenu();});
+</script>
+
+<!-- PROHLÍŽEČ PDF (okno v aplikaci, aby šlo vždy zpět) -->
+<div id="pdfViewer" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.92);flex-direction:column">
+  <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));background:#12110f;border-bottom:1px solid var(--border)">
+    <button type="button" onclick="zavritPdf()" style="background:var(--gold);color:#080807;border:none;border-radius:100px;padding:9px 16px;font-size:14px;font-weight:600;cursor:pointer">✕ Zavřít</button>
+    <span id="pdfViewerName" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--grey-light)"></span>
+    <button type="button" onclick="sdiletPdf()" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--white);border-radius:100px;padding:8px 14px;font-size:13px;cursor:pointer">⤴ Sdílet / uložit</button>
+  </div>
+  <iframe id="pdfViewerFrame" style="flex:1;width:100%;border:0;background:#fff"></iframe>
+</div>
+<script>
+let pdfViewerHref=null;
+function otevritPdf(href){
+  pdfViewerHref=href;
+  const name=decodeURIComponent(href.split('/download/')[1]||'').split('?')[0];
+  document.getElementById('pdfViewerName').textContent=name;
+  document.getElementById('pdfViewerFrame').src=href+(href.includes('?')?'&':'?')+'inline=1';
+  document.getElementById('pdfViewer').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function zavritPdf(){
+  document.getElementById('pdfViewer').style.display='none';
+  document.getElementById('pdfViewerFrame').src='about:blank';
+  document.body.style.overflow='';
+}
+async function sdiletPdf(){
+  if(!pdfViewerHref) return;
+  const name=decodeURIComponent(pdfViewerHref.split('/download/')[1]||'soubor.pdf').split('?')[0];
+  try{
+    const blob=await (await fetch(pdfViewerHref)).blob();
+    const file=new File([blob],name,{type:'application/pdf'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file]}); return; }
+  }catch(e){ if(e&&e.name==='AbortError') return; }
+  const a=document.createElement('a'); a.href=pdfViewerHref; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+}
+// všechny odkazy na PDF z generátoru otevřít v okně uvnitř aplikace
+document.addEventListener('click',function(e){
+  const a=e.target.closest&&e.target.closest('a[href^="/download/"]');
+  if(!a) return;
+  const href=a.getAttribute('href');
+  if(!/\.pdf(\?|$)/i.test(decodeURIComponent(href))) return;
+  e.preventDefault(); otevritPdf(href);
+});
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&document.getElementById('pdfViewer').style.display==='flex') zavritPdf(); });
+</script>
+<script>
+// ---- podpis vracejícího ----
+let vrPodpisKreslil=false;
+function vrPodpisClear(){
+  const c=document.getElementById('vrPodpisCanvas'); if(!c) return;
+  const x=c.getContext('2d'); x.clearRect(0,0,c.width,c.height); vrPodpisKreslil=false;
+}
+(function(){
+  const c=document.getElementById('vrPodpisCanvas'); if(!c) return;
+  const x=c.getContext('2d'); let kresli=false, last=null;
+  const pos=e=>{ const r=c.getBoundingClientRect(); return {x:(e.clientX-r.left)*c.width/r.width, y:(e.clientY-r.top)*c.height/r.height}; };
+  c.addEventListener('pointerdown',e=>{ e.preventDefault(); c.setPointerCapture(e.pointerId); kresli=true; last=pos(e); });
+  c.addEventListener('pointermove',e=>{ if(!kresli) return; e.preventDefault(); const p=pos(e);
+    x.strokeStyle='#0b1f5c'; x.lineWidth=5; x.lineCap='round'; x.lineJoin='round';
+    x.beginPath(); x.moveTo(last.x,last.y); x.lineTo(p.x,p.y); x.stroke(); last=p; vrPodpisKreslil=true;
+    document.getElementById('vrf_podpis').classList.remove('has-error'); });
+  const stop=()=>{ kresli=false; };
+  c.addEventListener('pointerup',stop); c.addEventListener('pointercancel',stop); c.addEventListener('pointerleave',stop);
+})();
+</script>
 </body>
 </html>
