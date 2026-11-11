@@ -575,6 +575,115 @@ def spojit_pdf(soubory, vystup, bez_protokolu=()):
         return False
 
 
+def zaklad_nazvu(entry):
+    """Základ názvu souborů vrácení – podle čísla smlouvy (u firem chybí jméno a soubory by se přepisovaly)."""
+    import unicodedata as _ud
+    z = (entry or {}).get("cislo_smlouvy") or (entry or {}).get("jmeno") or (entry or {}).get("id") or "smlouva"
+    z = _ud.normalize("NFKD", str(z)).encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"[^A-Za-z0-9_-]+", "_", z).strip("_") or "smlouva"
+
+
+def uprav_historii_id(entry_id, **pole):
+    """Doplní pole do záznamu v historii podle id (víc smluv může mít stejný soubor)."""
+    with _DATA_LOCK:
+        history = load_history()
+        for e in history:
+            if e.get("id") == entry_id:
+                e.update(pole)
+                with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                    json.dump(history, f, ensure_ascii=False, indent=2)
+                return e
+    return None
+
+
+def soubor_smlouvy_k_vraceni(entry):
+    """Smlouva do kompletního PDF: podepsaná přes DocuSeal, jinak uložená (s podpisem z generátoru)."""
+    sml = entry.get("filename") or ""
+    podep = sml[:-4] + "_podepsana.pdf" if sml.endswith(".pdf") else ""
+    if podep and os.path.isfile(os.path.join(SCRIPT_DIR, podep)):
+        return podep
+    return sml
+
+
+def sestav_kompletni(entry, fname_protokol, fname_vyuct):
+    """Kompletní PDF ukončené smlouvy: smlouva + VOP + předávací protokol s předáním i vrácením
+    + vyúčtování (původní protokol bez vrácení se ze smlouvy vynechá). Vrací název souboru."""
+    sml = soubor_smlouvy_k_vraceni(entry)
+    dily = [os.path.join(SCRIPT_DIR, x) for x in (sml, fname_protokol, fname_vyuct)
+            if x and os.path.isfile(os.path.join(SCRIPT_DIR, x))]
+    if not dily:
+        return None
+    _sml_path = os.path.join(SCRIPT_DIR, sml) if sml else ""
+    _bez = (_sml_path,) if (fname_protokol and os.path.isfile(os.path.join(SCRIPT_DIR, fname_protokol))) else ()
+    balik = f"kompletni_{zaklad_nazvu(entry)}.pdf"
+    if spojit_pdf(dily, os.path.join(SCRIPT_DIR, balik), bez_protokolu=_bez):
+        return balik
+    return None
+
+
+def _pdf_text(fp, stran=2):
+    try:
+        try:
+            from pypdf import PdfReader
+        except ImportError:
+            from PyPDF2 import PdfReader
+        r = PdfReader(fp)
+        return " ".join((p.extract_text() or "") for p in r.pages[:stran])
+    except Exception:
+        return ""
+
+
+def migrace_ukoncenych():
+    """Jednorázově při startu: smlouvy vrácené dřív (před evidencí ukončení) označí jako ukončené
+    a dohledá / sestaví jejich protokol s vrácením, vyúčtování a kompletní PDF."""
+    import glob, shutil as _sh
+    try:
+        history = load_history()
+    except Exception:
+        return
+    zmeneno = 0
+    for e in history:
+        if e.get("ukoncena"):
+            continue
+        vr = [z for z in (e.get("zmeny") or []) if "vrácení" in (z.get("akce") or "")]
+        if not vr:
+            continue
+        cislo = e.get("cislo_smlouvy") or ""
+        zaklad = zaklad_nazvu(e)
+        pole = {"ukoncena": True, "datum_ukonceni": vr[-1].get("kdy", "")}
+        # Global Assistance – kompletní PDF už existuje
+        zak = re.sub(r"[^A-Za-z0-9_-]+", "_", e.get("cislo_zakazky") or cislo or "").strip("_")
+        ga = f"GA_{zak}_kompletni.pdf" if zak else ""
+        if ga and os.path.isfile(os.path.join(SCRIPT_DIR, ga)):
+            pole["kompletni_vraceni"] = ga
+        # protokol / vyúčtování dohledat podle čísla smlouvy v textu PDF
+        nalez = {}
+        for druh, vzor in (("protokol", "protokol_vraceni_*.pdf"), ("vyuctovani", "vyuctovani_*.pdf")):
+            kand = sorted(glob.glob(os.path.join(SCRIPT_DIR, vzor)), key=os.path.getmtime, reverse=True)
+            for fp in kand:
+                if cislo and f"č. {cislo}" in _pdf_text(fp, 1):
+                    cil = f"{'protokol_vraceni' if druh == 'protokol' else 'vyuctovani'}_{zaklad}.pdf"
+                    if os.path.basename(fp) != cil:
+                        _sh.copyfile(fp, os.path.join(SCRIPT_DIR, cil))   # vlastní kopie, ať ji další vrácení nepřepíše
+                    nalez[druh] = cil
+                    break
+        if nalez.get("protokol"):
+            pole["protokol_vraceni_soubor"] = nalez["protokol"]
+        if nalez.get("vyuctovani"):
+            pole["vyuctovani_soubor"] = nalez["vyuctovani"]
+        if not pole.get("kompletni_vraceni") and (nalez.get("protokol") or nalez.get("vyuctovani")):
+            k = sestav_kompletni(e, nalez.get("protokol"), nalez.get("vyuctovani"))
+            if k:
+                pole["kompletni_vraceni"] = k
+        e.update(pole)
+        zmeneno += 1
+    if zmeneno:
+        with _DATA_LOCK:
+            with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                json.dump(history, f, ensure_ascii=False, indent=2)
+        print(f"📁 Označeno ukončených smluv (dřívější vrácení): {zmeneno}", flush=True)
+
+
 def uprav_historii(filename=None, cislo=None, **pole):
     """Doplní pole do záznamu v historii (podle souboru smlouvy nebo čísla smlouvy)."""
     with _DATA_LOCK:
@@ -1901,7 +2010,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 except Exception as fe:
                     vys["faktura_chyba"] = str(fe)
 
-            fname = ("vyuctovani_" + _ascii(entry.get("jmeno", "najemce")).replace(" ", "_") + ".pdf")
+            fname = f"vyuctovani_{zaklad_nazvu(entry)}.pdf"
             from smlouva_v2 import generate_vyuctovani, generate_smlouva_v2
             generate_vyuctovani(vys, os.path.join(SCRIPT_DIR, fname))
 
@@ -1919,7 +2028,7 @@ class AppHandler(BaseHTTPRequestHandler):
                 smlouva_p["poskozeni_nakres"] = nacti_nakres(entry.get("nakres_predani"))
                 _nk_vr = uloz_nakres(entry.get("id"), "vraceni", data.get("poskozeni_nakres") or "")
                 if _nk_vr:
-                    uprav_historii(filename=entry.get("filename"), nakres_vraceni=_nk_vr)
+                    uprav_historii_id(entry.get("id"), nakres_vraceni=_nk_vr)
                 posk_text = ""
                 if posk or posk_popis:
                     posk_text = posk_popis or "poškození vozidla"
@@ -1935,7 +2044,7 @@ class AppHandler(BaseHTTPRequestHandler):
                            "datum_vraceni": vra.strftime("%d.%m.%Y"),
                            "km_vraceni": (f"{km1:,.0f}".replace(",", " ") if km1 is not None else ""),
                            "nadrz_vraceni": n1, "poskozeni_text": posk_text}
-                fname_protokol = ("protokol_vraceni_" + _ascii(entry.get("jmeno", "najemce")).replace(" ", "_") + ".pdf")
+                fname_protokol = f"protokol_vraceni_{zaklad_nazvu(entry)}.pdf"
                 generate_smlouva_v2(osobni_p, smlouva_p, entry.get("firma") or None,
                                     os.path.join(SCRIPT_DIR, fname_protokol),
                                     vys["cislo_smlouvy"], typ_vozidla=entry.get("typ_vozidla", "osobni"),
@@ -1951,45 +2060,23 @@ class AppHandler(BaseHTTPRequestHandler):
                 out.update(self._ga_po_vraceni(entry, fname, fname_protokol, vys))
                 out["kompletni"] = out.get("ga_soubor")
             else:
-                out["kompletni"] = self._kompletni_po_vraceni(entry, fname, fname_protokol)
-            if out.get("kompletni"):
-                uprav_historii(filename=entry.get("filename"), kompletni_vraceni=out["kompletni"])
+                out["kompletni"] = sestav_kompletni(entry, fname_protokol, fname)
+            uprav_historii_id(entry.get("id"), ukoncena=True,
+                              datum_ukonceni=f"{vra.strftime('%d.%m.%Y')} {(data.get('cas_vraceni') or '').strip()}".strip(),
+                              kompletni_vraceni=out.get("kompletni") or "",
+                              protokol_vraceni_soubor=fname_protokol or "",
+                              vyuctovani_soubor=fname)
             return out
         except Exception as e:
             import traceback
             print("CHYBA (vyuctovani):\n" + traceback.format_exc())
             return {"success": False, "error": str(e)}
 
-    def _kompletni_po_vraceni(self, entry, fname_vyuct, fname_protokol):
-        """Kompletní PDF po vrácení: smlouva podepsaná při předání + VOP + předávací protokol
-        s vyplněným vrácením + vyúčtování (původní protokol ze smlouvy se vynechá)."""
-        sml = entry.get("filename") or ""
-        podep = sml[:-4] + "_podepsana.pdf" if sml.endswith(".pdf") else ""
-        if podep and os.path.isfile(os.path.join(SCRIPT_DIR, podep)):
-            sml = podep                                   # podepsaná přes DocuSeal
-        dily = [os.path.join(SCRIPT_DIR, x) for x in (sml, fname_protokol, fname_vyuct)
-                if x and os.path.isfile(os.path.join(SCRIPT_DIR, x))]
-        if not dily:
-            return None
-        _sml_path = os.path.join(SCRIPT_DIR, sml) if sml else ""
-        _bez = (_sml_path,) if (fname_protokol and os.path.isfile(os.path.join(SCRIPT_DIR, fname_protokol))) else ()
-        import unicodedata as _ud
-        _z = entry.get("cislo_smlouvy") or entry.get("jmeno") or "smlouva"
-        _z = _ud.normalize("NFKD", _z).encode("ascii", "ignore").decode("ascii")
-        zaklad = re.sub(r"[^A-Za-z0-9_-]+", "_", _z).strip("_") or "smlouva"
-        balik = f"kompletni_{zaklad}_vraceni.pdf"
-        if spojit_pdf(dily, os.path.join(SCRIPT_DIR, balik), bez_protokolu=_bez):
-            return balik
-        return None
-
     def _ga_po_vraceni(self, entry, fname_vyuct, fname_protokol, vys):
         """Global Assistance: po vrácení spojí smlouvu + protokol vrácení + vyúčtování do jednoho PDF
         a pošle ho e-mailem na info@rxauto.cz. Pro WhatsApp vrátí soubor ke sdílení."""
         res = {"ga": True}
-        sml = entry.get("filename") or ""
-        podep = sml[:-4] + "_podepsana.pdf" if sml.endswith(".pdf") else ""
-        if podep and os.path.isfile(os.path.join(SCRIPT_DIR, podep)):
-            sml = podep
+        sml = soubor_smlouvy_k_vraceni(entry)
         dily = [os.path.join(SCRIPT_DIR, x) for x in (sml, fname_protokol, fname_vyuct)
                 if x and os.path.isfile(os.path.join(SCRIPT_DIR, x))]
         zak = re.sub(r"[^A-Za-z0-9_-]+", "_", entry.get("cislo_zakazky") or entry.get("cislo_smlouvy") or "zakazka").strip("_")
@@ -2274,5 +2361,9 @@ if __name__ == "__main__":
         print("⚠️  Aplikace je pak dostupná komukoli ve stejné síti. Vypneš smazáním lan_mode.txt a restartem.\n")
     if not auth.ma_uzivatele():
         print(f"👤 Zatím žádní uživatelé — otevři http://localhost:{port}/login na tomto počítači a založ administrátora.\n")
+    try:
+        migrace_ukoncenych()
+    except Exception as _me:
+        print("⚠️ Migrace ukončených smluv:", _me)
     threading.Thread(target=hlidac_zmen, daemon=True).start()
     ThreadingHTTPServer((host, port), AppHandler).serve_forever()
