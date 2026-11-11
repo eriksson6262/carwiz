@@ -1928,7 +1928,8 @@ class AppHandler(BaseHTTPRequestHandler):
                 cas_vr = (data.get("cas_vraceni") or "").strip() or datetime.now().strftime("%H:%M")
                 _pv = data.get("podpis_vraceni") or ""
                 vraceni = {"misto_vraceni": (data.get("misto_vraceni") or "").strip(), "cas_vraceni": cas_vr,
-                           "podpis_png": _pv if _pv.startswith("data:image/png") else "",
+                           "podpis_png": "" if data.get("bez_podpisu") else (_pv if _pv.startswith("data:image/png") else ""),
+                           "bez_podpisu": bool(data.get("bez_podpisu")),
                            "poskozeni_nakres": data.get("poskozeni_nakres") or "",
                            "kdo_vraci": data.get("kdo_vraci", ""),
                            "datum_vraceni": vra.strftime("%d.%m.%Y"),
@@ -1948,11 +1949,38 @@ class AppHandler(BaseHTTPRequestHandler):
             out = {"success": True, "filename": fname, "filename_protokol": fname_protokol, "vysledek": vys}
             if entry.get("global_assistance") or je_global_assistance(entry.get("firma")):
                 out.update(self._ga_po_vraceni(entry, fname, fname_protokol, vys))
+                out["kompletni"] = out.get("ga_soubor")
+            else:
+                out["kompletni"] = self._kompletni_po_vraceni(entry, fname, fname_protokol)
+            if out.get("kompletni"):
+                uprav_historii(filename=entry.get("filename"), kompletni_vraceni=out["kompletni"])
             return out
         except Exception as e:
             import traceback
             print("CHYBA (vyuctovani):\n" + traceback.format_exc())
             return {"success": False, "error": str(e)}
+
+    def _kompletni_po_vraceni(self, entry, fname_vyuct, fname_protokol):
+        """Kompletní PDF po vrácení: smlouva podepsaná při předání + VOP + předávací protokol
+        s vyplněným vrácením + vyúčtování (původní protokol ze smlouvy se vynechá)."""
+        sml = entry.get("filename") or ""
+        podep = sml[:-4] + "_podepsana.pdf" if sml.endswith(".pdf") else ""
+        if podep and os.path.isfile(os.path.join(SCRIPT_DIR, podep)):
+            sml = podep                                   # podepsaná přes DocuSeal
+        dily = [os.path.join(SCRIPT_DIR, x) for x in (sml, fname_protokol, fname_vyuct)
+                if x and os.path.isfile(os.path.join(SCRIPT_DIR, x))]
+        if not dily:
+            return None
+        _sml_path = os.path.join(SCRIPT_DIR, sml) if sml else ""
+        _bez = (_sml_path,) if (fname_protokol and os.path.isfile(os.path.join(SCRIPT_DIR, fname_protokol))) else ()
+        import unicodedata as _ud
+        _z = entry.get("cislo_smlouvy") or entry.get("jmeno") or "smlouva"
+        _z = _ud.normalize("NFKD", _z).encode("ascii", "ignore").decode("ascii")
+        zaklad = re.sub(r"[^A-Za-z0-9_-]+", "_", _z).strip("_") or "smlouva"
+        balik = f"kompletni_{zaklad}_vraceni.pdf"
+        if spojit_pdf(dily, os.path.join(SCRIPT_DIR, balik), bez_protokolu=_bez):
+            return balik
+        return None
 
     def _ga_po_vraceni(self, entry, fname_vyuct, fname_protokol, vys):
         """Global Assistance: po vrácení spojí smlouvu + protokol vrácení + vyúčtování do jednoho PDF

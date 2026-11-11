@@ -679,15 +679,18 @@ def _generate_smlouva_v2(osobni_data, smlouva_data, firma_data, output_path,
                 _vr_podpis.hAlign = "LEFT"
             except Exception:
                 _vr_podpis = ""
-        _vr_imgs = (_vr_podpis, _mk_razitko(9, 44) if vr.get("podpis_png") else "")
+        # razítko pronajímatele vždy, když je vrácení vyplněné (i bez podpisu nájemce)
+        _vr_imgs = (_vr_podpis, _mk_razitko(9, 44) if vr.get("datum_vraceni") else "")
         story.extend(_section("Vrácení vozidla", [
             ("KDO VRACÍ", vr.get("kdo_vraci", "") or ""),
             ("MÍSTO VRÁCENÍ", vr.get("misto_vraceni") or smlouva_data.get("misto_vraceni", "")),
-            ("DATUM VRÁCENÍ", (_cz_datum(vr.get("datum_vraceni", "")) + (" " + vr["cas_vraceni"] if vr.get("cas_vraceni") else "")) if vr.get("datum_vraceni") else ""),
+            ("DATUM A ČAS VRÁCENÍ", (_cz_datum(vr.get("datum_vraceni", "")) + (" " + vr["cas_vraceni"] if vr.get("cas_vraceni") else "")) if vr.get("datum_vraceni") else ""),
             ("STAV KILOMETRŮ", f"{vr_km} km" if vr_km else ""),
             ("STAV NÁDRŽE", vr.get("nadrz_vraceni", "") or ""),
         ], poskozeni_text=vr.get("poskozeni_text", ""), sign_imgs=_vr_imgs,
-           sign_labels=(("Vrací: " + vr["kdo_vraci"]) if vr.get("kdo_vraci") else "Za nájemce (vrací)", "Za pronajímatele (přebírá)"),
+           sign_labels=(("Nájemce u vrácení nepodepsal" if vr.get("bez_podpisu") else
+                         ("Vrací: " + vr["kdo_vraci"]) if vr.get("kdo_vraci") else "Za nájemce (vrací)"),
+                        "Za pronajímatele (přebírá)"),
            diagram_raw=_nakres_raw(vr.get("poskozeni_nakres"))))
 
     if jen_protokol:

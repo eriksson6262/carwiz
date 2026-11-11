@@ -464,8 +464,9 @@
         </select></div>
       <div class="form-field" id="vrf_misto"><label class="form-label" id="vr_misto_lbl">Místo vrácení</label>
         <input class="form-input" id="vr_misto" placeholder="kde bylo vozidlo převzato" /></div>
-      <div class="form-field"><label class="form-label">Čas vrácení</label>
-        <input class="form-input" id="vr_cas" type="time" /></div>
+      <div class="form-field"><label class="form-label">Čas vrácení <span style="opacity:.55;font-weight:400;text-transform:none;letter-spacing:0">(předvyplněn aktuální, lze změnit)</span></label>
+        <div style="display:flex;gap:6px"><input class="form-input" id="vr_cas" type="time" style="flex:1;min-width:0" />
+        <button type="button" class="toggle-btn" style="flex:0 0 auto;padding:6px 12px" onclick="vrCasTed()">Teď</button></div></div>
       <div class="form-field"><label class="form-label">Kdo vozidlo vrací</label>
         <input class="form-input" id="vr_kdo" placeholder="jméno" /></div>
       <div class="form-field"><label class="form-label">Poškození — částka</label>
@@ -477,11 +478,11 @@
         <span id="nakresVraceniInfo" style="display:none;font-size:11px;color:var(--green-light);margin-left:8px">✓ nákres uložen</span>
       </div>
       <div class="form-field full" id="vrf_podpis">
-        <label class="form-label required">Podpis vracejícího</label>
+        <label class="form-label required">Podpis zákazníka (vracejícího)</label>
         <canvas id="vrPodpisCanvas" width="1160" height="320"
           style="width:100%;height:150px;background:#fff;border-radius:10px;border:1px dashed rgba(0,0,0,0.3);touch-action:none;cursor:crosshair;display:block"></canvas>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-          <span style="font-size:11px;color:var(--grey)">Podepiš prstem / stylusem / myší</span>
+          <span style="font-size:11px;color:var(--grey)">Podepíše zákazník prstem / stylusem · razítko pronajímatele se doplní samo</span>
           <button type="button" class="toggle-btn" style="flex:0 0 auto;padding:6px 12px" onclick="vrPodpisClear()">↺ Vymazat</button>
         </div>
       </div>
@@ -2033,6 +2034,7 @@ function renderHistory(items) {
       <div class="hist-actions" onclick="event.stopPropagation()">
         <button class="hist-btn hist-btn-load" onclick="loadFromHistory('${e.id}')">↩ Načíst</button>
         <button class="hist-btn hist-btn-load" onclick="openVraceni('${e.id}')">🔁 Vrácení</button>
+        ${e.kompletni_vraceni?`<a class="hist-btn hist-btn-load" style="text-decoration:none" href="/download/${encodeURIComponent(e.kompletni_vraceni)}">📄 Kompletní</a>`:''}
         <button class="hist-btn hist-btn-del admin-only" onclick="deleteHistory('${e.id}')">🗑</button>
       </div>
     </div>
@@ -2290,6 +2292,9 @@ function openVraceni(id){
   const st=document.getElementById('vrStatus'); st.style.display='none'; st.innerHTML='';
   document.getElementById('modalVraceni').classList.add('show');
 }
+function vrCasTed(){
+  const n=new Date(); document.getElementById('vr_cas').value=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
 async function submitVraceni(){
   const e=allHistory.find(x=>x.id===vraceniId)||{};
   if(document.getElementById('vr_faktura').checked && (e.mena||'CZK')!=='CZK'
@@ -2298,8 +2303,15 @@ async function submitVraceni(){
     document.getElementById('vrf_misto').classList.add('has-error'); document.getElementById('vr_misto').focus(); return; }
   if(vraceniGA && (!document.getElementById('vr_km').value.trim() || !document.getElementById('vr_nadrz').value)){
     alert('Doplň stav tachometru a nádrže při vrácení.'); return; }
-  if(!vrPodpisKreslil){ const f=document.getElementById('vrf_podpis'); f.classList.add('has-error');
-    f.scrollIntoView({behavior:'smooth',block:'center'}); alert('Chybí podpis vracejícího.'); return; }
+  if(!document.getElementById('vr_cas').value) vrCasTed();
+  let bezPodpisu=false;
+  if(!vrPodpisKreslil){
+    if(confirm('Zákazník se zatím nepodepsal.\n\nOK = podepíše teď\nZrušit = pokračovat bez podpisu (zákazník není přítomen)')){
+      const f=document.getElementById('vrf_podpis'); f.classList.add('has-error');
+      f.scrollIntoView({behavior:'smooth',block:'center'}); return;
+    }
+    bezPodpisu=true;
+  }
   const st=document.getElementById('vrStatus');
   st.style.display='block'; st.innerHTML='⏳ Počítám vyúčtování…';
   try{
@@ -2311,7 +2323,8 @@ async function submitVraceni(){
         kdo_vraci:document.getElementById('vr_kdo').value,
         misto_vraceni:document.getElementById('vr_misto').value,
         cas_vraceni:document.getElementById('vr_cas').value,
-        podpis_vraceni:document.getElementById('vrPodpisCanvas').toDataURL('image/png'),
+        podpis_vraceni:bezPodpisu?'':document.getElementById('vrPodpisCanvas').toDataURL('image/png'),
+        bez_podpisu:bezPodpisu,
         poskozeni_nakres:state.nakresVraceni||'',
         poskozeni_castka:document.getElementById('vr_poskozeni').value,
         poskozeni_popis:document.getElementById('vr_poskozeni_popis').value,
@@ -2328,8 +2341,11 @@ async function submitVraceni(){
     if(v.faktura) info.push(v.faktura);
     if(v.faktura_chyba) info.push(`⚠️ faktura: ${v.faktura_chyba}`);
     st.innerHTML='✅ '+(info.join(' · ')||'Hotovo')+
+      (data.kompletni?`<div style="margin:10px 0 4px"><a class="btn-dl primary" href="/download/${encodeURIComponent(data.kompletni)}">📄 Kompletní PDF — podepsaná smlouva + protokol s vrácením + vyúčtování</a></div>`:'')+
       `<br><a href="/download/${encodeURIComponent(data.filename)}" style="color:var(--gold)">📄 Stáhnout vyúčtování (PDF)</a>`+
       (data.filename_protokol?` &nbsp;·&nbsp; <a href="/download/${encodeURIComponent(data.filename_protokol)}" style="color:var(--gold)">📋 Předávací protokol s vrácením (PDF)</a>`:'');
+    if(data.kompletni){ const e2=allHistory.find(x=>x.id===vraceniId); if(e2) e2.kompletni_vraceni=data.kompletni;
+      if(typeof otevritPdf==='function') otevritPdf('/download/'+encodeURIComponent(data.kompletni)); }
     if(data.ga){
       gaSdileni={soubor:data.ga_soubor, text:data.ga_whatsapp_text||''};
       st.innerHTML+=`<div style="margin-top:12px;padding:12px 14px;border:1px solid rgba(47,125,225,0.45);border-radius:10px;background:rgba(47,125,225,0.06)">
