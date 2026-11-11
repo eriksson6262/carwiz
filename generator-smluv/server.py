@@ -1309,7 +1309,59 @@ AUDIT_AKCE = {
 }
 
 
+_AKTIVNI = [0]                       # počet právě zpracovávaných požadavků (kvůli bezpečnému restartu)
+_AKTIVNI_LOCK = threading.Lock()
+
+
+def hlidac_zmen(interval=3):
+    """Automatické načtení úprav: když se změní některý .py soubor generátoru
+    (např. po nahrání nové verze), počká na dokončení rozpracovaných požadavků,
+    ověří, že nový kód jde zkompilovat, a server se sám restartuje."""
+    import glob, sys as _sys, time as _t
+    def stav():
+        return {f: os.path.getmtime(f) for f in glob.glob(os.path.join(SCRIPT_DIR, "*.py"))
+                if not os.path.basename(f).startswith("test_")}
+    puvodni = stav()
+    while True:
+        _t.sleep(interval)
+        try:
+            ted = stav()
+        except Exception:
+            continue
+        if ted == puvodni:
+            continue
+        _t.sleep(2)                      # dopsání souborů
+        zmenene = [os.path.basename(f) for f in ted if puvodni.get(f) != ted.get(f)]
+        try:
+            for f in ted:
+                with open(f, encoding="utf-8") as fh:
+                    compile(fh.read(), f, "exec")
+        except Exception as e:
+            print(f"⚠️ Nová verze ({', '.join(zmenene)}) má chybu, zůstává běžet stará: {e}")
+            puvodni = stav()
+            continue
+        konec = _t.time() + 180
+        while _AKTIVNI[0] > 0 and _t.time() < konec:
+            _t.sleep(1)
+        print(f"🔄 Nová verze ({', '.join(zmenene)}) – restartuji generátor...", flush=True)
+        try:
+            auth.audit({"login": "system", "jmeno": "Automatická aktualizace"}, "restart po aktualizaci",
+                       soubor=", ".join(zmenene))
+        except Exception:
+            pass
+        os.execv(_sys.executable, [_sys.executable, os.path.join(SCRIPT_DIR, "server.py")])
+
+
 class AppHandler(BaseHTTPRequestHandler):
+    def handle_one_request(self):
+        with _AKTIVNI_LOCK:
+            _AKTIVNI[0] += 1
+        try:
+            super().handle_one_request()
+        finally:
+            with _AKTIVNI_LOCK:
+                _AKTIVNI[0] -= 1
+
     def log_message(self, format, *args):
         u = getattr(self, "user", None) or {}
         print(f"→ {self.command} {self.path.split('?')[0]}" + (f"  [{u.get('login')}]" if u else ""))
@@ -2194,4 +2246,5 @@ if __name__ == "__main__":
         print("⚠️  Aplikace je pak dostupná komukoli ve stejné síti. Vypneš smazáním lan_mode.txt a restartem.\n")
     if not auth.ma_uzivatele():
         print(f"👤 Zatím žádní uživatelé — otevři http://localhost:{port}/login na tomto počítači a založ administrátora.\n")
+    threading.Thread(target=hlidac_zmen, daemon=True).start()
     ThreadingHTTPServer((host, port), AppHandler).serve_forever()
