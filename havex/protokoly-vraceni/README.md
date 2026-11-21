@@ -39,6 +39,7 @@ Zpracování protokolů o vrácení vozidel, které posílá HAVEX Mobility (pet
    splatnost 22 dní, datum = datum HAVEX protokolu. Vzor FA 20261996 (Pro Construction), FA 20262104 (DC-tec, 9H01004).
 6. **Renteon** – RX vozy deaktivovat aktivitou „Deaktivace vozu“ (def. 121) s neaktivním stavem 31 = „Koupit zpět – pronájem“ (buyback lease), ne 32 (subrent). Fabian vozy v Renteonu nejsou.
 7. **Ukončení pojistek** – Kooperativa (Gieselová) / Generali (Herrmann); pojišťovnu určit z výpisu Kooperativy (předpis pojistného, CSV) a vyúčtování flotily Generali.
+   Vozy Carnetto RX vrácené přes AUTOCENTRUM Jičín (Šulcová, „ukončení HAV“ + čestné prohlášení) = Generali RS 6287974108 (Herrmann). Čísla podsmluv: „Detailní vyúčtování pojistného“ (info@carnetto.cz, 1. den v měsíci, `Vyuctovani - detailni sestava.htm`) – párovat podle VIN. E-mail = přeposlání mailu ACJC (příloha čestného prohlášení) s výčtem RZ – VIN – podsmlouva, předmět „Carnetto RX – žádost o ukončení pojištění N vozidel (RS 6287974108)“, ukončení ke dni čestného prohlášení.
 
 ## Spuštění
 ```
