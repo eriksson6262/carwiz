@@ -135,7 +135,7 @@ def stamp(text, col, size=118):
     d.rounded_rectangle([6, 6, im.width - 7, im.height - 7], radius=18, fill=(8, 6, 18, 215), outline=col + (255,), width=10)
     d.text((im.width / 2, im.height / 2 - 4), text, font=f, fill=col + (255,), anchor="mm")
     return im.rotate(7, expand=True, resample=Image.BICUBIC)
-ST_FAIL, ST_OK = stamp("MISE SELHALA", RED, 104), stamp("MISE SPLNĚNA", GREEN, 104)
+ST_FAIL, ST_OK = stamp("BUSTED", RED, 190), stamp("MISE SPLNĚNA", GREEN, 104)
 logo = ImageOps.invert(Image.open(os.path.join(HERE, "src", "RX_logo.jpg")).convert("L")).resize((260, 171), Image.LANCZOS)
 
 # ---------- prvky scény ----------
@@ -264,7 +264,18 @@ def frame(t):
         if fail:
             d.rectangle([0, 0, W, H], fill=(60, 0, 10, 110))
         im.alpha_composite(ov)
-        put_stamp(im, ST_FAIL, t, 6.2)
+        put_stamp(im, ST_FAIL, t, 6.2, cy=960)
+        if t >= 6.45:                                      # řada majáků pod nápisem
+            d2 = ImageDraw.Draw(im)
+            for i in range(5):
+                on = (int(t * 6) + i) % 2 == 0
+                col = (RED if i % 2 == 0 else (60, 110, 255))
+                x = 540 + (i - 2) * 120; y = 1215 - (i - 2) * 14
+                if on:
+                    g = (G_RED if i % 2 == 0 else G_BLUE).resize((200, 200), Image.BILINEAR)
+                    im.alpha_composite(g, (x - 100, y - 110))
+                d2.pieslice([x - 34, y - 44, x + 34, y + 24], 180, 360, fill=col + (255,) if on else tuple(c // 3 for c in col) + (255,), outline=DARK + (255,), width=5)
+                d2.rounded_rectangle([x - 44, y - 12, x + 44, y + 8], radius=6, fill=(230, 230, 240, 255), outline=DARK + (255,), width=4)
     elif t < T3:                                           # ---- mise B: pronajmout
         im = world(t, False, 0.38, drift=(t - T2) * 9)
         ov = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(ov)
