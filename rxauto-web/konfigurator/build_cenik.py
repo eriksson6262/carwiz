@@ -95,7 +95,7 @@ cars = [
     ("Superb Combi Sportline", "Škoda", 14900, 2500, "C", "FWAR", "FWAR", "ano", "ano", "ne", 6, "ano", "", "", "ano", "Osobní auta", None, None),
     ("Superb Combi L&K", "Škoda", 16900, 2500, "C", "FWAR", "FWAR", "ano", "ano", "ne", 6, "ano", "Renteon nerozlišuje Sportline a L&K (obojí FWAR).", "", "ano", "Osobní auta", None, None),
     ("Kodiaq Sportline", "Škoda", 16900, 2500, "C", "FFAR", "FFAR", "ano", "ano", "ano", 6, "ano", "", "", "ano", "Osobní auta", None, None),
-    ("Kodiaq RS 4×4", "Škoda", 18900, 2500, "C", "FFAR", "FFAR", "ano", "ano", "ano", 6, "ano", "FFAR = všechny Kodiaqy (+ Peugeot 5008).", "", "ano", "Osobní auta", None, None),
+    ("Kodiaq RS 4×4", "Škoda", 20578.51, 2500, "C", "FFAR", "FFAR", "ano", "ano", "ano", 6, "ano", "FFAR = všechny Kodiaqy (+ Peugeot 5008).", "", "ano", "Osobní auta", None, None),
     ("Alfa Romeo Tonale PHEV Q4", "Alfa Romeo", 19900, 2500, "C", "", "", "ano", "ne", "ne", "", "ano", "Není v Renteonu – dostupnost ověříme ručně.", "Plug-in hybrid 4×4, bez omezení doby pronájmu, nabíjení zdarma. Servis není v ceně.", "ne", "Osobní auta", 2024, None),
     ("Peugeot 3008", "Peugeot", 13900, 2500, "B", "IGAR", "CFAR", "ano", "ano", "ano", "", "ano", "IGAR v CZ sdílí s Karoq.", "Bez omezení doby pronájmu. Možnost neomezeného nájezdu za pevný příplatek.", "ano", "Osobní auta", 2022, 6000),
     ("Mercedes-Benz GLE", "Mercedes-Benz", 59900, 2500, "P", "GFAR", "", "ano", "ne", "ne", "", "ano", "", "Prémiové SUV 4MATIC.", "ano", "Osobní auta", 2025, None),
