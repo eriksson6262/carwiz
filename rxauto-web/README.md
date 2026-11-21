@@ -153,3 +153,9 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
     `page-detail-spocitej.js`. Nový vůz do konfigurátoru = doplnit jeho _id do konfiguratorVuz v Auta/Karavany.
   - Hlavička: tlačítko „Flexibilní pronájem →“ posunuto níž (Y 8) – zarovnané s logem.
   Zveřejněno 2026-11-10 00:31 (Erik „publikuj“), ověřeno na živém webu (dlaždice, detail M5 = Poptat, Delfin = Spočítej).
+- 2026-11-21 (Erik):
+  - ProdejLeasing: Cupra Formentor 1.5 TSI DSG skryta (zobrazitNaWebu = false, záznam ponechán) → na /prodej-vozu 25 vozů.
+  - KonfiguratorVozy: Kodiaq RS 4×4 cenaMesic 18 900 → 20 578,51 Kč bez DPH, aby při 6 měsících vyšlo 24 900 Kč/měs. s DPH
+    (24 900 / 1,21). Excel `konfigurator/cenik_konfigurator.xlsx` zatím drží starou cenu – při příští aktualizaci ceníku přepsat.
+    Karta Kodiaq RS ve Flotile (CMS Auta, pole cena) zůstává „18 900 Kč/měsíc bez DPH“ – čeká na Erikovo rozhodnutí.
+  - Návrh webového banneru „Nekraďte. Pronajměte si.“ (GLC Coupé) jako Design artefakt – zatím jen návrh, na webu není.
