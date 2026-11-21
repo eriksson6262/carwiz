@@ -6,7 +6,8 @@ import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-W, H, FPS, DUR = 1080, 1920, 30, 15.0
+WEB = os.environ.get("VARIANT") == "web"       # verze pro popup na webu: obecná pro flotilu, vykání, konec = banner
+W, H, FPS, DUR = 1080, 1920, 30, (16.0 if WEB else 15.0)
 HOR = 1060                                   # horizont
 FONT = "/usr/share/fonts/truetype/google-fonts/ofl/montserrat/Montserrat[wght].ttf"
 FONT_I = "/usr/share/fonts/truetype/google-fonts/ofl/montserrat/Montserrat-Italic[wght].ttf"
@@ -102,6 +103,17 @@ def make_palm(h=900, flip=False):
     return ImageOps.mirror(im) if flip else im
 
 SUNSET, NIGHT = make_sunset(), make_night()
+END_BG = vgrad([(0, (27, 11, 61)), (0.62, (42, 13, 85)), (1, (74, 20, 102))])
+def _end_sun(r=330):
+    yy, xx = np.mgrid[0:2 * r, 0:2 * r]
+    dist = np.sqrt((xx - r) ** 2 + (yy - r) ** 2) / r
+    stops = [(0, (255, 226, 122)), (0.5, (255, 180, 84)), (1.0, (255, 95, 162))]
+    arr = np.zeros((2 * r, 2 * r, 4), dtype=np.float32)
+    for i in range(3):
+        arr[:, :, i] = np.interp(dist, [s[0] for s in stops], [s[1][i] for s in stops])
+    arr[:, :, 3] = np.clip((1 - dist) * r / 1.5, 0, 1) * 255
+    return Image.fromarray(arr.astype(np.uint8), "RGBA")
+END_SUN = _end_sun()
 GROUND_D = vgrad([(0, (150, 40, 120)), (0.25, (88, 22, 100)), (1, (40, 12, 66))], h=H - HOR)
 GROUND_N = vgrad([(0, (40, 14, 70)), (1, (10, 6, 26))], h=H - HOR)
 PALM_L, PALM_R = make_palm(), make_palm(flip=True)
@@ -246,9 +258,10 @@ def frame(t):
         a1, a2, a3 = ease(seg(t, 0.15, 0.6)), ease(seg(t, 0.5, 0.95)), ease(seg(t, 0.9, 1.35))
         outlined(d, (540, 300 - (1 - a1) * 40), "JEDNO AUTO.", font(104), WHITE, a1)
         outlined(d, (540, 430 - (1 - a2) * 40), "DVĚ MISE.", font(132), YEL, a2, sw=10)
-        tracked(d, (540, 520), "MERCEDES-BENZ GLC COUPÉ", font(34, "Bold", False), rgba(WHITE, a3), track=6)
+        if not WEB:
+            tracked(d, (540, 520), "MERCEDES-BENZ GLC COUPÉ", font(34, "Bold", False), rgba(WHITE, a3), track=6)
         if t > 1.5 and int(t * 4) % 2 == 0:
-            outlined(d, (540, 1000), "VYBER SI ▼", font(60), CYAN, 1, sw=7)
+            outlined(d, (540, 1000), "VYBERTE SI ▼" if WEB else "VYBER SI ▼", font(60), CYAN, 1, sw=7)
         im.alpha_composite(ov)
     elif t < T2:                                           # ---- mise A: ukrást
         u = seg(t, T1, T2)
@@ -272,7 +285,7 @@ def frame(t):
         a = ease(seg(t, T2 + 0.5, T2 + 0.9))
         bar(d, 520, "STRES", 0.0, RED, a)
         bar(d, 590, "KLID", ease(seg(t, T2 + 0.6, 9.4)), GREEN, a)
-        for i, s in enumerate(["ŽÁDNÉ SIRÉNY", "ŽÁDNÝ ÚTĚK", "JEN TY A CESTA"]):
+        for i, s in enumerate(["ŽÁDNÉ SIRÉNY", "ŽÁDNÝ ÚTĚK", "JEN VY A CESTA" if WEB else "JEN TY A CESTA"]):
             b = ease(seg(t, 8.6 + i * 0.45, 9.0 + i * 0.45))
             if b > 0:
                 x0, y0 = 90 - (1 - b) * 80, 700 + i * 78
@@ -281,6 +294,52 @@ def frame(t):
                 outlined(d, (x0 + 78, y0), s, font(50, "ExtraBold"), WHITE, b, sw=7, anchor="lm")
         im.alpha_composite(ov)
         put_stamp(im, ST_OK, t, 10.9, cy=1040)
+    elif WEB:                                              # ---- závěr = webový banner (obecný pro flotilu)
+        im = END_BG.copy().convert("RGBA")
+        u = t - T3
+        ca = ease(seg(u, 0.1, 0.8))
+        car = CAR_DAY
+        cx, cy = 540 + (1 - ca) * 500, 1230
+        im.alpha_composite(END_SUN, (540 - END_SUN.width // 2, 1150 - END_SUN.height // 2))
+        sh = Image.new("RGBA", shadow.size, (0, 0, 0, 0)); sh.putalpha(shadow)
+        im.alpha_composite(sh, (int(cx - shadow.width / 2), int(cy + car.height / 2 - 150)))
+        im.alpha_composite(car, (int(cx - car.width / 2), int(cy - car.height / 2)))
+        ov = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(ov)
+        a1, a2, a3, a4, a5 = (ease(seg(u, 0.25 + i * 0.28, 0.7 + i * 0.28)) for i in range(5))
+        d.text((540, 410 - (1 - a1) * 30), "Nekraďte.", font=font(124, "ExtraBold", False), fill=rgba(WHITE, a1), anchor="mm")
+        d.text((540, 545 - (1 - a2) * 30), "Pronajměte si.", font=font(124, "ExtraBold", False), fill=rgba((255, 111, 177), a2), anchor="mm")
+        d.text((540, 668), "Žádné sirény, žádný útěk. Jen vy a cesta.", font=font(40, "Light", False), fill=rgba(WHITE, a3), anchor="mm")
+        for i, (lab, val, col) in enumerate([("STRES", 0.0, (201, 191, 230)), ("KLID", ease(seg(u, 1.1, 2.2)), (255, 111, 177))]):
+            y = 770 + i * 58
+            tracked(d, (236, y - 17), lab, font(28, "SemiBold", False), rgba(col, a4), track=6)
+            d.rounded_rectangle([340, y - 4, 800, y + 4], radius=4, fill=rgba(WHITE, 0.16 * a4))
+            if val > 0.01:
+                gw = int(460 * val)
+                grad = Image.new("RGBA", (gw, 8))
+                gp = grad.load()
+                for gx in range(gw):
+                    k = gx / 460
+                    for gy in range(8):
+                        gp[gx, gy] = (255, int(61 + (180 - 61) * k), int(154 + (84 - 154) * k), int(255 * a4))
+                ov.alpha_composite(grad, (340, y - 4))
+            d.text((860, y), f"{int(val * 100)} %", font=font(28, "Bold", False), fill=rgba(col, a4), anchor="mm")
+        bw = 300
+        btn = Image.new("RGBA", (bw * 2, 112), (0, 0, 0, 0)); bp = btn.load()
+        for gx in range(bw * 2):
+            k = gx / (bw * 2)
+            for gy in range(112):
+                bp[gx, gy] = (255, int(210 + (154 - 210) * k), int(63 + (60 - 63) * k), 255)
+        bm = Image.new("L", btn.size, 0); ImageDraw.Draw(bm).rounded_rectangle([0, 0, bw * 2 - 1, 111], radius=56, fill=int(255 * a5))
+        btn.putalpha(bm)
+        yb = 1570 + (1 - a5) * 30
+        ov.alpha_composite(btn, (540 - bw, int(yb - 56)))
+        d.text((540, yb), "Prohlédnout flotilu", font=font(46, "Bold", False), fill=rgba((27, 11, 61), a5), anchor="mm")
+        tracked(d, (540, 1672), "PRAHA · OSTRAVA · BRATISLAVA", font(28, "SemiBold", False), rgba((201, 191, 230), a5), track=6)
+        im.alpha_composite(ov)
+        if a1 > 0:
+            lg = Image.new("RGBA", logo.size, (255, 255, 255, 0)); lg.putalpha(logo.point(lambda v: int(v * a1)))
+            lg = lg.resize((170, 112), Image.LANCZOS)
+            im.alpha_composite(lg, (540 - 85, 190))
     else:                                                  # ---- závěr
         im = world(t, False, 0.3, drift=(T3 - T2) * 9)
         ov = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(ov)
@@ -343,7 +402,7 @@ def render():
         p.stdin.close(); assert p.wait() == 0
         os.replace(tmp, fin); parts.append(fin); print("scene", i, flush=True)
     lst = os.path.join(out, "list.txt"); open(lst, "w").write("".join(f"file '{p}'\n" for p in parts))
-    sil, wav, fin = os.path.join(out, "video.mp4"), os.path.join(out, "audio.wav"), os.path.join(out, "rxauto-glc-dve-mise.mp4")
+    sil, wav, fin = os.path.join(out, "video.mp4"), os.path.join(out, "audio.wav"), os.path.join(out, "rxauto-dve-mise-web.mp4" if WEB else "rxauto-glc-dve-mise.mp4")
     subprocess.check_call(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst, "-c", "copy", sil])
     audio(wav)
     subprocess.check_call(["ffmpeg", "-y", "-loglevel", "error", "-i", sil, "-i", wav, "-map", "0:v", "-map", "1:a", "-c:v", "copy",
@@ -355,7 +414,7 @@ if __name__ == "__main__":
         render()
     else:
         out = os.path.join(HERE, "output_mise"); os.makedirs(out, exist_ok=True)
-        ts = [2.0, 4.6, 6.6, 10.2, 11.3, 14.0]
+        ts = [2.0, 4.6, 6.6, 10.2, 11.3, DUR - 0.5]
         sheet = Image.new("RGB", (360 * len(ts), 640))
         for i, t in enumerate(ts):
             sheet.paste(frame(t).resize((360, 640), Image.LANCZOS), (i * 360, 0))

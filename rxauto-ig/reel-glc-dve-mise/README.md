@@ -6,3 +6,8 @@ Herní retro-neon parodie: mise A „Ukrást" (noc, policie, mise selhala) vs. m
 - `python3 render_mise.py preview` / `render` (→ `output_mise/`), potřebuje numpy + Pillow + ffmpeg.
 - `src/car_cut.png` = fotka GLC Coupé z webu s odstraněným pozadím (rembg, isnet-general-use).
 - Vlastní vizuál, bez log, písma a postav z GTA – jen obecná herní stylizace.
+
+## Verze pro popup na webu (21. 11. 2026)
+`VARIANT=web python3 render_mise.py render` → `output_mise/rxauto-dve-mise-web.mp4` (16 s). Rozdíly: bez zmínky o GLC
+(obecné pro flotilu), vykání („Vyberte si“, „Jen vy a cesta“), závěr = webový banner „Nekraďte. Pronajměte si.“
+v barvách západu slunce s tlačítkem „Prohlédnout flotilu“. Bez `VARIANT` vzniká původní Reel pro IG.
