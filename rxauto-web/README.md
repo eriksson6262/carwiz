@@ -160,3 +160,11 @@ Detail v `konfigurator/README.md`. Tlačítko „Vybrat auto“ na /dlouhodoby-p
     „24 900 Kč/měsíc vč. DPH“, Excel `konfigurator/cenik_konfigurator.xlsx` i `build_cenik.py` = 20 578,51.
     Staré IG příspěvky a letáky s 18 900 zůstávají.
   - Návrh webového banneru „Nekraďte. Pronajměte si.“ (GLC Coupé) jako Design artefakt – zatím jen návrh, na webu není.
+- 2026-11-21 22:40 – popup (lightbox „Leták Škoda“) předělán a zveřejněn (Erik „publikuj“):
+  - Dva letáky (#image2 Konfigurátor, #image3 Prodej vozů) smazány; soubory rxauto-letak-v3-*.webp zůstávají v Media Manageru.
+  - Nově VideoBox `#videoBox1` s videem „Dvě mise“ – webová varianta (`rxauto-ig/reel-glc-dve-mise`, `VARIANT=web`),
+    soubor `rxauto-dve-mise-popup.mp4` (Media Manager, id 4d8ed0_df176e1dcf3a4093a2abb5375ab243e6). Autoplay, smyčka, bez zvuku.
+    Desktop 304×540, mobil 280×497. Pod videem tlačítko `#button12` „Prohlédnout flotilu →“ → stránka Flotila.
+  - VideoBox ve Velo nemá `onClick`, proto odkaz řeší tlačítko, ne klik na video. Kód popupu (`public/pages/uvfqi.js`) je prázdný onReady.
+  - Video do Wixu: `site-media/v1/files/import` z veřejného odkazu Google Drive (`uc?export=download&id=…`) – funguje i pro mp4.
+  - Editor otevřen přes Claude in Chrome (vestavěný prohlížeč není do Wixu přihlášený).
