@@ -36,6 +36,19 @@ Nový projekt = nová složka + řádek do tabulky výše.
 - Commit zpráva česky: co a proč. Prefix složkou, např. `renteon: oprava výpočtu sezónní přirážky`.
 - Před pushem `git pull --rebase`, konflikty vyřeš sám.
 
+## Autonomie a soubory – Google Drive (povinné pro všechny projekty a agenty)
+- Úkoly zpracuj **autonomně až do konce** (včetně uložení a odeslání, které Erik zadal). Neptej se, kam uložit, a nekonči hláškou „nejde uložit / nejde přiložit“ – použij postup níže.
+  Zastav se jen u toho, co opravdu nejde bez Erika: hesla a přihlášení, platby, nevratné rozhodnutí, které může dopadnout dvojím způsobem.
+- **Úložiště = Google Drive `xpeerik@gmail.com`**, složka `RX Auto Claude/` (`vstupy`, `vystupy`, `predavaci-protokoly`, `faktury`, `vinkulace`, `sosbk`, `pokuty`, `vyuctovani`, `prehled-zapujcek`). Nové složky zakládej uvnitř ní, ne v kořeni Drive.
+- **Uložení:** konektor Google Drive (`create_file`, `base64Content` = `sha256:<hash>:<abs. cesta>`, limit ~3 MB na soubor).
+- **Příloha e-mailu (Spark):** soubor nejdřív nahraj na Drive, pak ho přilož cestou synchronizované složky na Mac mini:
+  `/Users/rxautoagentai/Library/CloudStorage/GoogleDrive-xpeerik@gmail.com/Můj disk/RX Auto Claude/<podsložka>/<soubor>`
+  **Pozor:** „Můj disk“ je na disku v rozloženém Unicode (NFD) – v cestě piš `Mu\u030aj disk` (u + kombinující kroužek), s předsloženým „ů“ Spark soubor nenajde. Po nahrání chvíli počkej na synchronizaci a při „file not found“ zkus znovu.
+  Nevyžaduje připojenou složku v chatu – Spark čte disk Macu sám. Ověřeno 23. 11. 2026.
+- `device_bash` složku `RX Auto Claude` přes mount nepřečte („Resource deadlock avoided“); jiné složky Drive ano. Na čtení/zápis proto používej konektor Drive, lokální cestu jen pro přílohy.
+- Příjemci bez Google účtu odkaz na Drive neotevřou – posílej soubor jako přílohu, ne odkaz.
+- Soubory s osobními údaji patří na Drive, nikdy do repa.
+
 ## Co nikdy necommitovat
 - Hesla, API klíče, tokeny, `.env` soubory. Skripty berou údaje přes `common/rxauto_config.py`, nikdy natvrdo v kódu.
 - Osobní údaje klientů: RČ, čísla dokladů, vyplněné smlouvy, protokoly, exporty z Renteonu se zákazníky.
