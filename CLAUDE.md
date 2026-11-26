@@ -40,7 +40,7 @@ Nový projekt = nová složka + řádek do tabulky výše.
 - Úkoly zpracuj **autonomně až do konce** (včetně uložení a odeslání, které Erik zadal). Neptej se, kam uložit, a nekonči hláškou „nejde uložit / nejde přiložit“ – použij postup níže.
   Zastav se jen u toho, co opravdu nejde bez Erika: hesla a přihlášení, platby, nevratné rozhodnutí, které může dopadnout dvojím způsobem.
 - **Úložiště = Google Drive `xpeerik@gmail.com`**, složka `RX Auto Claude/` (`vstupy`, `vystupy`, `predavaci-protokoly`, `faktury`, `vinkulace`, `sosbk`, `pokuty`, `vyuctovani`, `prehled-zapujcek`). Nové složky zakládej uvnitř ní, ne v kořeni Drive.
-- **Uložení:** konektor Google Drive (`create_file`, `base64Content` = `sha256:<hash>:<abs. cesta>`, limit ~3 MB na soubor).
+- **Uložení:** konektor Google Drive (`create_file`, `base64Content` = `sha256:<hash>:<abs. cesta>`, limit ~3 MB na soubor). Pro binární formáty (PDF, XLSX, DOCX, obrázky) **vždy nastav `disableConversionToGoogleType: true`**, jinak Drive konvertuje soubor na Google Doc (fileSize=1 B, nepoužitelné).
 - **Příloha e-mailu (Spark):** soubor nejdřív nahraj na Drive, pak ho přilož cestou synchronizované složky na Mac mini:
   `/Users/rxautoagentai/Library/CloudStorage/GoogleDrive-xpeerik@gmail.com/Můj disk/RX Auto Claude/<podsložka>/<soubor>`
   **Pozor:** „Můj disk“ je na disku v rozloženém Unicode (NFD) – v cestě piš `Mu\u030aj disk` (u + kombinující kroužek), s předsloženým „ů“ Spark soubor nenajde. Po nahrání chvíli počkej na synchronizaci a při „file not found“ zkus znovu.
