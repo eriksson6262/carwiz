@@ -1,0 +1,34 @@
+{
+  "pronajimatel": {
+    "nazev": "Carnetto RX s.r.o.",
+    "ico": "23915501",
+    "spisova_znacka": "C 385601 vedená u Městského soudu v Praze",
+    "sidlo": "Aviatická 1092/8, Praha 6 – Ruzyně, 161 00",
+    "zastoupena": "Erikem Rajohnsonem",
+    "funkce": "jednatelem",
+    "misto_podpisu": "Praze"
+  },
+  "najemce": {
+    "nazev": "Firma s.r.o.",
+    "ico": "XXXXXXXX",
+    "dic": "CZXXXXXXXX",
+    "sidlo": "Ulice čp, Část, PSČ Město",
+    "zastoupena": "Jméno Příjmení",
+    "funkce": "jednatelem",
+    "misto_podpisu": "……………………"
+  },
+  "vozidlo": {
+    "model": "Značka Model",
+    "spz": "XXXXXXX",
+    "vin": "XXXXXXXXXXXXXXXXX",
+    "palivo": "benzin",
+    "titul": "leasingové smlouvy"
+  },
+  "smlouva": {
+    "od": "2026-12-01",
+    "do": "2027-05-31",
+    "mesicu": 6,
+    "cena_mesic_bez_dph": 14543.00,
+    "splatnost_dnu": 10
+  }
+}
